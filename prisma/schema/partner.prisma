@@ -1,0 +1,13 @@
+model PartnerSchool {
+  id         Int         @id @default(autoincrement())
+  short_name String
+  full_name  String
+  plan       PartnerPlan
+}
+
+enum PartnerPlan {
+  Personal
+  GroupA // 團體購買（有繳納會費者）
+  GroupB // 團體購買（全校學生）
+  Combined // 繳納會費（GroupA）＋個人購買方案並行
+}
