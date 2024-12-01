@@ -1,7 +1,6 @@
 import { fromHono } from "chanfana";
 import { Context, Hono } from "hono";
 import { Env } from "../worker-configuration";
-import { cors } from "hono/cors";
 import { ListPartnerSchool } from "endpoints/resources/ListPartnerSchool";
 import { PrismaClient } from "@prisma/client";
 import { prisma } from "database/prisma";

@@ -1,6 +1,6 @@
 import { OpenAPIRoute } from "chanfana";
 import { z } from "zod";
-import { PartnerSchoolSchema } from "../../../prisma/schema/generated/zod";
+import { PartnerSchoolSchema } from "schemas";
 import { AppContext } from "index";
 
 export class ListPartnerSchool extends OpenAPIRoute {
@@ -22,7 +22,7 @@ export class ListPartnerSchool extends OpenAPIRoute {
   };
 
   async handle(ctx: AppContext) {
-    const db = ctx.get("prisma");
+    const db = ctx.var.prisma;
     const partnerSchools = await db.partnerSchool.findMany();
     return ctx.json(partnerSchools);
   }

@@ -5,7 +5,7 @@ import { AppContext } from "index";
 
 export const prisma = (): MiddlewareHandler => {
   return async (ctx: AppContext, next: any) => {
-    if (!ctx.get("prisma")) {
+    if (!ctx.var.prisma) {
       const connectionString = ctx.env.DATABASE_URL;
       const client = new PrismaClient({
         datasources: {

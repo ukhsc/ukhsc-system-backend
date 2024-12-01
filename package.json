@@ -10,6 +10,9 @@
     "env": "dotenv -e .dev.vars",
     "prisma": "npm run env -- prisma"
   },
+  "prisma": {
+    "seed": "tsx prisma/seed.ts"
+  },
   "dependencies": {
     "@prisma/client": "^6.0.0",
     "@prisma/extension-accelerate": "^1.2.1",
@@ -20,10 +23,11 @@
   },
   "devDependencies": {
     "@cloudflare/workers-types": "^4.20241127.0",
-    "@types/node": "20.8.3",
+    "@types/node": "^20.17.9",
     "@types/service-worker-mock": "^2.0.1",
     "dotenv-cli": "^7.4.4",
     "prisma": "^6.0.0",
+    "tsx": "^4.19.2",
     "wrangler": "^3.60.3"
   }
 }
