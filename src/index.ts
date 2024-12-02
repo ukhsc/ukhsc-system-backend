@@ -30,7 +30,13 @@ openapi.use(
   "/health",
   ipRestriction(getConnInfo, {
     denyList: [],
-    allowList: ["127.0.0.1", "::1"],
+    allowList: [
+      "127.0.0.1", // IPv4 localhost
+      "::1", // IPv6 localhost
+      "172.16.0.0/12", // Docker default bridge network range
+      "192.168.0.0/16", // Additional Docker network range
+      "10.0.0.0/8", // Docker overlay network range
+    ],
   }),
 );
 openapi.get("/health", HealthCheck);
