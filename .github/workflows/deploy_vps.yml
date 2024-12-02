@@ -55,10 +55,17 @@ jobs:
               -e CURRENT_ENVIRONMENT=$TARGET_ENV \
               ghcr.io/${{ github.repository_owner }}/ukhsc-system-backend-api:latest
 
-            until curl --silent --fail http://localhost:$TARGET_PORT/health; do
+            COUNTER=0
+            until curl --silent --fail http://localhost:$TARGET_PORT/health || [ $COUNTER -gt 12 ]; do
               echo "Waiting for $TARGET_ENV to be ready..."
               sleep 5
+              COUNTER=$((COUNTER+1))
             done
+
+            if [ $COUNTER -gt 12 ]; then
+              echo "Deployment failed: Service did not become healthy within 60 seconds"
+              exit 1
+            fi
 
             sed -i "s/127.0.0.1:[0-9]*/127.0.0.1:$TARGET_PORT/" /etc/nginx/sites-available/default
             systemctl reload nginx

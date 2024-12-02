@@ -26,12 +26,14 @@ export class HealthCheck extends OpenAPIRoute {
     const db = ctx.var.prisma;
 
     let status = "ok";
+    let statusCode: 200 | 500 = 200;
     try {
       // Try a simple query to check DB connectivity
       await db.$queryRaw`SELECT 1`;
     } catch (err) {
       console.error(err);
       status = "error";
+      statusCode = 500;
     }
 
     return ctx.json(
@@ -40,7 +42,7 @@ export class HealthCheck extends OpenAPIRoute {
         environment: process.env.CURRENT_ENVIRONMENT || "unknown",
         timestamp: new Date().toISOString(),
       },
-      500,
+      statusCode,
     );
   }
 }
