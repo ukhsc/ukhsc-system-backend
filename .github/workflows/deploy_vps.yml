@@ -1,0 +1,65 @@
+name: Deploy to VPS
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Log in to GitHub Container Registry
+        run: echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
+
+      - name: Build and push Docker image
+        run: |
+          docker build -t ghcr.io/${{ github.repository_owner }}/ukhsc-system-backend-api:latest .
+          docker push ghcr.io/${{ github.repository_owner }}/ukhsc-system-backend-api:latest
+
+      - name: Deploy to VPS using SSH
+        uses: appleboy/ssh-action@v0.5.8
+        with:
+          host: ${{ secrets.VPS_IP }}
+          username: root
+          key: ${{ secrets.VPS_SSH_KEY }}
+          script: |
+            CURRENT_ENV=$(curl -s http://localhost/health | jq -r '.environment')
+
+            if [ "$CURRENT_ENV" == "green" ]; then
+              TARGET_ENV="blue"
+              TARGET_PORT=3001
+            else
+              TARGET_ENV="green"
+              TARGET_PORT=3000
+            fi
+
+            echo "Current environment is $CURRENT_ENV. Deploying to $TARGET_ENV."
+
+            docker pull ghcr.io/${{ github.repository_owner }}/ukhsc-system-backend-api:latest
+
+            docker run -d --name ukhsc-system-backend-api-$TARGET_ENV -p $TARGET_PORT:3000 \
+              -e DATABASE_URL=${{ secrets.DATABASE_URL }} \
+              -e JWT_SECRET_KEY=${{ secrets.JWT_SECRET_KEY }} \
+              -e CURRENT_ENVIRONMENT=$TARGET_ENV \
+              ghcr.io/${{ github.repository_owner }}/ukhsc-system-backend-api:latest
+
+            until curl --silent --fail http://localhost:$TARGET_PORT/health; do
+              echo "Waiting for $TARGET_ENV to be ready..."
+              sleep 5
+            done
+
+            sed -i "s/127.0.0.1:[0-9]*/127.0.0.1:$TARGET_PORT/" /etc/nginx/sites-available/default
+            systemctl reload nginx
+
+            if [ "$CURRENT_ENV" == "green" ]; then
+              docker stop my-app-green || true
+              docker rm my-app-green || true
+            else
+              docker stop my-app-blue || true
+              docker rm my-app-blue || true
+            fi
