@@ -1,26 +1,29 @@
 import { fromHono } from "chanfana";
 import { Context, Hono } from "hono";
-import { Env } from "../worker-configuration";
 import { ListPartnerSchool } from "endpoints/resources/ListPartnerSchool";
+import { prismaInitMiddleware } from "config/prisma";
+import dotenv from "dotenv";
+import { logger } from "hono/logger";
 import { PrismaClient } from "@prisma/client";
-import { prisma } from "database/prisma";
 
 interface Variables {
   prisma: PrismaClient;
 }
+export type AppOptions = { Variables: Variables };
+export type AppContext = Context<AppOptions>;
 
-// Start a Hono app
-const app = new Hono<{ Bindings: Env }>();
+dotenv.config();
+const app = new Hono<AppOptions>();
 
-// Setup OpenAPI registry
 const openapi = fromHono(app, {
   docs_url: "/docs",
 });
-openapi.use("/*", prisma());
-
+openapi.use(logger());
+openapi.use(prismaInitMiddleware);
 // Register OpenAPI endpoints
 openapi.get("/resources/partner-school", ListPartnerSchool);
 
-// Export the Hono app
-export default app;
-export type AppContext = Context<{ Bindings: Env; Variables: Variables }>;
+export default {
+  port: process.env.PORT || 8787,
+  fetch: app.fetch,
+};

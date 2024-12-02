@@ -3,31 +3,34 @@
   "version": "0.0.1",
   "private": true,
   "scripts": {
-    "deploy": "wrangler deploy",
-    "dev": "wrangler dev",
-    "start": "wrangler dev",
-    "cf-typegen": "wrangler types",
-    "env": "dotenv -e .dev.vars",
-    "prisma": "npm run env -- prisma"
+    "dev": "bun run src/index.ts",
+    "start": "bun run src/index.ts",
+    "migrate": "prisma migrate dev",
+    "generate": "prisma generate",
+    "seed": "prisma db seed"
   },
   "prisma": {
     "seed": "tsx prisma/seed.ts"
   },
   "dependencies": {
     "@prisma/client": "^6.0.0",
-    "@prisma/extension-accelerate": "^1.2.1",
     "chanfana": "^2.0.2",
+    "dotenv": "^16.4.5",
     "hono": "^4.4.7",
+    "install": "^0.13.0",
+    "npm": "^10.9.1",
     "zod": "^3.23.8",
     "zod-prisma-types": "^3.1.8"
   },
   "devDependencies": {
-    "@cloudflare/workers-types": "^4.20241127.0",
     "@types/node": "^20.17.9",
-    "@types/service-worker-mock": "^2.0.1",
-    "dotenv-cli": "^7.4.4",
     "prisma": "^6.0.0",
     "tsx": "^4.19.2",
-    "wrangler": "^3.60.3"
+    "@types/bun": "latest"
+  },
+  "module": "index.ts",
+  "type": "module",
+  "peerDependencies": {
+    "typescript": "^5.0.0"
   }
 }

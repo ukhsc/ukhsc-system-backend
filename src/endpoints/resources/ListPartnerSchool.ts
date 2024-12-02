@@ -1,6 +1,6 @@
 import { OpenAPIRoute } from "chanfana";
 import { z } from "zod";
-import { PartnerSchoolSchema } from "schemas";
+import { PartnerSchoolSchema } from "schema";
 import { AppContext } from "index";
 
 export class ListPartnerSchool extends OpenAPIRoute {
