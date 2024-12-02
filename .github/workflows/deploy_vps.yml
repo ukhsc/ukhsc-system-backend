@@ -43,6 +43,10 @@ jobs:
 
             echo "Current environment is $CURRENT_ENV. Deploying to $TARGET_ENV."
 
+            # Stop and remove the target environment container if it exists
+            docker stop ukhsc-system-backend-api-$TARGET_ENV || true
+            docker rm ukhsc-system-backend-api-$TARGET_ENV || true
+
             docker pull ghcr.io/${{ github.repository_owner }}/ukhsc-system-backend-api:latest
 
             docker run -d --name ukhsc-system-backend-api-$TARGET_ENV -p $TARGET_PORT:8787 \
