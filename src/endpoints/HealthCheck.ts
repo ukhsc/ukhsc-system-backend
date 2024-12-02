@@ -1,7 +1,7 @@
 import { OpenAPIRoute } from "chanfana";
 import { AppContext } from "index";
 import { z } from "zod";
-import process from "process";
+import env from "../config/env";
 import console from "console";
 
 export class HealthCheck extends OpenAPIRoute {
@@ -41,7 +41,7 @@ export class HealthCheck extends OpenAPIRoute {
     return ctx.json(
       {
         status,
-        environment: process.env.CURRENT_ENVIRONMENT || "unknown",
+        environment: env.CURRENT_ENVIRONMENT || "unknown",
         timestamp: new Date().toISOString(),
       },
       statusCode,
