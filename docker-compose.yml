@@ -1,4 +1,16 @@
 services:
+  api:
+    build:
+      context: .
+    ports:
+      - "8787:8787"
+    environment:
+      - DATABASE_URL=postgresql://postgres:postgres@db:5432/mydb
+      - DIRECT_DATABASE_URL=postgresql://postgres:postgres@db:5432/mydb
+      - JWT_SECRET=local_dev_secret_key
+    command: bash -c "bun migrate && ./ukhsc-system-api"
+    depends_on:
+      - db
   db:
     image: postgres:16
     container_name: postgres_local
