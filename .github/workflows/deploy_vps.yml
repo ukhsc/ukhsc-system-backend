@@ -78,9 +78,9 @@ jobs:
             systemctl reload nginx
 
             if [ "$CURRENT_ENV" == "green" ]; then
-              docker stop my-app-green || true
-              docker rm my-app-green || true
+              docker stop ukhsc-system-backend-api-green || true
+              docker rm ukhsc-system-backend-api-green || true
             else
-              docker stop my-app-blue || true
-              docker rm my-app-blue || true
+              docker stop ukhsc-system-backend-api-blue || true
+              docker rm ukhsc-system-backend-api-blue || true
             fi
