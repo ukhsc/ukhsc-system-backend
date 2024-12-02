@@ -1,4 +1,6 @@
 import { z } from "zod";
+import process from "process";
+import console from "console";
 
 const envSchema = z.object({
   DATABASE_URL: z.string(),
@@ -15,10 +17,7 @@ const env = envSchema.safeParse({
 });
 
 if (!env.success) {
-  console.error(
-    "❌ Invalid environment variables:",
-    JSON.stringify(env.error.errors, null, 2),
-  );
+  console.error("❌ Invalid environment variables:", JSON.stringify(env.error.errors, null, 2));
   process.exit(1);
 }
 

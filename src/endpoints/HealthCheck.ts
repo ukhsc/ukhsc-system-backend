@@ -1,6 +1,8 @@
 import { OpenAPIRoute } from "chanfana";
 import { AppContext } from "index";
 import { z } from "zod";
+import process from "process";
+import console from "console";
 
 export class HealthCheck extends OpenAPIRoute {
   schema = {

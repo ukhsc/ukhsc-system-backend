@@ -6,8 +6,7 @@ import dotenv from "dotenv";
 import { logger } from "hono/logger";
 import { PrismaClient } from "@prisma/client";
 import { HealthCheck } from "endpoints/HealthCheck";
-import { getConnInfo } from "hono/bun";
-import { ipRestriction } from "hono/ip-restriction";
+import process from "process";
 
 interface Variables {
   prisma: PrismaClient;
