@@ -31,7 +31,14 @@ jobs:
           username: root
           key: ${{ secrets.VPS_SSH_KEY }}
           script: |
-            CURRENT_ENV=$(curl -s http://localhost/health | jq -r '.environment')
+            # Check both ports to determine current environment
+            if curl -s http://localhost:3000/health > /dev/null 2>&1; then
+              CURRENT_ENV=$(curl -s http://localhost:3000/health | jq -r '.environment')
+            elif curl -s http://localhost:3001/health > /dev/null 2>&1; then
+              CURRENT_ENV=$(curl -s http://localhost:3001/health | jq -r '.environment')
+            else
+              CURRENT_ENV="unknown"
+            fi
 
             if [ "$CURRENT_ENV" == "green" ]; then
               TARGET_ENV="blue"
