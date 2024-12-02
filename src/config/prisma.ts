@@ -1,7 +1,7 @@
 import { PrismaClient } from "@prisma/client";
 import { MiddlewareHandler } from "hono";
 import { AppOptions } from "index";
-import { env } from "./env";
+import env from "./env";
 
 export const prismaInitMiddleware: MiddlewareHandler<AppOptions> = async (
   ctx,

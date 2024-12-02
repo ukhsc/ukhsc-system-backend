@@ -8,8 +8,18 @@ const envSchema = z.object({
 
 export type EnvConfig = z.infer<typeof envSchema>;
 
-export const env = envSchema.parse({
+const env = envSchema.safeParse({
   DATABASE_URL: process.env.DATABASE_URL,
   DIRECT_DATABASE_URL: process.env.DIRECT_DATABASE_URL,
   JWT_SECRET: process.env.JWT_SECRET,
 });
+
+if (!env.success) {
+  console.error(
+    "❌ Invalid environment variables:",
+    JSON.stringify(env.error.errors, null, 2),
+  );
+  process.exit(1);
+}
+
+export default env.data;
