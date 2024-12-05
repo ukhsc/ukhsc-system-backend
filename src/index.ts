@@ -1,6 +1,6 @@
 import { fromHono } from "chanfana";
 import { Context, Hono } from "hono";
-import { ListPartnerSchool } from "endpoints/resources/ListPartnerSchool";
+import { ListPartnerSchool, OroderPersonalMembership } from "endpoints/index";
 import { prismaInitMiddleware } from "config/prisma";
 import dotenv from "dotenv";
 import { logger } from "hono/logger";
@@ -24,7 +24,6 @@ openapi.use(logger());
 openapi.use(prismaInitMiddleware);
 
 // Register OpenAPI endpoints
-openapi.get("/resources/partner-school", ListPartnerSchool);
 // TODO: fix ip restriction
 // openapi.use(
 //   "/health",
@@ -40,6 +39,8 @@ openapi.get("/resources/partner-school", ListPartnerSchool);
 //   }),
 // );
 openapi.get("/health", HealthCheck);
+openapi.get("/resources/partner-school", ListPartnerSchool);
+openapi.post("/forms/personal-membership-order", OroderPersonalMembership);
 
 export default {
   port: process.env.PORT || 8787,
