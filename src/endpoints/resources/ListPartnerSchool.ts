@@ -12,19 +12,15 @@ export class ListPartnerSchool extends OpenAPIRoute {
         description: "回傳有關合作學校資訊的陣列",
         content: {
           "application/json": {
-            schema: z.object({
-              series: PartnerSchoolSchema,
-            }),
-            example: {
-              series: [
-                {
-                  id: 1,
-                  short_name: "仁武高中",
-                  full_name: "高雄市立仁武高級中學",
-                  plan: "Combined",
-                },
-              ],
-            },
+            schema: z.array(PartnerSchoolSchema),
+            example: [
+              {
+                id: 1,
+                short_name: "仁武高中",
+                full_name: "高雄市立仁武高級中學",
+                plan: "Combined",
+              },
+            ],
           },
         },
       },
