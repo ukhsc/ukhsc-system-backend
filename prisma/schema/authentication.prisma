@@ -1,0 +1,11 @@
+enum AuthenticationProvider {
+  Password
+  Google
+}
+
+model SchoolAccountConfig {
+  username_format String
+  domain_name     String
+  school_id       Int           @unique
+  school          PartnerSchool @relation(fields: [school_id], references: [id])
+}
