@@ -5,7 +5,8 @@ model PartnerSchool {
   plan                  PartnerPlan
   google_account_config SchoolAccountConfig?
 
-  students StudentMember[]
+  students           StudentMember[]
+  personal_purchases PersonalMembershipPurchase[]
 }
 
 enum PartnerPlan {
