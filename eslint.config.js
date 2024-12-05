@@ -7,7 +7,7 @@ export default [
   eslint.configs.recommended,
   {
     files: ["**/*.ts", "**/*.tsx", "**/*.mts", "**/*.cts"],
-    ignores: ["node_modules/**", "dist/**"],
+    ignores: ["node_modules/**", "dist/**", "prisma/schema/generated/**"],
     languageOptions: {
       ecmaVersion: "latest",
       sourceType: "module",
