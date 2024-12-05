@@ -13,8 +13,8 @@ model StudentMember {
   created_at   DateTime  @default(now())
   activated_at DateTime?
 
-  password_hash          String?
-  personal_purchase_info PersonalMembershipPurchase?
+  password_hash    String?
+  membership_order PersonalMembershipOrder?
 }
 
 enum MembershipPurchaseChannel {
@@ -22,7 +22,7 @@ enum MembershipPurchaseChannel {
   StudentCouncil // 由學生會統一代為團體購買
 }
 
-model PersonalMembershipPurchase {
+model PersonalMembershipOrder {
   id        Int            @id @default(autoincrement())
   member_id String?        @unique
   member    StudentMember? @relation(fields: [member_id], references: [id])
