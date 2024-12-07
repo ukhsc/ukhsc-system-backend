@@ -58,7 +58,7 @@ jobs:
 
             docker run -d --name ukhsc-system-backend-api-$TARGET_ENV -p $TARGET_PORT:8787 \
               -e DATABASE_URL=${{ secrets.DATABASE_URL }} \
-              -e JWT_SECRET_KEY=${{ secrets.JWT_SECRET_KEY }} \
+              -e JWT_SECRET=${{ secrets.JWT_SECRET }} \
               -e CURRENT_ENVIRONMENT=$TARGET_ENV \
               ghcr.io/${{ github.repository_owner }}/ukhsc-system-backend-api:latest
 

@@ -31,6 +31,8 @@ CREATE TABLE "StudentMember" (
 -- CreateTable
 CREATE TABLE "PersonalMembershipOrder" (
     "id" SERIAL NOT NULL,
+    "created_at" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updated_at" TIMESTAMP(3) NOT NULL,
     "member_id" TEXT,
     "school_id" INTEGER NOT NULL,
     "class" TEXT NOT NULL,

@@ -1,9 +1,10 @@
+import { generateOrdererToken } from "@config/jwt";
 import { Prisma } from "@prisma/client";
 import { OpenAPIRoute } from "chanfana";
 import { AppContext } from "index";
 import { z } from "zod";
 
-export class OroderPersonalMembership extends OpenAPIRoute {
+export class OrderPersonalMembership extends OpenAPIRoute {
   schema = {
     tags: ["表單"],
     summary: "訂購個人會員",
@@ -33,11 +34,13 @@ export class OroderPersonalMembership extends OpenAPIRoute {
     responses: {
       // TODO: 更完整的錯誤處理
       200: {
-        description: "成功下單，並回傳訂單編號（此時尚未綁定用於身份驗證之帳號）",
+        description:
+          "成功下單，並回傳用於查詢／編輯訂單的 Token（此時尚未綁定用於身份驗證之社群帳號）",
         content: {
           "text/plain": {
-            schema: z.string(),
-            example: "cm4bgs9gf000408mjg8ah3xtf",
+            schema: z.string().describe("訂購人的 Token"),
+            example:
+              "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJvcmRlcl9pZCI6MX0.ITogrM9A6N2QSvu2lbuxJjBrqa6btiNHzMAXG9HS0DM",
           },
         },
       },
@@ -76,7 +79,8 @@ export class OroderPersonalMembership extends OpenAPIRoute {
         },
       });
 
-      return ctx.text(order.id.toString());
+      const token = generateOrdererToken({ order_id: order.id });
+      return ctx.text(token);
     } catch (e) {
       if (e instanceof Prisma.PrismaClientKnownRequestError) {
         if (e.code === "P2025") {

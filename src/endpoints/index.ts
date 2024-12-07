@@ -1,3 +1,3 @@
 export * from "./resources/ListPartnerSchool";
-export * from "./forms/OrderPersonalMembership";
+export * from "./forms/index";
 export * from "./HealthCheck";

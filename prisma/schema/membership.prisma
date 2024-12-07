@@ -23,12 +23,15 @@ enum MembershipPurchaseChannel {
 }
 
 model PersonalMembershipOrder {
-  id        Int            @id @default(autoincrement())
+  id         Int      @id @default(autoincrement())
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
+
   member_id String?        @unique
   member    StudentMember? @relation(fields: [member_id], references: [id])
+  school_id Int
+  school    PartnerSchool  @relation(fields: [school_id], references: [id])
 
-  school_id    Int
-  school       PartnerSchool @relation(fields: [school_id], references: [id])
   class        String
   number       String
   real_name    String

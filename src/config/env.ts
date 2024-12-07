@@ -5,7 +5,7 @@ import console from "console";
 const envSchema = z.object({
   DATABASE_URL: z.string(),
   DIRECT_DATABASE_URL: z.string().optional(),
-  JWT_SECRET: z.string().optional(),
+  JWT_SECRET: z.string(),
   CURRENT_ENVIRONMENT: z.string().optional(),
 });
 

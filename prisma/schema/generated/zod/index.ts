@@ -16,7 +16,7 @@ export const SchoolAccountConfigScalarFieldEnumSchema = z.enum(['username_format
 
 export const StudentMemberScalarFieldEnumSchema = z.enum(['id','school_attended_id','email','student_id','nickname','purchase_channel','has_stickers','auth_providers','created_at','activated_at','password_hash']);
 
-export const PersonalMembershipOrderScalarFieldEnumSchema = z.enum(['id','member_id','school_id','class','number','real_name','need_sticker','is_paid']);
+export const PersonalMembershipOrderScalarFieldEnumSchema = z.enum(['id','created_at','updated_at','member_id','school_id','class','number','real_name','need_sticker','is_paid']);
 
 export const PartnerSchoolScalarFieldEnumSchema = z.enum(['id','short_name','full_name','plan']);
 
@@ -80,6 +80,8 @@ export type StudentMember = z.infer<typeof StudentMemberSchema>
 
 export const PersonalMembershipOrderSchema = z.object({
   id: z.number().int(),
+  created_at: z.coerce.date(),
+  updated_at: z.coerce.date(),
   member_id: z.string().nullable(),
   school_id: z.number().int(),
   class: z.string(),
@@ -171,6 +173,8 @@ export const PersonalMembershipOrderArgsSchema: z.ZodType<Prisma.PersonalMembers
 
 export const PersonalMembershipOrderSelectSchema: z.ZodType<Prisma.PersonalMembershipOrderSelect> = z.object({
   id: z.boolean().optional(),
+  created_at: z.boolean().optional(),
+  updated_at: z.boolean().optional(),
   member_id: z.boolean().optional(),
   school_id: z.boolean().optional(),
   class: z.boolean().optional(),
@@ -379,6 +383,8 @@ export const PersonalMembershipOrderWhereInputSchema: z.ZodType<Prisma.PersonalM
   OR: z.lazy(() => PersonalMembershipOrderWhereInputSchema).array().optional(),
   NOT: z.union([ z.lazy(() => PersonalMembershipOrderWhereInputSchema),z.lazy(() => PersonalMembershipOrderWhereInputSchema).array() ]).optional(),
   id: z.union([ z.lazy(() => IntFilterSchema),z.number() ]).optional(),
+  created_at: z.union([ z.lazy(() => DateTimeFilterSchema),z.coerce.date() ]).optional(),
+  updated_at: z.union([ z.lazy(() => DateTimeFilterSchema),z.coerce.date() ]).optional(),
   member_id: z.union([ z.lazy(() => StringNullableFilterSchema),z.string() ]).optional().nullable(),
   school_id: z.union([ z.lazy(() => IntFilterSchema),z.number() ]).optional(),
   class: z.union([ z.lazy(() => StringFilterSchema),z.string() ]).optional(),
@@ -392,6 +398,8 @@ export const PersonalMembershipOrderWhereInputSchema: z.ZodType<Prisma.PersonalM
 
 export const PersonalMembershipOrderOrderByWithRelationInputSchema: z.ZodType<Prisma.PersonalMembershipOrderOrderByWithRelationInput> = z.object({
   id: z.lazy(() => SortOrderSchema).optional(),
+  created_at: z.lazy(() => SortOrderSchema).optional(),
+  updated_at: z.lazy(() => SortOrderSchema).optional(),
   member_id: z.union([ z.lazy(() => SortOrderSchema),z.lazy(() => SortOrderInputSchema) ]).optional(),
   school_id: z.lazy(() => SortOrderSchema).optional(),
   class: z.lazy(() => SortOrderSchema).optional(),
@@ -421,6 +429,8 @@ export const PersonalMembershipOrderWhereUniqueInputSchema: z.ZodType<Prisma.Per
   AND: z.union([ z.lazy(() => PersonalMembershipOrderWhereInputSchema),z.lazy(() => PersonalMembershipOrderWhereInputSchema).array() ]).optional(),
   OR: z.lazy(() => PersonalMembershipOrderWhereInputSchema).array().optional(),
   NOT: z.union([ z.lazy(() => PersonalMembershipOrderWhereInputSchema),z.lazy(() => PersonalMembershipOrderWhereInputSchema).array() ]).optional(),
+  created_at: z.union([ z.lazy(() => DateTimeFilterSchema),z.coerce.date() ]).optional(),
+  updated_at: z.union([ z.lazy(() => DateTimeFilterSchema),z.coerce.date() ]).optional(),
   school_id: z.union([ z.lazy(() => IntFilterSchema),z.number().int() ]).optional(),
   class: z.union([ z.lazy(() => StringFilterSchema),z.string() ]).optional(),
   number: z.union([ z.lazy(() => StringFilterSchema),z.string() ]).optional(),
@@ -433,6 +443,8 @@ export const PersonalMembershipOrderWhereUniqueInputSchema: z.ZodType<Prisma.Per
 
 export const PersonalMembershipOrderOrderByWithAggregationInputSchema: z.ZodType<Prisma.PersonalMembershipOrderOrderByWithAggregationInput> = z.object({
   id: z.lazy(() => SortOrderSchema).optional(),
+  created_at: z.lazy(() => SortOrderSchema).optional(),
+  updated_at: z.lazy(() => SortOrderSchema).optional(),
   member_id: z.union([ z.lazy(() => SortOrderSchema),z.lazy(() => SortOrderInputSchema) ]).optional(),
   school_id: z.lazy(() => SortOrderSchema).optional(),
   class: z.lazy(() => SortOrderSchema).optional(),
@@ -452,6 +464,8 @@ export const PersonalMembershipOrderScalarWhereWithAggregatesInputSchema: z.ZodT
   OR: z.lazy(() => PersonalMembershipOrderScalarWhereWithAggregatesInputSchema).array().optional(),
   NOT: z.union([ z.lazy(() => PersonalMembershipOrderScalarWhereWithAggregatesInputSchema),z.lazy(() => PersonalMembershipOrderScalarWhereWithAggregatesInputSchema).array() ]).optional(),
   id: z.union([ z.lazy(() => IntWithAggregatesFilterSchema),z.number() ]).optional(),
+  created_at: z.union([ z.lazy(() => DateTimeWithAggregatesFilterSchema),z.coerce.date() ]).optional(),
+  updated_at: z.union([ z.lazy(() => DateTimeWithAggregatesFilterSchema),z.coerce.date() ]).optional(),
   member_id: z.union([ z.lazy(() => StringNullableWithAggregatesFilterSchema),z.string() ]).optional().nullable(),
   school_id: z.union([ z.lazy(() => IntWithAggregatesFilterSchema),z.number() ]).optional(),
   class: z.union([ z.lazy(() => StringWithAggregatesFilterSchema),z.string() ]).optional(),
@@ -665,6 +679,8 @@ export const StudentMemberUncheckedUpdateManyInputSchema: z.ZodType<Prisma.Stude
 }).strict();
 
 export const PersonalMembershipOrderCreateInputSchema: z.ZodType<Prisma.PersonalMembershipOrderCreateInput> = z.object({
+  created_at: z.coerce.date().optional(),
+  updated_at: z.coerce.date().optional(),
   class: z.string(),
   number: z.string(),
   real_name: z.string(),
@@ -676,6 +692,8 @@ export const PersonalMembershipOrderCreateInputSchema: z.ZodType<Prisma.Personal
 
 export const PersonalMembershipOrderUncheckedCreateInputSchema: z.ZodType<Prisma.PersonalMembershipOrderUncheckedCreateInput> = z.object({
   id: z.number().int().optional(),
+  created_at: z.coerce.date().optional(),
+  updated_at: z.coerce.date().optional(),
   member_id: z.string().optional().nullable(),
   school_id: z.number().int(),
   class: z.string(),
@@ -686,6 +704,8 @@ export const PersonalMembershipOrderUncheckedCreateInputSchema: z.ZodType<Prisma
 }).strict();
 
 export const PersonalMembershipOrderUpdateInputSchema: z.ZodType<Prisma.PersonalMembershipOrderUpdateInput> = z.object({
+  created_at: z.union([ z.coerce.date(),z.lazy(() => DateTimeFieldUpdateOperationsInputSchema) ]).optional(),
+  updated_at: z.union([ z.coerce.date(),z.lazy(() => DateTimeFieldUpdateOperationsInputSchema) ]).optional(),
   class: z.union([ z.string(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
   number: z.union([ z.string(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
   real_name: z.union([ z.string(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
@@ -697,6 +717,8 @@ export const PersonalMembershipOrderUpdateInputSchema: z.ZodType<Prisma.Personal
 
 export const PersonalMembershipOrderUncheckedUpdateInputSchema: z.ZodType<Prisma.PersonalMembershipOrderUncheckedUpdateInput> = z.object({
   id: z.union([ z.number().int(),z.lazy(() => IntFieldUpdateOperationsInputSchema) ]).optional(),
+  created_at: z.union([ z.coerce.date(),z.lazy(() => DateTimeFieldUpdateOperationsInputSchema) ]).optional(),
+  updated_at: z.union([ z.coerce.date(),z.lazy(() => DateTimeFieldUpdateOperationsInputSchema) ]).optional(),
   member_id: z.union([ z.string(),z.lazy(() => NullableStringFieldUpdateOperationsInputSchema) ]).optional().nullable(),
   school_id: z.union([ z.number().int(),z.lazy(() => IntFieldUpdateOperationsInputSchema) ]).optional(),
   class: z.union([ z.string(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
@@ -708,6 +730,8 @@ export const PersonalMembershipOrderUncheckedUpdateInputSchema: z.ZodType<Prisma
 
 export const PersonalMembershipOrderCreateManyInputSchema: z.ZodType<Prisma.PersonalMembershipOrderCreateManyInput> = z.object({
   id: z.number().int().optional(),
+  created_at: z.coerce.date().optional(),
+  updated_at: z.coerce.date().optional(),
   member_id: z.string().optional().nullable(),
   school_id: z.number().int(),
   class: z.string(),
@@ -718,6 +742,8 @@ export const PersonalMembershipOrderCreateManyInputSchema: z.ZodType<Prisma.Pers
 }).strict();
 
 export const PersonalMembershipOrderUpdateManyMutationInputSchema: z.ZodType<Prisma.PersonalMembershipOrderUpdateManyMutationInput> = z.object({
+  created_at: z.union([ z.coerce.date(),z.lazy(() => DateTimeFieldUpdateOperationsInputSchema) ]).optional(),
+  updated_at: z.union([ z.coerce.date(),z.lazy(() => DateTimeFieldUpdateOperationsInputSchema) ]).optional(),
   class: z.union([ z.string(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
   number: z.union([ z.string(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
   real_name: z.union([ z.string(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
@@ -727,6 +753,8 @@ export const PersonalMembershipOrderUpdateManyMutationInputSchema: z.ZodType<Pri
 
 export const PersonalMembershipOrderUncheckedUpdateManyInputSchema: z.ZodType<Prisma.PersonalMembershipOrderUncheckedUpdateManyInput> = z.object({
   id: z.union([ z.number().int(),z.lazy(() => IntFieldUpdateOperationsInputSchema) ]).optional(),
+  created_at: z.union([ z.coerce.date(),z.lazy(() => DateTimeFieldUpdateOperationsInputSchema) ]).optional(),
+  updated_at: z.union([ z.coerce.date(),z.lazy(() => DateTimeFieldUpdateOperationsInputSchema) ]).optional(),
   member_id: z.union([ z.string(),z.lazy(() => NullableStringFieldUpdateOperationsInputSchema) ]).optional().nullable(),
   school_id: z.union([ z.number().int(),z.lazy(() => IntFieldUpdateOperationsInputSchema) ]).optional(),
   class: z.union([ z.string(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
@@ -1071,6 +1099,8 @@ export const StudentMemberNullableScalarRelationFilterSchema: z.ZodType<Prisma.S
 
 export const PersonalMembershipOrderCountOrderByAggregateInputSchema: z.ZodType<Prisma.PersonalMembershipOrderCountOrderByAggregateInput> = z.object({
   id: z.lazy(() => SortOrderSchema).optional(),
+  created_at: z.lazy(() => SortOrderSchema).optional(),
+  updated_at: z.lazy(() => SortOrderSchema).optional(),
   member_id: z.lazy(() => SortOrderSchema).optional(),
   school_id: z.lazy(() => SortOrderSchema).optional(),
   class: z.lazy(() => SortOrderSchema).optional(),
@@ -1087,6 +1117,8 @@ export const PersonalMembershipOrderAvgOrderByAggregateInputSchema: z.ZodType<Pr
 
 export const PersonalMembershipOrderMaxOrderByAggregateInputSchema: z.ZodType<Prisma.PersonalMembershipOrderMaxOrderByAggregateInput> = z.object({
   id: z.lazy(() => SortOrderSchema).optional(),
+  created_at: z.lazy(() => SortOrderSchema).optional(),
+  updated_at: z.lazy(() => SortOrderSchema).optional(),
   member_id: z.lazy(() => SortOrderSchema).optional(),
   school_id: z.lazy(() => SortOrderSchema).optional(),
   class: z.lazy(() => SortOrderSchema).optional(),
@@ -1098,6 +1130,8 @@ export const PersonalMembershipOrderMaxOrderByAggregateInputSchema: z.ZodType<Pr
 
 export const PersonalMembershipOrderMinOrderByAggregateInputSchema: z.ZodType<Prisma.PersonalMembershipOrderMinOrderByAggregateInput> = z.object({
   id: z.lazy(() => SortOrderSchema).optional(),
+  created_at: z.lazy(() => SortOrderSchema).optional(),
+  updated_at: z.lazy(() => SortOrderSchema).optional(),
   member_id: z.lazy(() => SortOrderSchema).optional(),
   school_id: z.lazy(() => SortOrderSchema).optional(),
   class: z.lazy(() => SortOrderSchema).optional(),
@@ -1715,6 +1749,8 @@ export const PartnerSchoolCreateOrConnectWithoutStudentsInputSchema: z.ZodType<P
 }).strict();
 
 export const PersonalMembershipOrderCreateWithoutMemberInputSchema: z.ZodType<Prisma.PersonalMembershipOrderCreateWithoutMemberInput> = z.object({
+  created_at: z.coerce.date().optional(),
+  updated_at: z.coerce.date().optional(),
   class: z.string(),
   number: z.string(),
   real_name: z.string(),
@@ -1725,6 +1761,8 @@ export const PersonalMembershipOrderCreateWithoutMemberInputSchema: z.ZodType<Pr
 
 export const PersonalMembershipOrderUncheckedCreateWithoutMemberInputSchema: z.ZodType<Prisma.PersonalMembershipOrderUncheckedCreateWithoutMemberInput> = z.object({
   id: z.number().int().optional(),
+  created_at: z.coerce.date().optional(),
+  updated_at: z.coerce.date().optional(),
   school_id: z.number().int(),
   class: z.string(),
   number: z.string(),
@@ -1778,6 +1816,8 @@ export const PersonalMembershipOrderUpdateToOneWithWhereWithoutMemberInputSchema
 }).strict();
 
 export const PersonalMembershipOrderUpdateWithoutMemberInputSchema: z.ZodType<Prisma.PersonalMembershipOrderUpdateWithoutMemberInput> = z.object({
+  created_at: z.union([ z.coerce.date(),z.lazy(() => DateTimeFieldUpdateOperationsInputSchema) ]).optional(),
+  updated_at: z.union([ z.coerce.date(),z.lazy(() => DateTimeFieldUpdateOperationsInputSchema) ]).optional(),
   class: z.union([ z.string(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
   number: z.union([ z.string(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
   real_name: z.union([ z.string(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
@@ -1788,6 +1828,8 @@ export const PersonalMembershipOrderUpdateWithoutMemberInputSchema: z.ZodType<Pr
 
 export const PersonalMembershipOrderUncheckedUpdateWithoutMemberInputSchema: z.ZodType<Prisma.PersonalMembershipOrderUncheckedUpdateWithoutMemberInput> = z.object({
   id: z.union([ z.number().int(),z.lazy(() => IntFieldUpdateOperationsInputSchema) ]).optional(),
+  created_at: z.union([ z.coerce.date(),z.lazy(() => DateTimeFieldUpdateOperationsInputSchema) ]).optional(),
+  updated_at: z.union([ z.coerce.date(),z.lazy(() => DateTimeFieldUpdateOperationsInputSchema) ]).optional(),
   school_id: z.union([ z.number().int(),z.lazy(() => IntFieldUpdateOperationsInputSchema) ]).optional(),
   class: z.union([ z.string(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
   number: z.union([ z.string(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
@@ -1972,6 +2014,8 @@ export const StudentMemberCreateManySchool_attendedInputEnvelopeSchema: z.ZodTyp
 }).strict();
 
 export const PersonalMembershipOrderCreateWithoutSchoolInputSchema: z.ZodType<Prisma.PersonalMembershipOrderCreateWithoutSchoolInput> = z.object({
+  created_at: z.coerce.date().optional(),
+  updated_at: z.coerce.date().optional(),
   class: z.string(),
   number: z.string(),
   real_name: z.string(),
@@ -1982,6 +2026,8 @@ export const PersonalMembershipOrderCreateWithoutSchoolInputSchema: z.ZodType<Pr
 
 export const PersonalMembershipOrderUncheckedCreateWithoutSchoolInputSchema: z.ZodType<Prisma.PersonalMembershipOrderUncheckedCreateWithoutSchoolInput> = z.object({
   id: z.number().int().optional(),
+  created_at: z.coerce.date().optional(),
+  updated_at: z.coerce.date().optional(),
   member_id: z.string().optional().nullable(),
   class: z.string(),
   number: z.string(),
@@ -2075,6 +2121,8 @@ export const PersonalMembershipOrderScalarWhereInputSchema: z.ZodType<Prisma.Per
   OR: z.lazy(() => PersonalMembershipOrderScalarWhereInputSchema).array().optional(),
   NOT: z.union([ z.lazy(() => PersonalMembershipOrderScalarWhereInputSchema),z.lazy(() => PersonalMembershipOrderScalarWhereInputSchema).array() ]).optional(),
   id: z.union([ z.lazy(() => IntFilterSchema),z.number() ]).optional(),
+  created_at: z.union([ z.lazy(() => DateTimeFilterSchema),z.coerce.date() ]).optional(),
+  updated_at: z.union([ z.lazy(() => DateTimeFilterSchema),z.coerce.date() ]).optional(),
   member_id: z.union([ z.lazy(() => StringNullableFilterSchema),z.string() ]).optional().nullable(),
   school_id: z.union([ z.lazy(() => IntFilterSchema),z.number() ]).optional(),
   class: z.union([ z.lazy(() => StringFilterSchema),z.string() ]).optional(),
@@ -2099,6 +2147,8 @@ export const StudentMemberCreateManySchool_attendedInputSchema: z.ZodType<Prisma
 
 export const PersonalMembershipOrderCreateManySchoolInputSchema: z.ZodType<Prisma.PersonalMembershipOrderCreateManySchoolInput> = z.object({
   id: z.number().int().optional(),
+  created_at: z.coerce.date().optional(),
+  updated_at: z.coerce.date().optional(),
   member_id: z.string().optional().nullable(),
   class: z.string(),
   number: z.string(),
@@ -2149,6 +2199,8 @@ export const StudentMemberUncheckedUpdateManyWithoutSchool_attendedInputSchema: 
 }).strict();
 
 export const PersonalMembershipOrderUpdateWithoutSchoolInputSchema: z.ZodType<Prisma.PersonalMembershipOrderUpdateWithoutSchoolInput> = z.object({
+  created_at: z.union([ z.coerce.date(),z.lazy(() => DateTimeFieldUpdateOperationsInputSchema) ]).optional(),
+  updated_at: z.union([ z.coerce.date(),z.lazy(() => DateTimeFieldUpdateOperationsInputSchema) ]).optional(),
   class: z.union([ z.string(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
   number: z.union([ z.string(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
   real_name: z.union([ z.string(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
@@ -2159,6 +2211,8 @@ export const PersonalMembershipOrderUpdateWithoutSchoolInputSchema: z.ZodType<Pr
 
 export const PersonalMembershipOrderUncheckedUpdateWithoutSchoolInputSchema: z.ZodType<Prisma.PersonalMembershipOrderUncheckedUpdateWithoutSchoolInput> = z.object({
   id: z.union([ z.number().int(),z.lazy(() => IntFieldUpdateOperationsInputSchema) ]).optional(),
+  created_at: z.union([ z.coerce.date(),z.lazy(() => DateTimeFieldUpdateOperationsInputSchema) ]).optional(),
+  updated_at: z.union([ z.coerce.date(),z.lazy(() => DateTimeFieldUpdateOperationsInputSchema) ]).optional(),
   member_id: z.union([ z.string(),z.lazy(() => NullableStringFieldUpdateOperationsInputSchema) ]).optional().nullable(),
   class: z.union([ z.string(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
   number: z.union([ z.string(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
@@ -2169,6 +2223,8 @@ export const PersonalMembershipOrderUncheckedUpdateWithoutSchoolInputSchema: z.Z
 
 export const PersonalMembershipOrderUncheckedUpdateManyWithoutSchoolInputSchema: z.ZodType<Prisma.PersonalMembershipOrderUncheckedUpdateManyWithoutSchoolInput> = z.object({
   id: z.union([ z.number().int(),z.lazy(() => IntFieldUpdateOperationsInputSchema) ]).optional(),
+  created_at: z.union([ z.coerce.date(),z.lazy(() => DateTimeFieldUpdateOperationsInputSchema) ]).optional(),
+  updated_at: z.union([ z.coerce.date(),z.lazy(() => DateTimeFieldUpdateOperationsInputSchema) ]).optional(),
   member_id: z.union([ z.string(),z.lazy(() => NullableStringFieldUpdateOperationsInputSchema) ]).optional().nullable(),
   class: z.union([ z.string(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
   number: z.union([ z.string(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),

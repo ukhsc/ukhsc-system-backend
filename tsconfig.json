@@ -3,6 +3,9 @@
     "allowJs": true,
     "allowSyntheticDefaultImports": true,
     "baseUrl": "src",
+    "paths": {
+      "@config/*": ["config/*"]
+    },
     "declaration": true,
     "sourceMap": true,
     "esModuleInterop": true,
