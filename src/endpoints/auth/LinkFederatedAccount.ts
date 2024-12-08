@@ -15,7 +15,6 @@ import console from "console";
 import { FederatedProviderSchema } from "schema";
 import env from "@config/env";
 import axios from "axios";
-import { TypedResponse } from "hono";
 
 enum GrantFlows {
   AuthorizationCode = "authorization_code",
