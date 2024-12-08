@@ -264,9 +264,12 @@ export class LinkFederatedAccount extends OpenAPIRoute {
       throw new Error(`Order not found or member not found: ${order_id}`);
     }
 
-    const existing_account = member.federated_accounts.find(
-      (account) => account.provider === provider,
-    );
+    const existing_account = await db.federatedAccount.findFirst({
+      where: {
+        provider,
+        OR: [{ member_id: member.id }, { provider_identifier: identifier }],
+      },
+    });
     if (existing_account) {
       throw ctx.json(
         {
