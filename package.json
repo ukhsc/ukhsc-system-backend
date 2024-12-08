@@ -16,6 +16,7 @@
   },
   "dependencies": {
     "@prisma/client": "^6.0.1",
+    "axios": "^1.7.9",
     "chanfana": "^2.3.0",
     "dotenv": "^16.4.7",
     "hono": "^4.6.12",

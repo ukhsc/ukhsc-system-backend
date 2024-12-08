@@ -1,5 +1,5 @@
-import { generateOrdererToken } from "@config/jwt";
-import { Prisma } from "@prisma/client";
+import { generateToken, OrdererTokenPayload, TokenRole } from "@config/auth";
+import { MembershipPurchaseChannel, Prisma } from "@prisma/client";
 import { OpenAPIRoute } from "chanfana";
 import { AppContext } from "index";
 import { z } from "zod";
@@ -71,6 +71,17 @@ export class OrderPersonalMembership extends OpenAPIRoute {
               id: data.body.school_id,
             },
           },
+          member: {
+            create: {
+              school_attended: {
+                connect: {
+                  id: data.body.school_id,
+                },
+              },
+              purchase_channel: MembershipPurchaseChannel.Personal,
+              has_stickers: data.body.need_sticker,
+            },
+          },
           class: data.body.class,
           number: data.body.number,
           real_name: data.body.real_name,
@@ -79,7 +90,10 @@ export class OrderPersonalMembership extends OpenAPIRoute {
         },
       });
 
-      const token = generateOrdererToken({ order_id: order.id });
+      const token = generateToken<OrdererTokenPayload>({
+        role: TokenRole.Orderer,
+        order_id: order.id,
+      });
       return ctx.text(token);
     } catch (e) {
       if (e instanceof Prisma.PrismaClientKnownRequestError) {

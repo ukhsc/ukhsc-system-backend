@@ -2,12 +2,18 @@ import { OpenAPIRoute } from "chanfana";
 import { AppContext } from "index";
 import { PersonalMembershipOrderSchema } from "schema";
 import { z } from "zod";
-import { getBearerToken, OrdererTokenPayload, verifyToken } from "@config/jwt";
+import {
+  isOrdererTokenPayload,
+  OpenAPIResponseForbidden,
+  OpenAPIResponseUnauthorized,
+  requireAuth,
+} from "@config/auth";
 
 export class ViewPersonalMembershipOrder extends OpenAPIRoute {
   schema = {
     tags: ["表單"],
     summary: "查看個人會員訂單",
+    security: [{ ordererAuth: [] }],
     responses: {
       200: {
         description: "成功取得個人會員訂單資料",
@@ -24,36 +30,26 @@ export class ViewPersonalMembershipOrder extends OpenAPIRoute {
             schema: z.object({
               error: z.string(),
             }),
+            example: {
+              error: "Order not found",
+            },
           },
         },
       },
+      ...OpenAPIResponseUnauthorized,
+      ...OpenAPIResponseForbidden,
     },
-    security: [{ ordererAuth: [] }],
   };
 
   async handle(ctx: AppContext) {
+    try {
+      requireAuth(ctx, isOrdererTokenPayload);
+    } catch (res) {
+      return res;
+    }
+
     const db = ctx.var.prisma;
-
-    const token = getBearerToken(ctx.req);
-    if (!token) {
-      return ctx.json(
-        {
-          error: "Unauthorized",
-        },
-        401,
-      );
-    }
-
-    const payload = verifyToken<OrdererTokenPayload>(token);
-    if (!payload) {
-      return ctx.json(
-        {
-          error: "Unauthorized",
-        },
-        401,
-      );
-    }
-
+    const payload = ctx.var.auth_payload;
     const order = await db.personalMembershipOrder.findUnique({
       where: { id: payload.order_id },
       include: { school: true },
