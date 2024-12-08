@@ -56,7 +56,7 @@ jobs:
 
             docker pull ghcr.io/${{ github.repository_owner }}/ukhsc-system-backend-api:latest
 
-            docker run -d --name ukhsc-system-backend-api-$TARGET_ENV -p $TARGET_PORT:8787 \
+            docker run -d --restart always --name ukhsc-system-backend-api-$TARGET_ENV -p $TARGET_PORT:8787 \
               -e DATABASE_URL=${{ secrets.DATABASE_URL }} \
               -e JWT_SECRET=${{ secrets.JWT_SECRET }} \
               -e GOOGLE_CLIENT_ID=${{ secrets.GOOGLE_CLIENT_ID }} \
