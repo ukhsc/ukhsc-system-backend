@@ -1,0 +1,40 @@
+model StudentMember {
+  id                 String        @id @default(cuid())
+  school_attended_id Int
+  school_attended    PartnerSchool @relation(fields: [school_attended_id], references: [id])
+
+  primary_email      String?                   @unique
+  student_id         String?
+  nickname           String?
+  purchase_channel   MembershipPurchaseChannel
+  has_stickers       Boolean                   @default(false)
+  federated_accounts FederatedAccount[]
+
+  created_at   DateTime  @default(now())
+  activated_at DateTime?
+
+  password_hash    String?
+  membership_order PersonalMembershipOrder?
+}
+
+enum MembershipPurchaseChannel {
+  Personal // 填寫個人購買表單後經由學生會代收代付取得會員資格
+  StudentCouncil // 由學生會統一代為團體購買
+}
+
+model PersonalMembershipOrder {
+  id         Int      @id @default(autoincrement())
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
+
+  member_id String?        @unique
+  member    StudentMember? @relation(fields: [member_id], references: [id])
+  school_id Int
+  school    PartnerSchool  @relation(fields: [school_id], references: [id])
+
+  class        String
+  number       String
+  real_name    String
+  need_sticker Boolean
+  is_paid      Boolean
+}

@@ -5,16 +5,22 @@ import { AppContext } from "index";
 
 export class ListPartnerSchool extends OpenAPIRoute {
   schema = {
-    tags: ["Resources"],
-    summary: "List Partner Schools",
+    tags: ["資源"],
+    summary: "列出所有本屆次聯盟的合作學校",
     responses: {
       "200": {
-        description: "Returns a list of partner schools",
+        description: "回傳有關合作學校資訊的陣列",
         content: {
           "application/json": {
-            schema: z.object({
-              series: PartnerSchoolSchema,
-            }),
+            schema: z.array(PartnerSchoolSchema),
+            example: [
+              {
+                id: 1,
+                short_name: "仁武高中",
+                full_name: "高雄市立仁武高級中學",
+                plan: "Combined",
+              },
+            ],
           },
         },
       },

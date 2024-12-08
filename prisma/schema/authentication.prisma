@@ -1,0 +1,20 @@
+model FederatedAccount {
+  id                  Int               @id @default(autoincrement())
+  provider            FederatedProvider
+  provider_identifier String // User identifier from the provider (e.g. Google ID)
+  email               String?
+
+  member_id String
+  member    StudentMember @relation(fields: [member_id], references: [id])
+}
+
+enum FederatedProvider {
+  Google
+}
+
+model SchoolAccountConfig {
+  username_format String
+  domain_name     String
+  school_id       Int           @unique
+  school          PartnerSchool @relation(fields: [school_id], references: [id])
+}

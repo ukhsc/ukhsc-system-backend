@@ -3,6 +3,9 @@
     "allowJs": true,
     "allowSyntheticDefaultImports": true,
     "baseUrl": "src",
+    "paths": {
+      "@config/*": ["config/*"]
+    },
     "declaration": true,
     "sourceMap": true,
     "esModuleInterop": true,
@@ -21,18 +24,8 @@
     "traceResolution": false,
     "outDir": "",
     "target": "esnext",
-    "module": "esnext",
-    "types": [
-      "@types/node",
-      "@types/service-worker-mock",
-      "@cloudflare/workers-types/2023-07-01"
-    ]
+    "module": "esnext"
   },
   "exclude": ["node_modules", "dist", "tests"],
-  "include": [
-    "src",
-    "scripts",
-    "worker-configuration",
-    "prisma/schema/generated/zod"
-  ]
+  "include": ["src", "prisma/schema/generated/zod", "node_modules/.prisma/client"]
 }

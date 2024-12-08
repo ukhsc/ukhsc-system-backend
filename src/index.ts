@@ -1,18 +1,21 @@
-import { fromHono } from "chanfana";
+import { fromHono, OpenAPIRouterType } from "chanfana";
 import { Context, Hono } from "hono";
-import { ListPartnerSchool } from "endpoints/resources/ListPartnerSchool";
+import { ListPartnerSchool, registerAuth, registerForms } from "endpoints";
 import { prismaInitMiddleware } from "config/prisma";
 import dotenv from "dotenv";
 import { logger } from "hono/logger";
 import { PrismaClient } from "@prisma/client";
 import { HealthCheck } from "endpoints/HealthCheck";
 import process from "process";
+import { BaseTokenPayload } from "@config/auth";
 
 interface Variables {
   prisma: PrismaClient;
+  auth_payload?: BaseTokenPayload;
 }
 export type AppOptions = { Variables: Variables };
 export type AppContext = Context<AppOptions>;
+export type AppRouter = Hono<AppOptions> & OpenAPIRouterType<Hono<AppOptions>>;
 
 dotenv.config();
 const app = new Hono<AppOptions>();
@@ -22,9 +25,12 @@ const openapi = fromHono(app, {
 });
 openapi.use(logger());
 openapi.use(prismaInitMiddleware);
+openapi.registry.registerComponent("securitySchemes", "ordererAuth", {
+  type: "http",
+  scheme: "bearer",
+});
 
 // Register OpenAPI endpoints
-openapi.get("/resources/partner-school", ListPartnerSchool);
 // TODO: fix ip restriction
 // openapi.use(
 //   "/health",
@@ -40,6 +46,10 @@ openapi.get("/resources/partner-school", ListPartnerSchool);
 //   }),
 // );
 openapi.get("/health", HealthCheck);
+openapi.get("/resources/partner-school", ListPartnerSchool);
+// Nesting routes is not working, see also: https://github.com/cloudflare/chanfana/issues/179.
+registerForms(openapi);
+registerAuth(openapi);
 
 export default {
   port: process.env.PORT || 8787,
