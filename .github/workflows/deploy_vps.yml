@@ -73,6 +73,8 @@ jobs:
 
             if [ $COUNTER -gt 12 ]; then
               echo "Deployment failed: Service did not become healthy within 60 seconds"
+              docker stop ukhsc-system-backend-api-$TARGET_ENV || true
+              docker rm ukhsc-system-backend-api-$TARGET_ENV || true
               echo "Fetching logs from the failed container..."
               docker logs ukhsc-system-backend-api-$TARGET_ENV > deployment_failed_logs.txt
               cat deployment_failed_logs.txt
