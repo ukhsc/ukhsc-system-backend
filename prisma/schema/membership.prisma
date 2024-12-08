@@ -3,12 +3,12 @@ model StudentMember {
   school_attended_id Int
   school_attended    PartnerSchool @relation(fields: [school_attended_id], references: [id])
 
-  email            String?                   @unique
-  student_id       String?
-  nickname         String?
-  purchase_channel MembershipPurchaseChannel
-  has_stickers     Boolean                   @default(false)
-  auth_providers   AuthenticationProvider[]
+  primary_email      String?                   @unique
+  student_id         String?
+  nickname           String?
+  purchase_channel   MembershipPurchaseChannel
+  has_stickers       Boolean                   @default(false)
+  federated_accounts FederatedAccount[]
 
   created_at   DateTime  @default(now())
   activated_at DateTime?
