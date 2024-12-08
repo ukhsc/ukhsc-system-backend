@@ -1,4 +1,7 @@
 import { PartnerPlan, PrismaClient } from "@prisma/client";
+import console from "console";
+import process from "process";
+
 const prisma = new PrismaClient();
 
 async function main() {
@@ -23,6 +26,11 @@ async function main() {
         short_name: "前鎮高中",
         full_name: "高雄市立前鎮高級中學",
         plan: PartnerPlan.Personal,
+      },
+      {
+        short_name: "小港高中",
+        full_name: "高雄市立小港高級中學",
+        plan: PartnerPlan.Combined,
       },
       {
         short_name: "仁武高中",

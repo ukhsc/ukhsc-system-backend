@@ -27,5 +27,5 @@
     "module": "esnext"
   },
   "exclude": ["node_modules", "dist", "tests"],
-  "include": ["src", "prisma/schema/generated/zod", "node_modules/.prisma/client"]
+  "include": ["src", "prisma/schema/generated/zod", "prisma/seed.ts", "node_modules/.prisma/client"]
 }
