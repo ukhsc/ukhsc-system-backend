@@ -8,6 +8,7 @@ import { PrismaClient } from "@prisma/client";
 import { HealthCheck } from "endpoints/HealthCheck";
 import process from "process";
 import { BaseTokenPayload } from "@config/auth";
+import { cors } from "hono/cors";
 
 interface Variables {
   prisma: PrismaClient;
@@ -24,6 +25,11 @@ const openapi = fromHono(app, {
   docs_url: "/docs",
 });
 openapi.use(logger());
+openapi.use(
+  cors({
+    origin: ["http://localhost:3000", "https://forms.ukhsc.org", "https://app.ukhsc.org"],
+  }),
+);
 openapi.use(prismaInitMiddleware);
 openapi.registry.registerComponent("securitySchemes", "ordererAuth", {
   type: "http",
