@@ -15,6 +15,7 @@ import console from "console";
 import { FederatedProviderSchema } from "schema";
 import env from "@config/env";
 import axios from "axios";
+import { TypedResponse } from "hono";
 
 enum GrantFlows {
   AuthorizationCode = "authorization_code",
@@ -155,7 +156,7 @@ export class LinkFederatedAccount extends OpenAPIRoute {
           break;
       }
     } catch (err) {
-      if (err! instanceof Error) {
+      if (isHonoResponse(err)) {
         // Return the error http response.
         return err;
       }
@@ -212,7 +213,9 @@ export class LinkFederatedAccount extends OpenAPIRoute {
       { validateStatus: () => true },
     );
     if (response.status !== 200) {
-      throw new Error(`Failed to exchange code for token: ${response.status} ${response.data}`);
+      throw new Error(
+        `Failed to exchange code for token: ${response.status} ${JSON.stringify(response.data)}`,
+      );
     }
 
     return response.data.access_token;
@@ -230,7 +233,7 @@ export class LinkFederatedAccount extends OpenAPIRoute {
 
         if (response.status !== 200) {
           throw new Error(
-            `Failed to get federated account's user info: ${response.status} ${response.data}`,
+            `Failed to get federated account's user info: ${response.status} ${JSON.stringify(response.data)}`,
           );
         }
 
@@ -296,4 +299,8 @@ export class LinkFederatedAccount extends OpenAPIRoute {
       },
     });
   }
+}
+
+function isHonoResponse(res: unknown) {
+  return res !== null && typeof res === "object" && "status" in res && "headers" in res;
 }
