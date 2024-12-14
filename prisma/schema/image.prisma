@@ -1,0 +1,7 @@
+model CloudImage {
+  id         Int      @id @default(autoincrement())
+  url        String
+  is_active  Boolean  @default(true)
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
+}
