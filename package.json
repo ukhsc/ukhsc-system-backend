@@ -5,7 +5,7 @@
   "scripts": {
     "dev": "bun run src/index.ts",
     "start": "bun run src/index.ts",
-    "migrate": "prisma migrate deploy",
+    "migrate": "prisma migrate deploy && bun seed",
     "generate": "prisma generate",
     "seed": "prisma db seed",
     "lint": "eslint .",
