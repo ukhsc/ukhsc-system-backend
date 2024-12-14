@@ -27,6 +27,7 @@
     "zod-prisma-types": "^3.2.1"
   },
   "devDependencies": {
+    "@cspell/eslint-plugin": "^8.16.1",
     "@types/bun": "latest",
     "@types/jsonwebtoken": "^9.0.7",
     "@types/node": "^20.17.9",

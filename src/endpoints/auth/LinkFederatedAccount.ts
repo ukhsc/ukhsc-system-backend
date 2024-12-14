@@ -187,10 +187,10 @@ export class LinkFederatedAccount extends OpenAPIRoute {
       scope?: string;
     }
 
-    let echange_config: ExchangeTokenConfig;
+    let exchange_config: ExchangeTokenConfig;
     switch (provider) {
       case FederatedProvider.Google: {
-        echange_config = {
+        exchange_config = {
           server_url: "https://oauth2.googleapis.com/token",
           client_id: env.GOOGLE_OAUTH_CLIENT_ID,
           client_secret: env.GOOGLE_OAUTH_CLIENT_SECRET,
@@ -201,12 +201,12 @@ export class LinkFederatedAccount extends OpenAPIRoute {
     }
 
     const response = await axios.post(
-      echange_config.server_url,
+      exchange_config.server_url,
       {
-        client_id: echange_config.client_id,
-        client_secret: echange_config.client_secret,
+        client_id: exchange_config.client_id,
+        client_secret: exchange_config.client_secret,
         code,
-        redirect_uri: echange_config.redirect_uri,
+        redirect_uri: exchange_config.redirect_uri,
         grant_type: "authorization_code",
       },
       { validateStatus: () => true },
