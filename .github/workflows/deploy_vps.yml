@@ -82,6 +82,20 @@ jobs:
               exit 1
             fi
 
+            # Database seeding
+            if ! docker exec \
+              -e DIRECT_DATABASE_URL=${{ secrets.DATABASE_URL }} \
+              ukhsc-system-backend-api-$TARGET_ENV \
+              bun seed; then
+              echo "Database seed failed. Rolling back deployment..."
+              docker stop ukhsc-system-backend-api-$TARGET_ENV || true
+              docker rm ukhsc-system-backend-api-$TARGET_ENV || true
+              echo "Fetching logs from the failed container..."
+              docker logs ukhsc-system-backend-api-$TARGET_ENV > seed_failed_logs.txt
+              cat seed_failed_logs.txt
+              exit 1
+            fi
+
             sed -i "s/127.0.0.1:[0-9]*/127.0.0.1:$TARGET_PORT/" /etc/nginx/sites-available/default
             systemctl reload nginx
 
