@@ -66,19 +66,19 @@ jobs:
               ghcr.io/${{ github.repository_owner }}/ukhsc-system-backend-api:latest
 
             COUNTER=0
-            until curl --silent --fail http://localhost:$TARGET_PORT/health || [ $COUNTER -gt 12 ]; do
+            until curl --silent --fail http://localhost:$TARGET_PORT/health || [ $COUNTER -gt 6 ]; do
               echo "Waiting for $TARGET_ENV to be ready..."
               sleep 5
               COUNTER=$((COUNTER+1))
             done
 
-            if [ $COUNTER -gt 12 ]; then
-              echo "Deployment failed: Service did not become healthy within 60 seconds"
+            if [ $COUNTER -gt 6 ]; then
+              echo "Deployment failed: Service did not become healthy within 30 seconds"
               docker stop ukhsc-system-backend-api-$TARGET_ENV || true
-              docker rm ukhsc-system-backend-api-$TARGET_ENV || true
               echo "Fetching logs from the failed container..."
               docker logs ukhsc-system-backend-api-$TARGET_ENV > deployment_failed_logs.txt
               cat deployment_failed_logs.txt
+              docker rm ukhsc-system-backend-api-$TARGET_ENV || true
               exit 1
             fi
 
