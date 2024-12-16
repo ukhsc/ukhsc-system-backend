@@ -91,9 +91,9 @@ jobs:
               oven/bun:latest sh -c "\
                 cd /app && \
                 echo 'Step 2/4: Installing dependencies...' && \
-                bun install && \
+                bun install --frozen-lockfile && \
                 echo 'Step 3/4: Running database migrations...' && \
-                bun run prisma migrate deploy && \
+                bun prisma migrate deploy && \
                 echo 'Step 4/4: Running database seeding...' && \
                 bun seed && \
                 echo 'Database migration and seeding completed!'"; then
