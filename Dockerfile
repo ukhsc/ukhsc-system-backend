@@ -1,19 +1,13 @@
-FROM oven/bun:alpine as builder
+FROM oven/bun:latest
 
-WORKDIR /build
+WORKDIR /app
 
 COPY . .
 
 RUN bun install --production
-RUN bun add -d prisma --frozen-lockfile
+RUN bun add -d prisma --frozen-lockfile # Use version from bun.lockb
 RUN bun run prisma generate
 RUN bun build --compile --minify --sourcemap --bytecode src/index.ts --outfile ukhsc-system-api
-
-FROM oven/bun:alpine
-
-WORKDIR /app
-
-COPY --from=builder /build/ukhsc-system-api ./
 
 EXPOSE 8787
 
