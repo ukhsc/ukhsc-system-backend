@@ -1,13 +1,19 @@
-FROM oven/bun:latest
+FROM oven/bun:latest as builder
 
-WORKDIR /app
+WORKDIR /build
 
 COPY . .
 
 RUN bun install --production
-RUN bun add -d prisma --frozen-lockfile # Use version from bun.lockb
+RUN bun add -d prisma --frozen-lockfile
 RUN bun run prisma generate
 RUN bun build --compile --minify --sourcemap --bytecode src/index.ts --outfile ukhsc-system-api
+
+FROM debian:bookworm-slim
+
+WORKDIR /app
+
+COPY --from=builder /build/ukhsc-system-api ./
 
 EXPOSE 8787
 

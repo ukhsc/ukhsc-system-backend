@@ -82,19 +82,28 @@ jobs:
               exit 1
             fi
 
-            # Database seeding
-            if ! docker exec \
-              -e DIRECT_DATABASE_URL=${{ secrets.DATABASE_URL }} \
-              ukhsc-system-backend-api-$TARGET_ENV \
-              bun seed; then
-              echo "Database seed failed. Rolling back deployment..."
+            echo "Starting database migration and seeding..."
+            echo "Step 1/4: Creating temporary container..."
+            if ! docker run --rm \
+              -e DATABASE_URL=${{ secrets.DATABASE_URL }} \
+              -v "$(pwd)/prisma:/app/prisma" \
+              -v "$(pwd)/package.json:/app/package.json" \
+              oven/bun:latest sh -c "\
+                cd /app && \
+                echo 'Step 2/4: Installing dependencies...' && \
+                bun install && \
+                echo 'Step 3/4: Running database migrations...' && \
+                bun run prisma migrate deploy && \
+                echo 'Step 4/4: Running database seeding...' && \
+                bun seed && \
+                echo 'Database migration and seeding completed!'"; then
+              echo "❌ Database migration or seeding failed. Starting deployment rollback..."
               docker stop ukhsc-system-backend-api-$TARGET_ENV || true
               docker rm ukhsc-system-backend-api-$TARGET_ENV || true
-              echo "Fetching logs from the failed container..."
-              docker logs ukhsc-system-backend-api-$TARGET_ENV > seed_failed_logs.txt
-              cat seed_failed_logs.txt
               exit 1
             fi
+
+            echo "✅ Database migration and seeding successful!"
 
             sed -i "s/127.0.0.1:[0-9]*/127.0.0.1:$TARGET_PORT/" /etc/nginx/sites-available/default
             systemctl reload nginx
