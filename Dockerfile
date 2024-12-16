@@ -9,7 +9,7 @@ RUN bun add -d prisma --frozen-lockfile
 RUN bun run prisma generate
 RUN bun build --compile --minify --sourcemap --bytecode src/index.ts --outfile ukhsc-system-api
 
-FROM debian:bookworm-slim
+FROM debian:bookworm
 
 WORKDIR /app
 
