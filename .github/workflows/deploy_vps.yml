@@ -59,6 +59,7 @@ jobs:
 
             docker run -d --restart always --name ukhsc-system-backend-api-$TARGET_ENV -p $TARGET_PORT:8787 \
               -e DATABASE_URL=${{ secrets.DATABASE_URL }} \
+              -e DIRECT_DATABASE_URL=${{ secrets.DATABASE_URL }} \
               -e JWT_SECRET=${{ secrets.JWT_SECRET }} \
               -e GOOGLE_OAUTH_CLIENT_ID=${{ secrets.GOOGLE_OAUTH_CLIENT_ID }} \
               -e GOOGLE_OAUTH_CLIENT_SECRET=${{ secrets.GOOGLE_OAUTH_CLIENT_SECRET }} \
@@ -82,29 +83,6 @@ jobs:
               exit 1
             fi
 
-            echo "Starting database migration and seeding..."
-            echo "Step 1/4: Creating temporary container..."
-            if ! docker run --rm \
-              -e DATABASE_URL=${{ secrets.DATABASE_URL }} \
-              -v "$(pwd)/prisma:/app/prisma" \
-              -v "$(pwd)/package.json:/app/package.json" \
-              oven/bun:latest sh -c "\
-                cd /app && \
-                echo 'Step 2/4: Installing dependencies...' && \
-                bun install --frozen-lockfile && \
-                echo 'Step 3/4: Running database migrations...' && \
-                bun prisma migrate deploy && \
-                echo 'Step 4/4: Running database seeding...' && \
-                bun seed && \
-                echo 'Database migration and seeding completed!'"; then
-              echo "❌ Database migration or seeding failed. Starting deployment rollback..."
-              docker stop ukhsc-system-backend-api-$TARGET_ENV || true
-              docker rm ukhsc-system-backend-api-$TARGET_ENV || true
-              exit 1
-            fi
-
-            echo "✅ Database migration and seeding successful!"
-
             sed -i "s/127.0.0.1:[0-9]*/127.0.0.1:$TARGET_PORT/" /etc/nginx/sites-available/default
             systemctl reload nginx
 
@@ -115,3 +93,5 @@ jobs:
               docker stop ukhsc-system-backend-api-blue || true
               docker rm ukhsc-system-backend-api-blue || true
             fi
+
+            echo "Deployment successful!"

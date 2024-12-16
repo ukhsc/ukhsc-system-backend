@@ -5,7 +5,6 @@
   "scripts": {
     "dev": "bun run src/index.ts",
     "start": "bun run src/index.ts",
-    "migrate": "prisma migrate deploy && bun seed",
     "generate": "prisma generate",
     "seed": "prisma db seed",
     "lint": "eslint .",
@@ -23,6 +22,8 @@
     "install": "^0.13.0",
     "jsonwebtoken": "^9.0.2",
     "npm": "^10.9.2",
+    "prisma": "^6.0.1",
+    "tsx": "^4.19.2",
     "zod": "^3.23.8",
     "zod-prisma-types": "^3.2.1"
   },
@@ -36,9 +37,7 @@
     "eslint": "^8.57.1",
     "eslint-config-prettier": "^9.1.0",
     "eslint-plugin-prettier": "^5.2.1",
-    "prettier": "^3.4.2",
-    "prisma": "^6.0.1",
-    "tsx": "^4.19.2"
+    "prettier": "^3.4.2"
   },
   "module": "index.ts",
   "type": "module",

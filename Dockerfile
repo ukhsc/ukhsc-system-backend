@@ -4,11 +4,20 @@ WORKDIR /app
 
 COPY . .
 
-RUN bun install --production
-RUN bun add -d prisma --frozen-lockfile # Use version from bun.lockb
-RUN bun run prisma generate
+# Install all dependencies (including prisma)
+RUN bun install --frozen-lockfile
+
+# Generate Prisma client
+RUN bun prisma generate
+
+# Build application
 RUN bun build --compile --minify --sourcemap --bytecode src/index.ts --outfile ukhsc-system-api
+
+# Add EntryPoint script
+COPY entrypoint.sh /app/entrypoint.sh
+RUN chmod +x /app/entrypoint.sh
 
 EXPOSE 8787
 
+ENTRYPOINT ["/app/entrypoint.sh"]
 CMD ["./ukhsc-system-api"]
