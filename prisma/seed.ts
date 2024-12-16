@@ -19,7 +19,7 @@ async function main() {
     {
       short_name: "左營高中",
       full_name: "高雄市立左營高級中學",
-      plan: PartnerPlan.GroupA,
+      plan: PartnerPlan.Personal,
     },
     {
       short_name: "前鎮高中",
