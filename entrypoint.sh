@@ -2,10 +2,10 @@
 set -e
 
 echo "Running database migrations..."
-bun prisma migrate deploy
+pnpm prisma migrate deploy
 
 echo "Running database seeding..."
-bun seed
+pnpm seed
 
 echo "Starting application..."
 exec "$@"

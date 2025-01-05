@@ -4,13 +4,29 @@
     "allowSyntheticDefaultImports": true,
     "baseUrl": "src",
     "paths": {
-      "@config/*": ["config/*"]
+      "@config/*": [
+        "config/*"
+      ],
+      "@endpoints/*": [
+        "endpoints/*"
+      ],
+      "@services/*": [
+        "services/*"
+      ],
+      "@tests/*": [
+        "../tests/*"
+      ],
+      "@test-helpers/*": [
+        "../tests/helpers/*"
+      ]
     },
     "declaration": true,
     "sourceMap": true,
     "esModuleInterop": true,
     "inlineSourceMap": false,
-    "lib": ["esnext"],
+    "lib": [
+      "esnext"
+    ],
     "listEmittedFiles": false,
     "listFiles": false,
     "moduleResolution": "node",
@@ -22,10 +38,21 @@
     "strict": true,
     "strictNullChecks": true,
     "traceResolution": false,
-    "outDir": "",
+    "outDir": "dist",
     "target": "esnext",
     "module": "esnext"
   },
-  "exclude": ["node_modules", "dist", "tests"],
-  "include": ["src", "prisma/schema/generated/zod", "prisma/seed.ts", "node_modules/.prisma/client"]
+  "exclude": [
+    "node_modules",
+    "dist"
+  ],
+  "include": [
+    "src",
+    "tests",
+    "prisma/schema/generated/zod",
+    "prisma/seed.ts",
+    "node_modules/.prisma/client",
+    "tsup.config.ts",
+    "vitest.config.ts"
+  ]
 }

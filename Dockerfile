@@ -1,17 +1,15 @@
-FROM oven/bun:latest
+FROM node:22
 
 WORKDIR /app
 
+COPY package.json pnpm-lock.yaml ./
+RUN corepack enable && corepack prepare pnpm@latest --activate
+
 COPY . .
 
-# Install all dependencies (including prisma)
-RUN bun install --frozen-lockfile
-
-# Generate Prisma client
-RUN bun prisma generate
-
-# Build application
-RUN bun build --compile --minify --sourcemap --bytecode src/index.ts --outfile ukhsc-system-api
+RUN pnpm install --frozen-lockfile
+RUN pnpm prisma generate
+RUN pnpm build
 
 # Add EntryPoint script
 COPY entrypoint.sh /app/entrypoint.sh
@@ -20,4 +18,4 @@ RUN chmod +x /app/entrypoint.sh
 EXPOSE 8787
 
 ENTRYPOINT ["/app/entrypoint.sh"]
-CMD ["./ukhsc-system-api"]
+CMD ["node", "dist/index.js"]

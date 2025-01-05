@@ -603,16 +603,41 @@ export const PartnerSchoolOrderByWithRelationInputSchema: z.ZodType<Prisma.Partn
   personal_orders: z.lazy(() => PersonalMembershipOrderOrderByRelationAggregateInputSchema).optional()
 }).strict();
 
-export const PartnerSchoolWhereUniqueInputSchema: z.ZodType<Prisma.PartnerSchoolWhereUniqueInput> = z.object({
-  id: z.number().int()
-})
+export const PartnerSchoolWhereUniqueInputSchema: z.ZodType<Prisma.PartnerSchoolWhereUniqueInput> = z.union([
+  z.object({
+    id: z.number().int(),
+    short_name: z.string(),
+    full_name: z.string()
+  }),
+  z.object({
+    id: z.number().int(),
+    short_name: z.string(),
+  }),
+  z.object({
+    id: z.number().int(),
+    full_name: z.string(),
+  }),
+  z.object({
+    id: z.number().int(),
+  }),
+  z.object({
+    short_name: z.string(),
+    full_name: z.string(),
+  }),
+  z.object({
+    short_name: z.string(),
+  }),
+  z.object({
+    full_name: z.string(),
+  }),
+])
 .and(z.object({
   id: z.number().int().optional(),
+  short_name: z.string().optional(),
+  full_name: z.string().optional(),
   AND: z.union([ z.lazy(() => PartnerSchoolWhereInputSchema),z.lazy(() => PartnerSchoolWhereInputSchema).array() ]).optional(),
   OR: z.lazy(() => PartnerSchoolWhereInputSchema).array().optional(),
   NOT: z.union([ z.lazy(() => PartnerSchoolWhereInputSchema),z.lazy(() => PartnerSchoolWhereInputSchema).array() ]).optional(),
-  short_name: z.union([ z.lazy(() => StringFilterSchema),z.string() ]).optional(),
-  full_name: z.union([ z.lazy(() => StringFilterSchema),z.string() ]).optional(),
   plan: z.union([ z.lazy(() => EnumPartnerPlanFilterSchema),z.lazy(() => PartnerPlanSchema) ]).optional(),
   google_account_config: z.union([ z.lazy(() => SchoolAccountConfigNullableScalarRelationFilterSchema),z.lazy(() => SchoolAccountConfigWhereInputSchema) ]).optional().nullable(),
   students: z.lazy(() => StudentMemberListRelationFilterSchema).optional(),

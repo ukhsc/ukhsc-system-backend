@@ -1,29 +1,14 @@
-import {
-  ContextWithPayload,
-  isOrdererTokenPayload,
-  OpenAPIResponseForbidden,
-  OpenAPIResponseUnauthorized,
-  OrdererTokenPayload,
-  requireAuth,
-  TokenRole,
-} from "@config/auth";
-import { FederatedProvider } from "@prisma/client";
-import { OpenAPIRoute } from "chanfana";
-import { AppContext } from "index";
-import { z } from "zod";
-import console from "console";
 import { FederatedProviderSchema } from "schema";
-import env from "@config/env";
-import axios from "axios";
+import { AppContext } from "index";
+import { OpenAPIRoute } from "chanfana";
+import { z } from "zod";
+import { AuthService, OpenAPIResponseForbidden, OpenAPIResponseUnauthorized } from "@services/auth";
+import { FederatedAccountService } from "@services/federated_account";
+import { isOrdererTokenPayload, OrdererTokenPayload } from "@config/auth";
 
 enum GrantFlows {
   AuthorizationCode = "authorization_code",
   Implicit = "token",
-}
-
-interface FederatedUserInfo {
-  email: string;
-  identifier: string;
 }
 
 export class LinkFederatedAccount extends OpenAPIRoute {
@@ -34,9 +19,11 @@ export class LinkFederatedAccount extends OpenAPIRoute {
     security: [{ ordererAuth: [] }],
     request: {
       params: z.object({
-        provider: FederatedProviderSchema.describe("社群帳號提供者（目前僅支援 Google）").openapi({
-          example: FederatedProvider.Google,
-        }),
+        provider: FederatedProviderSchema.describe("社群帳號提供者（目前僅支援 Google）"),
+        // TODO: add example
+        // openapi({
+        //  example: FederatedProvider.Google,
+        // }),
       }),
       body: {
         content: {
@@ -51,24 +38,6 @@ export class LinkFederatedAccount extends OpenAPIRoute {
                   "授權完成後的重新導向網址（必須與前端取得授權碼的網址相同）\n\n若授權認證流程（`flow`）為 `token`，則此欄位不需要",
                 ),
             }),
-            examples: {
-              CodeFlow: {
-                summary: "授權碼模式 (Authorization Code Flow)",
-                value: {
-                  flow: GrantFlows.AuthorizationCode,
-                  grant_value: "4/0AY0e-g7jKJlKJH0A1B2C3D4E5F6G7H8I9J0K1L2M3N",
-                  redirect_uri: "https://example.com/auth/callback",
-                },
-              },
-              ImplicitFlow: {
-                summary: "隱含授權模式 (Implicit Flow)",
-                value: {
-                  flow: GrantFlows.Implicit,
-                  grant_value:
-                    "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJvcmRlcl9pZCI6MX0.ITogrM9A6N2QSvu2lbuxJjBrqa6btiNHzMAXG9HS0DM",
-                },
-              },
-            },
           },
         },
       },
@@ -81,31 +50,6 @@ export class LinkFederatedAccount extends OpenAPIRoute {
             schema: z.object({
               message: z.string(),
             }),
-            example: {
-              message: "Successfully linked the federated account",
-            },
-          },
-        },
-      },
-      400: {
-        description: "請求格式錯誤",
-        content: {
-          "application/json": {
-            schema: z.object({
-              error: z.string(),
-            }),
-            examples: {
-              MissingRedirectURI: {
-                value: {
-                  error: "Redirect URI is required for authorization code flow",
-                },
-              },
-              AccountAlreadyLinked: {
-                value: {
-                  error: "Account already linked: Google",
-                },
-              },
-            },
           },
         },
       },
@@ -116,16 +60,23 @@ export class LinkFederatedAccount extends OpenAPIRoute {
 
   async handle(ctx: AppContext) {
     const data = await this.getValidatedData<typeof this.schema>();
+    const federated_service = new FederatedAccountService(ctx.var.prisma, ctx.env);
+
+    // Validate authentication
+    const auth_service = new AuthService(ctx);
+    let auth_payload: OrdererTokenPayload;
     try {
-      requireAuth(ctx);
+      auth_payload = auth_service.validate(isOrdererTokenPayload);
     } catch (res) {
       return res;
     }
 
     const provider = data.params.provider;
     const { flow: grant_flow, redirect_uri, grant_value } = data.body;
+
     let access_token: string;
 
+    // Get access token
     switch (grant_flow) {
       case GrantFlows.AuthorizationCode:
         if (!redirect_uri) {
@@ -136,173 +87,30 @@ export class LinkFederatedAccount extends OpenAPIRoute {
             400,
           );
         }
-
-        access_token = await this.exchangeCodeForToken(provider, redirect_uri, grant_value);
+        access_token = await federated_service.exchangeCodeForToken(
+          provider,
+          redirect_uri,
+          grant_value,
+        );
         break;
       case GrantFlows.Implicit:
         access_token = grant_value;
         break;
     }
 
-    const info = await this.getUserInfo(provider, access_token);
-    const role = ctx.var.auth_payload.role;
-
+    // Get user info and link account
     try {
-      switch (role) {
-        case TokenRole.Orderer:
-          requireAuth(ctx, isOrdererTokenPayload);
-          await this.linkOrdererAccount(ctx, provider, info);
-          break;
-      }
+      const info = await federated_service.getUserInfo(provider, access_token);
+      await federated_service.linkOrdererAccount(auth_payload.order_id, provider, info);
     } catch (err) {
-      if (isHonoResponse(err)) {
-        // Return the error http response.
-        return err;
+      if (err instanceof Error) {
+        return ctx.json({ error: err.message }, 400);
       }
-
-      console.error(err);
-      return ctx.json(
-        {
-          error: "Internal server error",
-        },
-        500,
-      );
+      throw err;
     }
 
     return ctx.json({
       message: "Successfully linked the federated account",
     });
   }
-
-  async exchangeCodeForToken(
-    provider: FederatedProvider,
-    redirect_uri: string,
-    code: string,
-  ): Promise<string> {
-    interface ExchangeTokenConfig {
-      server_url: string;
-      client_id: string;
-      client_secret: string;
-      redirect_uri: string;
-      scope?: string;
-    }
-
-    let exchange_config: ExchangeTokenConfig;
-    switch (provider) {
-      case FederatedProvider.Google: {
-        exchange_config = {
-          server_url: "https://oauth2.googleapis.com/token",
-          client_id: env.GOOGLE_OAUTH_CLIENT_ID,
-          client_secret: env.GOOGLE_OAUTH_CLIENT_SECRET,
-          redirect_uri,
-          scope: "https://www.googleapis.com/auth/userinfo.email openid",
-        };
-      }
-    }
-
-    const response = await axios.post(
-      exchange_config.server_url,
-      {
-        client_id: exchange_config.client_id,
-        client_secret: exchange_config.client_secret,
-        code,
-        redirect_uri: exchange_config.redirect_uri,
-        grant_type: "authorization_code",
-      },
-      { validateStatus: () => true },
-    );
-    if (response.status !== 200) {
-      throw new Error(
-        `Failed to exchange code for token: ${response.status} ${JSON.stringify(response.data)}`,
-      );
-    }
-
-    return response.data.access_token;
-  }
-
-  async getUserInfo(provider: FederatedProvider, access_token: string): Promise<FederatedUserInfo> {
-    switch (provider) {
-      case FederatedProvider.Google: {
-        const response = await axios.get("https://www.googleapis.com/oauth2/v3/userinfo", {
-          headers: {
-            Authorization: `Bearer ${access_token}`,
-          },
-          validateStatus: () => true,
-        });
-
-        if (response.status !== 200) {
-          throw new Error(
-            `Failed to get federated account's user info: ${response.status} ${JSON.stringify(response.data)}`,
-          );
-        }
-
-        return {
-          email: response.data.email,
-          identifier: response.data.sub,
-        };
-      }
-    }
-  }
-
-  async linkOrdererAccount(
-    ctx: ContextWithPayload<OrdererTokenPayload>,
-    provider: FederatedProvider,
-    info: FederatedUserInfo,
-  ) {
-    const db = ctx.var.prisma;
-    const { order_id } = ctx.var.auth_payload;
-    const { email, identifier } = info;
-
-    const order = await db.personalMembershipOrder.findUnique({
-      where: { id: order_id },
-      include: {
-        member: { include: { federated_accounts: true } },
-      },
-    });
-    const member = order?.member;
-    if (!order || !member) {
-      throw new Error(`Order not found or member not found: ${order_id}`);
-    }
-
-    const existing_account = await db.federatedAccount.findFirst({
-      where: {
-        provider,
-        OR: [{ member_id: member.id }, { provider_identifier: identifier }],
-      },
-    });
-    if (existing_account) {
-      throw ctx.json(
-        {
-          error: `Account already linked: ${provider}`,
-        },
-        400,
-      );
-    }
-
-    if (!member.primary_email) {
-      await db.studentMember.update({
-        where: { id: member.id },
-        data: {
-          primary_email: email,
-        },
-      });
-    }
-
-    await db.federatedAccount.create({
-      data: {
-        provider,
-        provider_identifier: identifier,
-        email,
-        member: {
-          connect: {
-            id: member.id,
-          },
-        },
-      },
-    });
-  }
-}
-
-function isHonoResponse(res: unknown) {
-  return res !== null && typeof res === "object" && "status" in res && "headers" in res;
 }

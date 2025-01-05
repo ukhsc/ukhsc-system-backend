@@ -1,14 +1,12 @@
 import { PrismaClient } from "@prisma/client";
 import { MiddlewareHandler } from "hono";
 import { AppOptions } from "index";
-import env from "./env";
 
 let prisma: PrismaClient | null = null;
 
-function initPrisma() {
-  const connectionString = env.DATABASE_URL;
+function initPrisma(connection_string: string) {
   const client = new PrismaClient({
-    datasources: { db: { url: connectionString } },
+    datasources: { db: { url: connection_string } },
   });
 
   prisma = client;
@@ -17,7 +15,7 @@ function initPrisma() {
 export const prismaInitMiddleware: MiddlewareHandler<AppOptions> = async (ctx, next) => {
   if (!ctx.var.prisma) {
     if (!prisma) {
-      initPrisma();
+      initPrisma(ctx.env.DATABASE_URL);
     }
 
     ctx.set("prisma", prisma as never);
