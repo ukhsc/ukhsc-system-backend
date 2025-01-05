@@ -3,6 +3,8 @@ import { AppContext } from "index";
 import { OpenAPIRoute } from "chanfana";
 import { z } from "zod";
 import { extendZodWithOpenApi } from "@asteasolutions/zod-to-openapi";
+// TODO: fix the workaround for zod-to-openapi
+// See Also: https://github.com/cloudflare/chanfana/issues/167
 extendZodWithOpenApi(z);
 import { AuthService, OpenAPIResponseForbidden, OpenAPIResponseUnauthorized } from "@services/auth";
 import { FederatedAccountService } from "@services/federated_account";
