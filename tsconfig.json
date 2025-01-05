@@ -6,6 +6,7 @@
     "paths": {
       "@config/*": ["config/*"],
       "@endpoints/*": ["endpoints/*"],
+      "@services/*": ["services/*"],
       "@tests/*": ["../tests/*"],
       "@test-helpers/*": ["../tests/helpers/*"]
     },
