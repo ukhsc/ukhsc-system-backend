@@ -20,6 +20,7 @@ model StudentMember {
 enum MembershipPurchaseChannel {
   Personal // 填寫個人購買表單後經由學生會代收代付取得會員資格
   StudentCouncil // 由學生會統一代為團體購買
+  PartnerFree // 政策變更：所有合作學校學生皆免費
 }
 
 model PersonalMembershipOrder {

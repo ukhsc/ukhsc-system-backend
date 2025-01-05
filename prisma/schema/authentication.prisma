@@ -1,7 +1,7 @@
 model FederatedAccount {
   id                  Int               @id @default(autoincrement())
   provider            FederatedProvider
-  provider_identifier String // User identifier from the provider (e.g. Google ID)
+  provider_identifier String /// User identifier from the provider (e.g. Google ID)
   email               String?
 
   member_id String
@@ -10,11 +10,15 @@ model FederatedAccount {
 
 enum FederatedProvider {
   Google
+  GoogleWorkspace /// Google Workspace for Education
 }
 
+// Google Workspace account configuration for a school
 model SchoolAccountConfig {
-  username_format String
-  domain_name     String
-  school_id       Int           @unique
-  school          PartnerSchool @relation(fields: [school_id], references: [id])
+  username_format         String
+  student_username_format String /// Regex pattern for student usernames where capture group 1 extracts the student ID (e.g. "s([0-9]{7})" - group 1 captures the 7-digit ID)
+  password_format         String
+  domain_name             String
+  school_id               Int           @unique
+  school                  PartnerSchool @relation(fields: [school_id], references: [id])
 }
