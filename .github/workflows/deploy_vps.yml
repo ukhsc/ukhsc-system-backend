@@ -59,6 +59,7 @@ jobs:
 
             docker run -d --restart always --name ukhsc-system-backend-api-$TARGET_ENV -p $TARGET_PORT:8787 \
               -e DATABASE_URL=${{ secrets.DATABASE_URL }} \
+              -e DIRECT_DATABASE_URL=${{ secrets.DATABASE_URL }} \
               -e JWT_SECRET=${{ secrets.JWT_SECRET }} \
               -e GOOGLE_OAUTH_CLIENT_ID=${{ secrets.GOOGLE_OAUTH_CLIENT_ID }} \
               -e GOOGLE_OAUTH_CLIENT_SECRET=${{ secrets.GOOGLE_OAUTH_CLIENT_SECRET }} \
@@ -66,19 +67,19 @@ jobs:
               ghcr.io/${{ github.repository_owner }}/ukhsc-system-backend-api:latest
 
             COUNTER=0
-            until curl --silent --fail http://localhost:$TARGET_PORT/health || [ $COUNTER -gt 12 ]; do
+            until curl --silent --fail http://localhost:$TARGET_PORT/health || [ $COUNTER -gt 6 ]; do
               echo "Waiting for $TARGET_ENV to be ready..."
               sleep 5
               COUNTER=$((COUNTER+1))
             done
 
-            if [ $COUNTER -gt 12 ]; then
-              echo "Deployment failed: Service did not become healthy within 60 seconds"
+            if [ $COUNTER -gt 6 ]; then
+              echo "Deployment failed: Service did not become healthy within 30 seconds"
               docker stop ukhsc-system-backend-api-$TARGET_ENV || true
-              docker rm ukhsc-system-backend-api-$TARGET_ENV || true
               echo "Fetching logs from the failed container..."
               docker logs ukhsc-system-backend-api-$TARGET_ENV > deployment_failed_logs.txt
               cat deployment_failed_logs.txt
+              docker rm ukhsc-system-backend-api-$TARGET_ENV || true
               exit 1
             fi
 
@@ -92,3 +93,11 @@ jobs:
               docker stop ukhsc-system-backend-api-blue || true
               docker rm ukhsc-system-backend-api-blue || true
             fi
+
+            echo "Deployment successful!"
+
+            echo "Cleaning up old Docker resources..."
+            docker system prune -a -f --filter "until=24h"
+            docker image prune -a -f --filter "until=24h"
+            docker container prune -f --filter "until=24h"
+            docker volume prune -f
