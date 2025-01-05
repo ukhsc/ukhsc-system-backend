@@ -1,4 +1,5 @@
-import { isOrdererTokenPayload, requireAuth } from "@config/auth";
+import { isOrdererTokenPayload, OrdererTokenPayload } from "@config/auth";
+import { AuthService } from "@services/auth";
 import { OpenAPIRoute } from "chanfana";
 import { AppContext } from "index";
 import { z } from "zod";
@@ -32,11 +33,15 @@ export class UpdatePersonalMembershipOrder extends OpenAPIRoute {
     const data = await this.getValidatedData<typeof this.schema>();
     const db = ctx.var.prisma;
 
-    requireAuth(ctx, isOrdererTokenPayload);
-    const payload = ctx.var.auth_payload;
+    let auth_payload: OrdererTokenPayload;
+    try {
+      auth_payload = new AuthService(ctx).validate(isOrdererTokenPayload);
+    } catch (res) {
+      return res;
+    }
 
     const order = await db.personalMembershipOrder.findUnique({
-      where: { id: payload.order_id },
+      where: { id: auth_payload.order_id },
     });
     if (!order) {
       return ctx.json({ error: "Order not found" }, 404);
@@ -45,7 +50,7 @@ export class UpdatePersonalMembershipOrder extends OpenAPIRoute {
     const { class: className, number, real_name, need_sticker } = data.body;
 
     await db.personalMembershipOrder.update({
-      where: { id: payload.order_id },
+      where: { id: auth_payload.order_id },
       data: {
         class: className,
         number,

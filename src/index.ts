@@ -9,12 +9,14 @@ import { HealthCheck } from "endpoints/HealthCheck";
 import process from "process";
 import { BaseTokenPayload } from "@config/auth";
 import { cors } from "hono/cors";
+import { EnvConfig, initEnv } from "@config/env";
+import console from "console";
 
 interface Variables {
   prisma: PrismaClient;
   auth_payload?: BaseTokenPayload;
 }
-export type AppOptions = { Variables: Variables };
+export type AppOptions = { Variables: Variables; Bindings: EnvConfig };
 export type AppContext = Context<AppOptions>;
 export type AppRouter = Hono<AppOptions> & OpenAPIRouterType<Hono<AppOptions>>;
 
@@ -23,6 +25,12 @@ const app = new Hono<AppOptions>();
 
 const openapi = fromHono(app, {
   docs_url: "/docs",
+});
+openapi.use(async (ctx, next) => {
+  if (!ctx.env) {
+    ctx.env = initEnv();
+  }
+  return next();
 });
 openapi.use(logger());
 openapi.use(
@@ -56,6 +64,10 @@ openapi.get("/resources/partner-school", ListPartnerSchool);
 // Nesting routes is not working, see also: https://github.com/cloudflare/chanfana/issues/179.
 registerForms(openapi);
 registerAuth(openapi);
+openapi.onError((err, cxt) => {
+  console.error(err);
+  return cxt.text("Internal Server Error", 500);
+});
 
 export default {
   port: process.env.PORT || 8787,

@@ -15,20 +15,25 @@ const envSchema = z.object({
 
 export type EnvConfig = z.infer<typeof envSchema>;
 
-const env = envSchema.safeParse({
-  DATABASE_URL: process.env.DATABASE_URL,
-  DIRECT_DATABASE_URL: process.env.DIRECT_DATABASE_URL,
-  JWT_SECRET: process.env.JWT_SECRET,
-  CURRENT_ENVIRONMENT: process.env.CURRENT_ENVIRONMENT,
+export function initEnv(): EnvConfig {
+  const result = envSchema.safeParse({
+    DATABASE_URL: process.env.DATABASE_URL,
+    DIRECT_DATABASE_URL: process.env.DIRECT_DATABASE_URL,
+    JWT_SECRET: process.env.JWT_SECRET,
+    CURRENT_ENVIRONMENT: process.env.CURRENT_ENVIRONMENT,
 
-  // OAuth
-  GOOGLE_OAUTH_CLIENT_ID: process.env.GOOGLE_OAUTH_CLIENT_ID,
-  GOOGLE_OAUTH_CLIENT_SECRET: process.env.GOOGLE_OAUTH_CLIENT_SECRET,
-});
+    // OAuth
+    GOOGLE_OAUTH_CLIENT_ID: process.env.GOOGLE_OAUTH_CLIENT_ID,
+    GOOGLE_OAUTH_CLIENT_SECRET: process.env.GOOGLE_OAUTH_CLIENT_SECRET,
+  });
 
-if (!env.success) {
-  console.error("❌ Invalid environment variables:", JSON.stringify(env.error.errors, null, 2));
-  process.exit(1);
+  if (!result.success) {
+    console.error(
+      "❌ Invalid environment variables:",
+      JSON.stringify(result.error.errors, null, 2),
+    );
+    process.exit(1);
+  }
+
+  return result.data;
 }
-
-export default env.data;
