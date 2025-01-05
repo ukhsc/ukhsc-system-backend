@@ -2,9 +2,12 @@ import { FederatedProviderSchema } from "schema";
 import { AppContext } from "index";
 import { OpenAPIRoute } from "chanfana";
 import { z } from "zod";
+import { extendZodWithOpenApi } from "@asteasolutions/zod-to-openapi";
+extendZodWithOpenApi(z);
 import { AuthService, OpenAPIResponseForbidden, OpenAPIResponseUnauthorized } from "@services/auth";
 import { FederatedAccountService } from "@services/federated_account";
 import { isOrdererTokenPayload, OrdererTokenPayload } from "@config/auth";
+import { FederatedProvider } from "@prisma/client";
 
 enum GrantFlows {
   AuthorizationCode = "authorization_code",
@@ -19,11 +22,9 @@ export class LinkFederatedAccount extends OpenAPIRoute {
     security: [{ ordererAuth: [] }],
     request: {
       params: z.object({
-        provider: FederatedProviderSchema.describe("社群帳號提供者（目前僅支援 Google）"),
-        // TODO: add example
-        // openapi({
-        //  example: FederatedProvider.Google,
-        // }),
+        provider: FederatedProviderSchema.describe("社群帳號提供者（目前僅支援 Google）").openapi({
+          example: FederatedProvider.Google,
+        }),
       }),
       body: {
         content: {
