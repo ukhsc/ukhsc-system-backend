@@ -72,16 +72,14 @@ openapi.onError((err, cxt) => {
   return cxt.text("Internal Server Error", 500);
 });
 
-if (import.meta.env?.MODE !== "test") {
-  serve(
-    {
-      fetch: app.fetch,
-      port: Number(process.env.PORT) || 8787,
-    },
-    (info) => {
-      console.log(`🚀 Server running at http://localhost:${info.port}`);
-    },
-  );
-}
+serve(
+  {
+    fetch: app.fetch,
+    port: Number(process.env.PORT) || 8787,
+  },
+  (info) => {
+    console.log(`🚀 Server running at http://localhost:${info.port}`);
+  },
+);
 
 export default app;
