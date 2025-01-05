@@ -8,7 +8,10 @@ services:
       - DATABASE_URL=postgresql://postgres:postgres@db:5432/mydb
       - DIRECT_DATABASE_URL=postgresql://postgres:postgres@db:5432/mydb
       - JWT_SECRET=local_dev_secret_key
-    command: bash -c "bun migrate && ./ukhsc-system-api"
+    command: sh -c "pnpm migrate && pnpm dev"
+    volumes:
+      - .:/app
+      - /app/node_modules
     depends_on:
       - db
     env_file:

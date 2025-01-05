@@ -1,14 +1,16 @@
-FROM oven/bun:latest
+FROM node:20-slim
 
 WORKDIR /app
 
+COPY package.json pnpm-lock.yaml ./
+RUN corepack enable && corepack prepare pnpm@latest --activate
+
 COPY . .
 
-RUN bun install --production
-RUN bun add -d prisma --frozen-lockfile # Use version from bun.lockb
-RUN bun run prisma generate
-RUN bun build --compile --minify --sourcemap --bytecode src/index.ts --outfile ukhsc-system-api
+RUN pnpm install --frozen-lockfile
+RUN pnpm prisma generate
+RUN pnpm build
 
 EXPOSE 8787
 
-CMD ["./ukhsc-system-api"]
+CMD ["node", "dist/index.js"]

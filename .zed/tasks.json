@@ -1,12 +1,11 @@
 // Static tasks configuration.
-
 [
   {
     "label": "Generate database client code",
-    "command": "bun generate"
+    "command": "pnpm generate"
   },
   {
     "label": "Run tests",
-    "command": "bun test"
+    "command": "pnpm test"
   }
 ]

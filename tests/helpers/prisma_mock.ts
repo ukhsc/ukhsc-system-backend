@@ -1,33 +1,12 @@
 import { PrismaClient } from "@prisma/client";
-import { mock, beforeEach } from "bun:test";
+import { DeepMockProxy, mockDeep } from "vitest-mock-extended";
 
-export type Context = {
-  prisma: PrismaClient;
-};
+export type MockPrisma = DeepMockProxy<PrismaClient>;
 
-export type MockContext = {
-  prisma: DeepMockProxy<PrismaClient>;
-};
-
-function createMockPrismaClient(): MockPrismaClient {
-  return {
-    personalMembershipOrder: {
-      findUnique: mock(() => Promise.resolve(null)),
+export function createMockPrisma(): MockPrisma {
+  return mockDeep<PrismaClient>({
+    fallbackMockImplementation: () => {
+      throw new Error("please add expected return value using calledWith");
     },
-    federatedAccount: {
-      findFirst: mock(() => Promise.resolve(null)),
-      create: mock(() => Promise.resolve(null)),
-    },
-    studentMember: {
-      update: mock(() => Promise.resolve(null)),
-    },
-  } as MockPrismaClient;
+  });
 }
-
-let prisma: MockPrismaClient = createMockPrismaClient();
-
-beforeEach(() => {
-  prisma = createMockPrismaClient();
-});
-
-export { prisma };

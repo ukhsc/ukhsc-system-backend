@@ -11,6 +11,7 @@ import { BaseTokenPayload } from "@config/auth";
 import { cors } from "hono/cors";
 import { EnvConfig, initEnv } from "@config/env";
 import console from "console";
+import { serve } from "@hono/node-server";
 
 interface Variables {
   prisma: PrismaClient;
@@ -22,13 +23,15 @@ export type AppRouter = Hono<AppOptions> & OpenAPIRouterType<Hono<AppOptions>>;
 
 dotenv.config();
 const app = new Hono<AppOptions>();
-
 const openapi = fromHono(app, {
   docs_url: "/docs",
 });
+
+let isEnvInitialized = false;
 openapi.use(async (ctx, next) => {
-  if (!ctx.env) {
+  if (!isEnvInitialized) {
     ctx.env = initEnv();
+    isEnvInitialized = true;
   }
   return next();
 });
@@ -69,7 +72,16 @@ openapi.onError((err, cxt) => {
   return cxt.text("Internal Server Error", 500);
 });
 
-export default {
-  port: process.env.PORT || 8787,
-  fetch: app.fetch,
-};
+if (import.meta.env?.MODE !== "test") {
+  serve(
+    {
+      fetch: app.fetch,
+      port: Number(process.env.PORT) || 8787,
+    },
+    (info) => {
+      console.log(`🚀 Server running at http://localhost:${info.port}`);
+    },
+  );
+}
+
+export default app;
