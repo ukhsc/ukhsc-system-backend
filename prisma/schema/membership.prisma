@@ -7,7 +7,6 @@ model StudentMember {
   student_id         String?
   nickname           String?
   purchase_channel   MembershipPurchaseChannel
-  has_stickers       Boolean                   @default(false)
   federated_accounts FederatedAccount[]
 
   created_at   DateTime  @default(now())

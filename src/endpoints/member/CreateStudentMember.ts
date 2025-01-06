@@ -40,8 +40,6 @@ export class CreateStudentMember extends OpenAPIRoute {
           "application/json": {
             schema: StudentMemberSchema.omit({
               password_hash: true,
-              // Deprecated field
-              has_stickers: true,
             }),
             example: {
               purchase_channel: "PartnerFree",
@@ -113,10 +111,7 @@ export class CreateStudentMember extends OpenAPIRoute {
 
       await federated_service.linkAccount(member, info);
 
-      return ctx.json(
-        StudentMemberSchema.omit({ password_hash: true, has_stickers: true }).parse(member),
-        201,
-      );
+      return ctx.json(StudentMemberSchema.omit({ password_hash: true }).parse(member), 201);
     } catch (error) {
       if (error instanceof BadRequestError) {
         return ctx.json({ error: error.message }, 400);

@@ -80,7 +80,6 @@ export class OrderPersonalMembership extends OpenAPIRoute {
                 },
               },
               purchase_channel: MembershipPurchaseChannel.Personal,
-              has_stickers: data.body.need_sticker,
             },
           },
           class: data.body.class,
