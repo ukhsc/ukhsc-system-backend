@@ -1,44 +1,60 @@
-import { FederatedProvider } from "@prisma/client";
+import { FederatedProvider, StudentMember } from "@prisma/client";
 import { PrismaClient } from "@prisma/client";
 import axios from "axios";
 import { EnvConfig } from "@config/env";
+import { BadRequestError } from ".";
+import console from "console";
 
 interface FederatedUserInfo {
   email: string;
   identifier: string;
 }
 
+export enum GrantFlows {
+  AuthorizationCode = "authorization_code",
+  Implicit = "token",
+}
+
+export class MissingRedirectURIError extends BadRequestError {
+  constructor() {
+    super("Redirect URI is required for authorization code flow");
+  }
+}
+
+export class AccountAlreadyLinkedError extends BadRequestError {
+  constructor(provider: FederatedProvider) {
+    super(`Account already linked: ${provider}`);
+  }
+}
+
 export class FederatedAccountService {
   constructor(
     private prisma: PrismaClient,
     private env: EnvConfig,
+    private provider: FederatedProvider,
   ) {}
 
-  async linkOrdererAccount(orderId: number, provider: FederatedProvider, info: FederatedUserInfo) {
-    const { email, identifier } = info;
+  async getAccessToken(flow: GrantFlows, grant_value: string, redirect_uri?: string) {
+    switch (flow) {
+      case GrantFlows.AuthorizationCode:
+        if (!redirect_uri) throw new MissingRedirectURIError();
 
-    const order = await this.prisma.personalMembershipOrder.findUnique({
-      where: { id: orderId },
-      include: {
-        member: { include: { federated_accounts: true } },
-      },
-    });
-
-    const member = order?.member;
-    if (!order || !member) {
-      throw new Error(`Order not found or member not found: ${orderId}`);
+        return await this.exchangeCodeForToken(redirect_uri, grant_value);
+      case GrantFlows.Implicit:
+        return grant_value;
     }
+  }
+
+  async linkAccount(member: StudentMember, info: FederatedUserInfo) {
+    const { email, identifier } = info;
 
     const existingAccount = await this.prisma.federatedAccount.findFirst({
       where: {
-        provider,
+        provider: this.provider,
         OR: [{ member_id: member.id }, { provider_identifier: identifier }],
       },
     });
-
-    if (existingAccount) {
-      throw new Error(`Account already linked: ${provider}`);
-    }
+    if (existingAccount) throw new AccountAlreadyLinkedError(this.provider);
 
     if (!member.primary_email) {
       await this.prisma.studentMember.update({
@@ -51,7 +67,7 @@ export class FederatedAccountService {
 
     await this.prisma.federatedAccount.create({
       data: {
-        provider,
+        provider: this.provider,
         provider_identifier: identifier,
         email,
         member: {
@@ -63,11 +79,7 @@ export class FederatedAccountService {
     });
   }
 
-  async exchangeCodeForToken(
-    provider: FederatedProvider,
-    redirect_uri: string,
-    code: string,
-  ): Promise<string> {
+  private async exchangeCodeForToken(redirect_uri: string, code: string): Promise<string> {
     interface ExchangeTokenConfig {
       server_url: string;
       client_id: string;
@@ -77,8 +89,9 @@ export class FederatedAccountService {
     }
 
     let exchangeConfig: ExchangeTokenConfig;
-    switch (provider) {
-      case FederatedProvider.Google: {
+    switch (this.provider) {
+      case FederatedProvider.Google:
+      case FederatedProvider.GoogleWorkspace: {
         exchangeConfig = {
           server_url: "https://oauth2.googleapis.com/token",
           client_id: this.env.GOOGLE_OAUTH_CLIENT_ID,
@@ -102,17 +115,19 @@ export class FederatedAccountService {
     );
 
     if (response.status !== 200) {
-      throw new Error(
+      console.error(
         `Failed to exchange code for token: ${response.status} ${JSON.stringify(response.data)}`,
       );
+      throw new BadRequestError("Failed to exchange code for token");
     }
 
     return response.data.access_token;
   }
 
-  async getUserInfo(provider: FederatedProvider, access_token: string): Promise<FederatedUserInfo> {
-    switch (provider) {
-      case FederatedProvider.Google: {
+  async getUserInfo(access_token: string): Promise<FederatedUserInfo> {
+    switch (this.provider) {
+      case FederatedProvider.Google:
+      case FederatedProvider.GoogleWorkspace: {
         const response = await axios.get("https://www.googleapis.com/oauth2/v3/userinfo", {
           headers: {
             Authorization: `Bearer ${access_token}`,
@@ -121,9 +136,12 @@ export class FederatedAccountService {
         });
 
         if (response.status !== 200) {
-          throw new Error(
-            `Failed to get federated account's user info: ${response.status} ${JSON.stringify(response.data)}`,
+          console.error(
+            `Failed to get federated account's user info: ${response.status} ${JSON.stringify(
+              response.data,
+            )}`,
           );
+          throw new BadRequestError("Failed to get federated account's user info");
         }
 
         return {

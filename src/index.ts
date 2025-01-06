@@ -1,6 +1,6 @@
 import { fromHono, OpenAPIRouterType } from "chanfana";
 import { Context, Hono } from "hono";
-import { ListPartnerSchool, registerAuth, registerForms } from "endpoints";
+import { registerEndpoints } from "endpoints";
 import { prismaInitMiddleware } from "config/prisma";
 import dotenv from "dotenv";
 import { logger } from "hono/logger";
@@ -46,27 +46,7 @@ openapi.registry.registerComponent("securitySchemes", "ordererAuth", {
   type: "http",
   scheme: "bearer",
 });
-
-// Register OpenAPI endpoints
-// TODO: fix ip restriction
-// openapi.use(
-//   "/health",
-//   ipRestriction(getConnInfo, {
-//     denyList: [],
-//     allowList: [
-//       "127.0.0.1", // IPv4 localhost
-//       "::1", // IPv6 localhost
-//       "172.16.0.0/12", // Docker default bridge network range
-//       "192.168.0.0/16", // Additional Docker network range
-//       "10.0.0.0/8", // Docker overlay network range
-//     ],
-//   }),
-// );
-openapi.get("/health", HealthCheck);
-openapi.get("/resources/partner-school", ListPartnerSchool);
-// Nesting routes is not working, see also: https://github.com/cloudflare/chanfana/issues/179.
-registerForms(openapi);
-registerAuth(openapi);
+registerEndpoints(openapi);
 openapi.onError((err, cxt) => {
   console.error(err);
   return cxt.text("Internal Server Error", 500);

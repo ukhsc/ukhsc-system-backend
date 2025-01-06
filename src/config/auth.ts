@@ -1,5 +1,6 @@
 export enum TokenRole {
   Orderer = "orderer",
+  StudentMember = "student_member",
 }
 
 export interface BaseTokenPayload {

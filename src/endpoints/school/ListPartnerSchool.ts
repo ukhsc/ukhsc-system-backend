@@ -5,7 +5,7 @@ import { AppContext } from "index";
 
 export class ListPartnerSchool extends OpenAPIRoute {
   schema = {
-    tags: ["資源"],
+    tags: ["合作學校"],
     summary: "列出所有本屆次聯盟的合作學校",
     responses: {
       "200": {

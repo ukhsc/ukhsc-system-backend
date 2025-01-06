@@ -68,6 +68,8 @@ describe("Health Check", () => {
     const body = await res.json();
 
     // Assert
+    expect(res.status).toBe(200);
+    // @ts-ignore
     expect(body.environment).toBe(TEST_ENVIRONMENT);
   });
 });
