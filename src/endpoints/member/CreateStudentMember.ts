@@ -38,18 +38,25 @@ export class CreateStudentMember extends OpenAPIRoute {
         description: "成功註冊新的學生會員帳號",
         content: {
           "application/json": {
-            schema: StudentMemberSchema.omit({
-              password_hash: true,
+            schema: z.object({
+              token: z.string().optional().describe("會員帳號的存取權杖"),
+              member: StudentMemberSchema.omit({
+                password_hash: true,
+              }).describe("會員帳號資訊"),
             }),
             example: {
-              purchase_channel: "PartnerFree",
-              id: "ckv4f2g3e0000y9l5t6z8j2h3",
-              school_attended_id: 1,
-              primary_email: "s1234567@example.edu.tw",
-              student_id: "1234567",
-              nickname: null,
-              created_at: "2025-01-01T00:00:00.000Z",
-              activated_at: "2025-01-01T00:00:00.000Z",
+              token:
+                "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IlN0dWRlbnQgTWVtYmVyIiwiaWF0IjoxNTE2MjM5MDIyfQ.ZDViNTNhYTg0MDVlN2I4ZGE1MDQ1ZjYyYmRmMTZlZmI0ZjUxZWE3Mg",
+              member: {
+                purchase_channel: "PartnerFree",
+                id: "ckv4f2g3e0000y9l5t6z8j2h3",
+                school_attended_id: 1,
+                primary_email: "s1234567@example.edu.tw",
+                student_id: "1234567",
+                nickname: null,
+                created_at: "2025-01-01T00:00:00.000Z",
+                activated_at: "2025-01-01T00:00:00.000Z",
+              },
             },
           },
         },
