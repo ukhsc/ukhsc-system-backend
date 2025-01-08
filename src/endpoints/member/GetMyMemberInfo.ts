@@ -11,7 +11,7 @@ export class GetMyMemberInfo extends OpenAPIRoute {
     summary: "依據存取權杖取得目前會員的資訊",
     security: [{ memberAuth: [] }],
     responses: {
-      200: {
+      201: {
         description: "成功取得會員資訊",
         content: {
           "application/json": {
