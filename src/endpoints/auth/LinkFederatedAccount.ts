@@ -8,9 +8,9 @@ import { extendZodWithOpenApi } from "@asteasolutions/zod-to-openapi";
 extendZodWithOpenApi(z);
 import { AuthService, OpenAPIResponseForbidden, OpenAPIResponseUnauthorized } from "@services/auth";
 import { FederatedAccountService, GrantFlows } from "@services/federated_account";
-import { isOrdererTokenPayload, OrdererTokenPayload } from "@config/auth";
+import { isOrdererTokenPayload } from "@utils/auth";
 import { FederatedProvider } from "@prisma/client";
-import { BadRequestError } from "@services/index";
+import { BadRequestError } from "@utils/error";
 
 export class LinkFederatedAccount extends OpenAPIRoute {
   schema = {
@@ -65,13 +65,8 @@ export class LinkFederatedAccount extends OpenAPIRoute {
     const federated_service = new FederatedAccountService(db, ctx.env, data.params.provider);
 
     // Validate authentication
-    const auth_service = new AuthService(ctx);
-    let auth_payload: OrdererTokenPayload;
-    try {
-      auth_payload = auth_service.validate(isOrdererTokenPayload);
-    } catch (res) {
-      return res;
-    }
+    const auth_service = new AuthService(ctx.req);
+    const auth_payload = auth_service.validate(ctx.env.JWT_SECRET, isOrdererTokenPayload);
 
     try {
       const { flow, redirect_uri, grant_value } = data.body;

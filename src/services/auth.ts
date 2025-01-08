@@ -1,52 +1,50 @@
-import { AppContext } from "index";
 import jwt from "jsonwebtoken";
 import { z } from "zod";
-import { BaseTokenPayload } from "@config/auth";
+import { BaseTokenPayload } from "@utils/auth";
+import { ForbiddenError, UnauthorizedError } from "@utils/error";
+import { HonoRequest } from "hono";
 
 export class AuthService {
-  constructor(private ctx: AppContext) {}
+  constructor(private req: HonoRequest) {}
 
   /**
    * Requires the request to be authenticated with a valid token.
+   * @param secret - The secret key used to sign the token.
    * @param {(payload: BaseTokenPayload) => payload is P} type_guard - A type guard function to check the payload. See {@link isOrdererTokenPayload} for an example.
-   * @throws {TypedResponse} - Needs to be caught by the caller to return the response.
+   * @throws {HttpError} - Needs to be caught by the caller to return the response.
    *
    * Example usage:
    * ```ts
-   * let auth_payload: OrdererTokenPayload;
-   * try {
-   *   const auth_service = new AuthService(ctx);
-   *   auth_payload = auth_service.validate(isOrdererTokenPayload);
-   * } catch (res) {
-   *   return res;
-   * }
+   * const auth_service = new AuthService(ctx.req);
+   * const auth_payload = auth_service.validate(ctx.env.JWT_SECRET, isOrdererTokenPayload);
    * // The code below this line will only be executed if the request is authenticated
    * // and the payload is of type P (OrdererTokenPayload in this case)
    * ```
    */
   validate<P extends BaseTokenPayload>(
+    secret: string,
     type_guard?: (payload: BaseTokenPayload) => payload is P,
   ): P {
     const token = this.getBearerToken();
     if (!token) {
-      throw this.ctx.json({ error: "Unauthorized (No token provided)" }, 401);
+      throw new UnauthorizedError("No token provided");
     }
 
     try {
-      const payload = jwt.verify(token, this.ctx.env.JWT_SECRET) as P;
+      const payload = jwt.verify(token, secret) as P;
 
       if (type_guard && !type_guard(payload)) {
-        throw this.ctx.json({ error: "Forbidden (Insufficient permissions or role)" }, 403);
+        throw new ForbiddenError("Insufficient permissions or role");
       }
 
       return payload;
-    } catch (error) {
-      throw this.ctx.json({ error: "Unauthorized (Invalid token)" }, 401);
+    } catch (_) {
+      throw new UnauthorizedError("Invalid token");
     }
   }
 
   private getBearerToken(): string | null {
-    const authHeader = this.ctx.req.header("Authorization");
+    const authHeader = this.req.header("Authorization");
     if (!authHeader) {
       return null;
     }
@@ -59,8 +57,8 @@ export class AuthService {
     return token;
   }
 
-  static generateToken<P extends BaseTokenPayload>(payload: P, secrt: string): string {
-    const token = jwt.sign(payload, secrt, {
+  static generateToken<P extends BaseTokenPayload>(payload: P, secret: string): string {
+    const token = jwt.sign(payload, secret, {
       expiresIn: "60 days",
     });
 

@@ -1,8 +1,8 @@
 import { FederatedProvider, StudentMember } from "@prisma/client";
 import { PrismaClient } from "@prisma/client";
 import axios from "axios";
-import { EnvConfig } from "@config/env";
-import { BadRequestError } from ".";
+import { EnvConfig } from "utils/env";
+import { BadRequestError } from "@utils/error";
 import console from "console";
 
 interface FederatedUserInfo {

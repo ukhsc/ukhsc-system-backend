@@ -1,17 +1,17 @@
 import { fromHono, OpenAPIRouterType } from "chanfana";
 import { Context, Hono } from "hono";
 import { registerEndpoints } from "endpoints";
-import { prismaInitMiddleware } from "config/prisma";
+import { prismaInitMiddleware } from "@utils/prisma";
 import dotenv from "dotenv";
 import { logger } from "hono/logger";
 import { PrismaClient } from "@prisma/client";
-import { HealthCheck } from "endpoints/HealthCheck";
 import process from "process";
-import { BaseTokenPayload } from "@config/auth";
+import { BaseTokenPayload } from "@utils/auth";
 import { cors } from "hono/cors";
-import { EnvConfig, initEnv } from "@config/env";
+import { EnvConfig, initEnv } from "@utils/env";
 import console from "console";
 import { serve } from "@hono/node-server";
+import { httpErrorMiddleware } from "@utils/error";
 
 interface Variables {
   prisma: PrismaClient;
@@ -46,7 +46,12 @@ openapi.registry.registerComponent("securitySchemes", "ordererAuth", {
   type: "http",
   scheme: "bearer",
 });
+openapi.registry.registerComponent("securitySchemes", "memberAuth", {
+  type: "http",
+  scheme: "bearer",
+});
 registerEndpoints(openapi);
+openapi.use(httpErrorMiddleware);
 openapi.onError((err, cxt) => {
   console.error(err);
   return cxt.text("Internal Server Error", 500);

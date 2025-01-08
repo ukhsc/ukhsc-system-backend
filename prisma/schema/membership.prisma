@@ -11,6 +11,7 @@ model StudentMember {
 
   created_at   DateTime  @default(now())
   activated_at DateTime?
+  expired_at   DateTime?
 
   password_hash    String?
   membership_order PersonalMembershipOrder?

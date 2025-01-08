@@ -1,4 +1,4 @@
-import { isOrdererTokenPayload, OrdererTokenPayload } from "@config/auth";
+import { isOrdererTokenPayload } from "@utils/auth";
 import { AuthService } from "@services/auth";
 import { OpenAPIRoute } from "chanfana";
 import { AppContext } from "index";
@@ -33,12 +33,10 @@ export class UpdatePersonalMembershipOrder extends OpenAPIRoute {
     const data = await this.getValidatedData<typeof this.schema>();
     const db = ctx.var.prisma;
 
-    let auth_payload: OrdererTokenPayload;
-    try {
-      auth_payload = new AuthService(ctx).validate(isOrdererTokenPayload);
-    } catch (res) {
-      return res;
-    }
+    const auth_payload = new AuthService(ctx.req).validate(
+      ctx.env.JWT_SECRET,
+      isOrdererTokenPayload,
+    );
 
     const order = await db.personalMembershipOrder.findUnique({
       where: { id: auth_payload.order_id },

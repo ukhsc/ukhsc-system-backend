@@ -1,9 +1,10 @@
+import { StudentMemberTokenPayload, TokenRole } from "@utils/auth";
 import { FederatedProvider, MembershipPurchaseChannel, SchoolAccountConfig } from "@prisma/client";
+import { AuthService } from "@services/auth";
 import { FederatedAccountService, GrantFlows } from "@services/federated_account";
-import { BadRequestError } from "@services/index";
+import { BadRequestError } from "@utils/error";
 import { OpenAPIRoute } from "chanfana";
 import { AppContext } from "index";
-import { StudentMemberSchema } from "schema";
 import { z } from "zod";
 
 export class CreateStudentMember extends OpenAPIRoute {
@@ -37,27 +38,10 @@ export class CreateStudentMember extends OpenAPIRoute {
       200: {
         description: "成功註冊新的學生會員帳號",
         content: {
-          "application/json": {
-            schema: z.object({
-              token: z.string().optional().describe("會員帳號的存取權杖"),
-              member: StudentMemberSchema.omit({
-                password_hash: true,
-              }).describe("會員帳號資訊"),
-            }),
-            example: {
-              token:
-                "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IlN0dWRlbnQgTWVtYmVyIiwiaWF0IjoxNTE2MjM5MDIyfQ.ZDViNTNhYTg0MDVlN2I4ZGE1MDQ1ZjYyYmRmMTZlZmI0ZjUxZWE3Mg",
-              member: {
-                purchase_channel: "PartnerFree",
-                id: "ckv4f2g3e0000y9l5t6z8j2h3",
-                school_attended_id: 1,
-                primary_email: "s1234567@example.edu.tw",
-                student_id: "1234567",
-                nickname: null,
-                created_at: "2025-01-01T00:00:00.000Z",
-                activated_at: "2025-01-01T00:00:00.000Z",
-              },
-            },
+          "text/plain": {
+            schema: z.string().describe("會員帳號的存取權杖"),
+            example:
+              "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IlN0dWRlbnQgTWVtYmVyIiwiaWF0IjoxNTE2MjM5MDIyfQ.ZDViNTNhYTg0MDVlN2I4ZGE1MDQ1ZjYyYmRmMTZlZmI0ZjUxZWE3Mg",
           },
         },
       },
@@ -83,48 +67,54 @@ export class CreateStudentMember extends OpenAPIRoute {
       FederatedProvider.GoogleWorkspace,
     );
 
-    try {
-      const { flow, grant_value, redirect_uri } = data.body.google_workspace;
-      const token = await federated_service.getAccessToken(flow, grant_value, redirect_uri);
-      const info = await federated_service.getUserInfo(token);
+    const { flow, grant_value, redirect_uri } = data.body.google_workspace;
+    const google_token = await federated_service.getAccessToken(flow, grant_value, redirect_uri);
+    const info = await federated_service.getUserInfo(google_token);
 
-      const account_config = await db.schoolAccountConfig.findUnique({
-        where: {
-          school_id: school_attended.id,
+    const account_config = await db.schoolAccountConfig.findUnique({
+      where: {
+        school_id: school_attended.id,
+      },
+    });
+    if (!account_config) {
+      return ctx.json(
+        {
+          error: "School account configuration has not been set up by the administrator",
         },
-      });
-      if (!account_config) {
-        return ctx.json(
-          {
-            error: "School account configuration has not been set up by the administrator",
-          },
-          500,
-        );
-      }
-
-      const student_id = this.captureStudentId(info.email, account_config);
-      const member = await db.studentMember.create({
-        data: {
-          school_attended: {
-            connect: {
-              id: school_attended.id,
-            },
-          },
-          purchase_channel: MembershipPurchaseChannel.PartnerFree,
-          student_id,
-          activated_at: new Date(),
-        },
-      });
-
-      await federated_service.linkAccount(member, info);
-
-      return ctx.json(StudentMemberSchema.omit({ password_hash: true }).parse(member), 201);
-    } catch (error) {
-      if (error instanceof BadRequestError) {
-        return ctx.json({ error: error.message }, 400);
-      }
-      throw error;
+        500,
+      );
     }
+
+    const student_id = this.captureStudentId(info.email, account_config);
+    const system_config = await db.systemConfigurationUpdates.findFirst({
+      orderBy: {
+        id: "desc",
+      },
+    });
+    const member = await db.studentMember.create({
+      data: {
+        school_attended: {
+          connect: {
+            id: school_attended.id,
+          },
+        },
+        purchase_channel: MembershipPurchaseChannel.PartnerFree,
+        student_id,
+        activated_at: new Date(),
+        expired_at: system_config?.contract_end_date,
+      },
+    });
+
+    await federated_service.linkAccount(member, info);
+    const token = AuthService.generateToken<StudentMemberTokenPayload>(
+      {
+        role: TokenRole.StudentMember,
+        member_id: member.id,
+      },
+      ctx.env.JWT_SECRET,
+    );
+
+    return ctx.text(token, 201);
   }
 
   private captureStudentId(email: string, config: SchoolAccountConfig): string {

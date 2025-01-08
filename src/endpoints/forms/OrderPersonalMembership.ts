@@ -1,4 +1,4 @@
-import { OrdererTokenPayload, TokenRole } from "@config/auth";
+import { OrdererTokenPayload, TokenRole } from "@utils/auth";
 import { MembershipPurchaseChannel, Prisma } from "@prisma/client";
 import { AuthService } from "@services/auth";
 import { OpenAPIRoute } from "chanfana";

@@ -16,7 +16,9 @@ export const FederatedAccountScalarFieldEnumSchema = z.enum(['id','provider','pr
 
 export const SchoolAccountConfigScalarFieldEnumSchema = z.enum(['username_format','student_username_format','password_format','domain_name','school_id']);
 
-export const StudentMemberScalarFieldEnumSchema = z.enum(['id','school_attended_id','primary_email','student_id','nickname','purchase_channel','created_at','activated_at','password_hash']);
+export const SystemConfigurationUpdatesScalarFieldEnumSchema = z.enum(['id','created_at','updated_at','service_status','contract_start_date','contract_end_date']);
+
+export const StudentMemberScalarFieldEnumSchema = z.enum(['id','school_attended_id','primary_email','student_id','nickname','purchase_channel','created_at','activated_at','expired_at','password_hash']);
 
 export const PersonalMembershipOrderScalarFieldEnumSchema = z.enum(['id','created_at','updated_at','member_id','school_id','class','number','real_name','need_sticker','is_paid']);
 
@@ -31,6 +33,10 @@ export const NullsOrderSchema = z.enum(['first','last']);
 export const FederatedProviderSchema = z.enum(['Google','GoogleWorkspace']);
 
 export type FederatedProviderType = `${z.infer<typeof FederatedProviderSchema>}`
+
+export const SystemServiceStatusSchema = z.enum(['Normal','Maintenance']);
+
+export type SystemServiceStatusType = `${z.infer<typeof SystemServiceStatusSchema>}`
 
 export const MembershipPurchaseChannelSchema = z.enum(['Personal','StudentCouncil','PartnerFree']);
 
@@ -85,6 +91,21 @@ export const SchoolAccountConfigSchema = z.object({
 export type SchoolAccountConfig = z.infer<typeof SchoolAccountConfigSchema>
 
 /////////////////////////////////////////
+// SYSTEM CONFIGURATION UPDATES SCHEMA
+/////////////////////////////////////////
+
+export const SystemConfigurationUpdatesSchema = z.object({
+  service_status: SystemServiceStatusSchema,
+  id: z.number().int(),
+  created_at: z.coerce.date(),
+  updated_at: z.coerce.date(),
+  contract_start_date: z.coerce.date(),
+  contract_end_date: z.coerce.date(),
+})
+
+export type SystemConfigurationUpdates = z.infer<typeof SystemConfigurationUpdatesSchema>
+
+/////////////////////////////////////////
 // STUDENT MEMBER SCHEMA
 /////////////////////////////////////////
 
@@ -97,6 +118,7 @@ export const StudentMemberSchema = z.object({
   nickname: z.string().nullable(),
   created_at: z.coerce.date(),
   activated_at: z.coerce.date().nullable(),
+  expired_at: z.coerce.date().nullable(),
   password_hash: z.string().nullable(),
 })
 
@@ -180,6 +202,18 @@ export const SchoolAccountConfigSelectSchema: z.ZodType<Prisma.SchoolAccountConf
   school: z.union([z.boolean(),z.lazy(() => PartnerSchoolArgsSchema)]).optional(),
 }).strict()
 
+// SYSTEM CONFIGURATION UPDATES
+//------------------------------------------------------
+
+export const SystemConfigurationUpdatesSelectSchema: z.ZodType<Prisma.SystemConfigurationUpdatesSelect> = z.object({
+  id: z.boolean().optional(),
+  created_at: z.boolean().optional(),
+  updated_at: z.boolean().optional(),
+  service_status: z.boolean().optional(),
+  contract_start_date: z.boolean().optional(),
+  contract_end_date: z.boolean().optional(),
+}).strict()
+
 // STUDENT MEMBER
 //------------------------------------------------------
 
@@ -212,6 +246,7 @@ export const StudentMemberSelectSchema: z.ZodType<Prisma.StudentMemberSelect> = 
   purchase_channel: z.boolean().optional(),
   created_at: z.boolean().optional(),
   activated_at: z.boolean().optional(),
+  expired_at: z.boolean().optional(),
   password_hash: z.boolean().optional(),
   school_attended: z.union([z.boolean(),z.lazy(() => PartnerSchoolArgsSchema)]).optional(),
   federated_accounts: z.union([z.boolean(),z.lazy(() => FederatedAccountFindManyArgsSchema)]).optional(),
@@ -407,6 +442,68 @@ export const SchoolAccountConfigScalarWhereWithAggregatesInputSchema: z.ZodType<
   school_id: z.union([ z.lazy(() => IntWithAggregatesFilterSchema),z.number() ]).optional(),
 }).strict();
 
+export const SystemConfigurationUpdatesWhereInputSchema: z.ZodType<Prisma.SystemConfigurationUpdatesWhereInput> = z.object({
+  AND: z.union([ z.lazy(() => SystemConfigurationUpdatesWhereInputSchema),z.lazy(() => SystemConfigurationUpdatesWhereInputSchema).array() ]).optional(),
+  OR: z.lazy(() => SystemConfigurationUpdatesWhereInputSchema).array().optional(),
+  NOT: z.union([ z.lazy(() => SystemConfigurationUpdatesWhereInputSchema),z.lazy(() => SystemConfigurationUpdatesWhereInputSchema).array() ]).optional(),
+  id: z.union([ z.lazy(() => IntFilterSchema),z.number() ]).optional(),
+  created_at: z.union([ z.lazy(() => DateTimeFilterSchema),z.coerce.date() ]).optional(),
+  updated_at: z.union([ z.lazy(() => DateTimeFilterSchema),z.coerce.date() ]).optional(),
+  service_status: z.union([ z.lazy(() => EnumSystemServiceStatusFilterSchema),z.lazy(() => SystemServiceStatusSchema) ]).optional(),
+  contract_start_date: z.union([ z.lazy(() => DateTimeFilterSchema),z.coerce.date() ]).optional(),
+  contract_end_date: z.union([ z.lazy(() => DateTimeFilterSchema),z.coerce.date() ]).optional(),
+}).strict();
+
+export const SystemConfigurationUpdatesOrderByWithRelationInputSchema: z.ZodType<Prisma.SystemConfigurationUpdatesOrderByWithRelationInput> = z.object({
+  id: z.lazy(() => SortOrderSchema).optional(),
+  created_at: z.lazy(() => SortOrderSchema).optional(),
+  updated_at: z.lazy(() => SortOrderSchema).optional(),
+  service_status: z.lazy(() => SortOrderSchema).optional(),
+  contract_start_date: z.lazy(() => SortOrderSchema).optional(),
+  contract_end_date: z.lazy(() => SortOrderSchema).optional()
+}).strict();
+
+export const SystemConfigurationUpdatesWhereUniqueInputSchema: z.ZodType<Prisma.SystemConfigurationUpdatesWhereUniqueInput> = z.object({
+  id: z.number()
+})
+.and(z.object({
+  id: z.number().optional(),
+  AND: z.union([ z.lazy(() => SystemConfigurationUpdatesWhereInputSchema),z.lazy(() => SystemConfigurationUpdatesWhereInputSchema).array() ]).optional(),
+  OR: z.lazy(() => SystemConfigurationUpdatesWhereInputSchema).array().optional(),
+  NOT: z.union([ z.lazy(() => SystemConfigurationUpdatesWhereInputSchema),z.lazy(() => SystemConfigurationUpdatesWhereInputSchema).array() ]).optional(),
+  created_at: z.union([ z.lazy(() => DateTimeFilterSchema),z.coerce.date() ]).optional(),
+  updated_at: z.union([ z.lazy(() => DateTimeFilterSchema),z.coerce.date() ]).optional(),
+  service_status: z.union([ z.lazy(() => EnumSystemServiceStatusFilterSchema),z.lazy(() => SystemServiceStatusSchema) ]).optional(),
+  contract_start_date: z.union([ z.lazy(() => DateTimeFilterSchema),z.coerce.date() ]).optional(),
+  contract_end_date: z.union([ z.lazy(() => DateTimeFilterSchema),z.coerce.date() ]).optional(),
+}).strict());
+
+export const SystemConfigurationUpdatesOrderByWithAggregationInputSchema: z.ZodType<Prisma.SystemConfigurationUpdatesOrderByWithAggregationInput> = z.object({
+  id: z.lazy(() => SortOrderSchema).optional(),
+  created_at: z.lazy(() => SortOrderSchema).optional(),
+  updated_at: z.lazy(() => SortOrderSchema).optional(),
+  service_status: z.lazy(() => SortOrderSchema).optional(),
+  contract_start_date: z.lazy(() => SortOrderSchema).optional(),
+  contract_end_date: z.lazy(() => SortOrderSchema).optional(),
+  _count: z.lazy(() => SystemConfigurationUpdatesCountOrderByAggregateInputSchema).optional(),
+  _avg: z.lazy(() => SystemConfigurationUpdatesAvgOrderByAggregateInputSchema).optional(),
+  _max: z.lazy(() => SystemConfigurationUpdatesMaxOrderByAggregateInputSchema).optional(),
+  _min: z.lazy(() => SystemConfigurationUpdatesMinOrderByAggregateInputSchema).optional(),
+  _sum: z.lazy(() => SystemConfigurationUpdatesSumOrderByAggregateInputSchema).optional()
+}).strict();
+
+export const SystemConfigurationUpdatesScalarWhereWithAggregatesInputSchema: z.ZodType<Prisma.SystemConfigurationUpdatesScalarWhereWithAggregatesInput> = z.object({
+  AND: z.union([ z.lazy(() => SystemConfigurationUpdatesScalarWhereWithAggregatesInputSchema),z.lazy(() => SystemConfigurationUpdatesScalarWhereWithAggregatesInputSchema).array() ]).optional(),
+  OR: z.lazy(() => SystemConfigurationUpdatesScalarWhereWithAggregatesInputSchema).array().optional(),
+  NOT: z.union([ z.lazy(() => SystemConfigurationUpdatesScalarWhereWithAggregatesInputSchema),z.lazy(() => SystemConfigurationUpdatesScalarWhereWithAggregatesInputSchema).array() ]).optional(),
+  id: z.union([ z.lazy(() => IntWithAggregatesFilterSchema),z.number() ]).optional(),
+  created_at: z.union([ z.lazy(() => DateTimeWithAggregatesFilterSchema),z.coerce.date() ]).optional(),
+  updated_at: z.union([ z.lazy(() => DateTimeWithAggregatesFilterSchema),z.coerce.date() ]).optional(),
+  service_status: z.union([ z.lazy(() => EnumSystemServiceStatusWithAggregatesFilterSchema),z.lazy(() => SystemServiceStatusSchema) ]).optional(),
+  contract_start_date: z.union([ z.lazy(() => DateTimeWithAggregatesFilterSchema),z.coerce.date() ]).optional(),
+  contract_end_date: z.union([ z.lazy(() => DateTimeWithAggregatesFilterSchema),z.coerce.date() ]).optional(),
+}).strict();
+
 export const StudentMemberWhereInputSchema: z.ZodType<Prisma.StudentMemberWhereInput> = z.object({
   AND: z.union([ z.lazy(() => StudentMemberWhereInputSchema),z.lazy(() => StudentMemberWhereInputSchema).array() ]).optional(),
   OR: z.lazy(() => StudentMemberWhereInputSchema).array().optional(),
@@ -419,6 +516,7 @@ export const StudentMemberWhereInputSchema: z.ZodType<Prisma.StudentMemberWhereI
   purchase_channel: z.union([ z.lazy(() => EnumMembershipPurchaseChannelFilterSchema),z.lazy(() => MembershipPurchaseChannelSchema) ]).optional(),
   created_at: z.union([ z.lazy(() => DateTimeFilterSchema),z.coerce.date() ]).optional(),
   activated_at: z.union([ z.lazy(() => DateTimeNullableFilterSchema),z.coerce.date() ]).optional().nullable(),
+  expired_at: z.union([ z.lazy(() => DateTimeNullableFilterSchema),z.coerce.date() ]).optional().nullable(),
   password_hash: z.union([ z.lazy(() => StringNullableFilterSchema),z.string() ]).optional().nullable(),
   school_attended: z.union([ z.lazy(() => PartnerSchoolScalarRelationFilterSchema),z.lazy(() => PartnerSchoolWhereInputSchema) ]).optional(),
   federated_accounts: z.lazy(() => FederatedAccountListRelationFilterSchema).optional(),
@@ -434,6 +532,7 @@ export const StudentMemberOrderByWithRelationInputSchema: z.ZodType<Prisma.Stude
   purchase_channel: z.lazy(() => SortOrderSchema).optional(),
   created_at: z.lazy(() => SortOrderSchema).optional(),
   activated_at: z.union([ z.lazy(() => SortOrderSchema),z.lazy(() => SortOrderInputSchema) ]).optional(),
+  expired_at: z.union([ z.lazy(() => SortOrderSchema),z.lazy(() => SortOrderInputSchema) ]).optional(),
   password_hash: z.union([ z.lazy(() => SortOrderSchema),z.lazy(() => SortOrderInputSchema) ]).optional(),
   school_attended: z.lazy(() => PartnerSchoolOrderByWithRelationInputSchema).optional(),
   federated_accounts: z.lazy(() => FederatedAccountOrderByRelationAggregateInputSchema).optional(),
@@ -464,6 +563,7 @@ export const StudentMemberWhereUniqueInputSchema: z.ZodType<Prisma.StudentMember
   purchase_channel: z.union([ z.lazy(() => EnumMembershipPurchaseChannelFilterSchema),z.lazy(() => MembershipPurchaseChannelSchema) ]).optional(),
   created_at: z.union([ z.lazy(() => DateTimeFilterSchema),z.coerce.date() ]).optional(),
   activated_at: z.union([ z.lazy(() => DateTimeNullableFilterSchema),z.coerce.date() ]).optional().nullable(),
+  expired_at: z.union([ z.lazy(() => DateTimeNullableFilterSchema),z.coerce.date() ]).optional().nullable(),
   password_hash: z.union([ z.lazy(() => StringNullableFilterSchema),z.string() ]).optional().nullable(),
   school_attended: z.union([ z.lazy(() => PartnerSchoolScalarRelationFilterSchema),z.lazy(() => PartnerSchoolWhereInputSchema) ]).optional(),
   federated_accounts: z.lazy(() => FederatedAccountListRelationFilterSchema).optional(),
@@ -479,6 +579,7 @@ export const StudentMemberOrderByWithAggregationInputSchema: z.ZodType<Prisma.St
   purchase_channel: z.lazy(() => SortOrderSchema).optional(),
   created_at: z.lazy(() => SortOrderSchema).optional(),
   activated_at: z.union([ z.lazy(() => SortOrderSchema),z.lazy(() => SortOrderInputSchema) ]).optional(),
+  expired_at: z.union([ z.lazy(() => SortOrderSchema),z.lazy(() => SortOrderInputSchema) ]).optional(),
   password_hash: z.union([ z.lazy(() => SortOrderSchema),z.lazy(() => SortOrderInputSchema) ]).optional(),
   _count: z.lazy(() => StudentMemberCountOrderByAggregateInputSchema).optional(),
   _avg: z.lazy(() => StudentMemberAvgOrderByAggregateInputSchema).optional(),
@@ -499,6 +600,7 @@ export const StudentMemberScalarWhereWithAggregatesInputSchema: z.ZodType<Prisma
   purchase_channel: z.union([ z.lazy(() => EnumMembershipPurchaseChannelWithAggregatesFilterSchema),z.lazy(() => MembershipPurchaseChannelSchema) ]).optional(),
   created_at: z.union([ z.lazy(() => DateTimeWithAggregatesFilterSchema),z.coerce.date() ]).optional(),
   activated_at: z.union([ z.lazy(() => DateTimeNullableWithAggregatesFilterSchema),z.coerce.date() ]).optional().nullable(),
+  expired_at: z.union([ z.lazy(() => DateTimeNullableWithAggregatesFilterSchema),z.coerce.date() ]).optional().nullable(),
   password_hash: z.union([ z.lazy(() => StringNullableWithAggregatesFilterSchema),z.string() ]).optional().nullable(),
 }).strict();
 
@@ -792,6 +894,66 @@ export const SchoolAccountConfigUncheckedUpdateManyInputSchema: z.ZodType<Prisma
   school_id: z.union([ z.number().int(),z.lazy(() => IntFieldUpdateOperationsInputSchema) ]).optional(),
 }).strict();
 
+export const SystemConfigurationUpdatesCreateInputSchema: z.ZodType<Prisma.SystemConfigurationUpdatesCreateInput> = z.object({
+  created_at: z.coerce.date().optional(),
+  updated_at: z.coerce.date().optional(),
+  service_status: z.lazy(() => SystemServiceStatusSchema),
+  contract_start_date: z.coerce.date(),
+  contract_end_date: z.coerce.date()
+}).strict();
+
+export const SystemConfigurationUpdatesUncheckedCreateInputSchema: z.ZodType<Prisma.SystemConfigurationUpdatesUncheckedCreateInput> = z.object({
+  id: z.number().optional(),
+  created_at: z.coerce.date().optional(),
+  updated_at: z.coerce.date().optional(),
+  service_status: z.lazy(() => SystemServiceStatusSchema),
+  contract_start_date: z.coerce.date(),
+  contract_end_date: z.coerce.date()
+}).strict();
+
+export const SystemConfigurationUpdatesUpdateInputSchema: z.ZodType<Prisma.SystemConfigurationUpdatesUpdateInput> = z.object({
+  created_at: z.union([ z.coerce.date(),z.lazy(() => DateTimeFieldUpdateOperationsInputSchema) ]).optional(),
+  updated_at: z.union([ z.coerce.date(),z.lazy(() => DateTimeFieldUpdateOperationsInputSchema) ]).optional(),
+  service_status: z.union([ z.lazy(() => SystemServiceStatusSchema),z.lazy(() => EnumSystemServiceStatusFieldUpdateOperationsInputSchema) ]).optional(),
+  contract_start_date: z.union([ z.coerce.date(),z.lazy(() => DateTimeFieldUpdateOperationsInputSchema) ]).optional(),
+  contract_end_date: z.union([ z.coerce.date(),z.lazy(() => DateTimeFieldUpdateOperationsInputSchema) ]).optional(),
+}).strict();
+
+export const SystemConfigurationUpdatesUncheckedUpdateInputSchema: z.ZodType<Prisma.SystemConfigurationUpdatesUncheckedUpdateInput> = z.object({
+  id: z.union([ z.number(),z.lazy(() => IntFieldUpdateOperationsInputSchema) ]).optional(),
+  created_at: z.union([ z.coerce.date(),z.lazy(() => DateTimeFieldUpdateOperationsInputSchema) ]).optional(),
+  updated_at: z.union([ z.coerce.date(),z.lazy(() => DateTimeFieldUpdateOperationsInputSchema) ]).optional(),
+  service_status: z.union([ z.lazy(() => SystemServiceStatusSchema),z.lazy(() => EnumSystemServiceStatusFieldUpdateOperationsInputSchema) ]).optional(),
+  contract_start_date: z.union([ z.coerce.date(),z.lazy(() => DateTimeFieldUpdateOperationsInputSchema) ]).optional(),
+  contract_end_date: z.union([ z.coerce.date(),z.lazy(() => DateTimeFieldUpdateOperationsInputSchema) ]).optional(),
+}).strict();
+
+export const SystemConfigurationUpdatesCreateManyInputSchema: z.ZodType<Prisma.SystemConfigurationUpdatesCreateManyInput> = z.object({
+  id: z.number().optional(),
+  created_at: z.coerce.date().optional(),
+  updated_at: z.coerce.date().optional(),
+  service_status: z.lazy(() => SystemServiceStatusSchema),
+  contract_start_date: z.coerce.date(),
+  contract_end_date: z.coerce.date()
+}).strict();
+
+export const SystemConfigurationUpdatesUpdateManyMutationInputSchema: z.ZodType<Prisma.SystemConfigurationUpdatesUpdateManyMutationInput> = z.object({
+  created_at: z.union([ z.coerce.date(),z.lazy(() => DateTimeFieldUpdateOperationsInputSchema) ]).optional(),
+  updated_at: z.union([ z.coerce.date(),z.lazy(() => DateTimeFieldUpdateOperationsInputSchema) ]).optional(),
+  service_status: z.union([ z.lazy(() => SystemServiceStatusSchema),z.lazy(() => EnumSystemServiceStatusFieldUpdateOperationsInputSchema) ]).optional(),
+  contract_start_date: z.union([ z.coerce.date(),z.lazy(() => DateTimeFieldUpdateOperationsInputSchema) ]).optional(),
+  contract_end_date: z.union([ z.coerce.date(),z.lazy(() => DateTimeFieldUpdateOperationsInputSchema) ]).optional(),
+}).strict();
+
+export const SystemConfigurationUpdatesUncheckedUpdateManyInputSchema: z.ZodType<Prisma.SystemConfigurationUpdatesUncheckedUpdateManyInput> = z.object({
+  id: z.union([ z.number(),z.lazy(() => IntFieldUpdateOperationsInputSchema) ]).optional(),
+  created_at: z.union([ z.coerce.date(),z.lazy(() => DateTimeFieldUpdateOperationsInputSchema) ]).optional(),
+  updated_at: z.union([ z.coerce.date(),z.lazy(() => DateTimeFieldUpdateOperationsInputSchema) ]).optional(),
+  service_status: z.union([ z.lazy(() => SystemServiceStatusSchema),z.lazy(() => EnumSystemServiceStatusFieldUpdateOperationsInputSchema) ]).optional(),
+  contract_start_date: z.union([ z.coerce.date(),z.lazy(() => DateTimeFieldUpdateOperationsInputSchema) ]).optional(),
+  contract_end_date: z.union([ z.coerce.date(),z.lazy(() => DateTimeFieldUpdateOperationsInputSchema) ]).optional(),
+}).strict();
+
 export const StudentMemberCreateInputSchema: z.ZodType<Prisma.StudentMemberCreateInput> = z.object({
   id: z.string().cuid().optional(),
   primary_email: z.string().optional().nullable(),
@@ -800,6 +962,7 @@ export const StudentMemberCreateInputSchema: z.ZodType<Prisma.StudentMemberCreat
   purchase_channel: z.lazy(() => MembershipPurchaseChannelSchema),
   created_at: z.coerce.date().optional(),
   activated_at: z.coerce.date().optional().nullable(),
+  expired_at: z.coerce.date().optional().nullable(),
   password_hash: z.string().optional().nullable(),
   school_attended: z.lazy(() => PartnerSchoolCreateNestedOneWithoutStudentsInputSchema),
   federated_accounts: z.lazy(() => FederatedAccountCreateNestedManyWithoutMemberInputSchema).optional(),
@@ -815,6 +978,7 @@ export const StudentMemberUncheckedCreateInputSchema: z.ZodType<Prisma.StudentMe
   purchase_channel: z.lazy(() => MembershipPurchaseChannelSchema),
   created_at: z.coerce.date().optional(),
   activated_at: z.coerce.date().optional().nullable(),
+  expired_at: z.coerce.date().optional().nullable(),
   password_hash: z.string().optional().nullable(),
   federated_accounts: z.lazy(() => FederatedAccountUncheckedCreateNestedManyWithoutMemberInputSchema).optional(),
   membership_order: z.lazy(() => PersonalMembershipOrderUncheckedCreateNestedOneWithoutMemberInputSchema).optional()
@@ -828,6 +992,7 @@ export const StudentMemberUpdateInputSchema: z.ZodType<Prisma.StudentMemberUpdat
   purchase_channel: z.union([ z.lazy(() => MembershipPurchaseChannelSchema),z.lazy(() => EnumMembershipPurchaseChannelFieldUpdateOperationsInputSchema) ]).optional(),
   created_at: z.union([ z.coerce.date(),z.lazy(() => DateTimeFieldUpdateOperationsInputSchema) ]).optional(),
   activated_at: z.union([ z.coerce.date(),z.lazy(() => NullableDateTimeFieldUpdateOperationsInputSchema) ]).optional().nullable(),
+  expired_at: z.union([ z.coerce.date(),z.lazy(() => NullableDateTimeFieldUpdateOperationsInputSchema) ]).optional().nullable(),
   password_hash: z.union([ z.string(),z.lazy(() => NullableStringFieldUpdateOperationsInputSchema) ]).optional().nullable(),
   school_attended: z.lazy(() => PartnerSchoolUpdateOneRequiredWithoutStudentsNestedInputSchema).optional(),
   federated_accounts: z.lazy(() => FederatedAccountUpdateManyWithoutMemberNestedInputSchema).optional(),
@@ -843,6 +1008,7 @@ export const StudentMemberUncheckedUpdateInputSchema: z.ZodType<Prisma.StudentMe
   purchase_channel: z.union([ z.lazy(() => MembershipPurchaseChannelSchema),z.lazy(() => EnumMembershipPurchaseChannelFieldUpdateOperationsInputSchema) ]).optional(),
   created_at: z.union([ z.coerce.date(),z.lazy(() => DateTimeFieldUpdateOperationsInputSchema) ]).optional(),
   activated_at: z.union([ z.coerce.date(),z.lazy(() => NullableDateTimeFieldUpdateOperationsInputSchema) ]).optional().nullable(),
+  expired_at: z.union([ z.coerce.date(),z.lazy(() => NullableDateTimeFieldUpdateOperationsInputSchema) ]).optional().nullable(),
   password_hash: z.union([ z.string(),z.lazy(() => NullableStringFieldUpdateOperationsInputSchema) ]).optional().nullable(),
   federated_accounts: z.lazy(() => FederatedAccountUncheckedUpdateManyWithoutMemberNestedInputSchema).optional(),
   membership_order: z.lazy(() => PersonalMembershipOrderUncheckedUpdateOneWithoutMemberNestedInputSchema).optional()
@@ -857,6 +1023,7 @@ export const StudentMemberCreateManyInputSchema: z.ZodType<Prisma.StudentMemberC
   purchase_channel: z.lazy(() => MembershipPurchaseChannelSchema),
   created_at: z.coerce.date().optional(),
   activated_at: z.coerce.date().optional().nullable(),
+  expired_at: z.coerce.date().optional().nullable(),
   password_hash: z.string().optional().nullable()
 }).strict();
 
@@ -868,6 +1035,7 @@ export const StudentMemberUpdateManyMutationInputSchema: z.ZodType<Prisma.Studen
   purchase_channel: z.union([ z.lazy(() => MembershipPurchaseChannelSchema),z.lazy(() => EnumMembershipPurchaseChannelFieldUpdateOperationsInputSchema) ]).optional(),
   created_at: z.union([ z.coerce.date(),z.lazy(() => DateTimeFieldUpdateOperationsInputSchema) ]).optional(),
   activated_at: z.union([ z.coerce.date(),z.lazy(() => NullableDateTimeFieldUpdateOperationsInputSchema) ]).optional().nullable(),
+  expired_at: z.union([ z.coerce.date(),z.lazy(() => NullableDateTimeFieldUpdateOperationsInputSchema) ]).optional().nullable(),
   password_hash: z.union([ z.string(),z.lazy(() => NullableStringFieldUpdateOperationsInputSchema) ]).optional().nullable(),
 }).strict();
 
@@ -880,6 +1048,7 @@ export const StudentMemberUncheckedUpdateManyInputSchema: z.ZodType<Prisma.Stude
   purchase_channel: z.union([ z.lazy(() => MembershipPurchaseChannelSchema),z.lazy(() => EnumMembershipPurchaseChannelFieldUpdateOperationsInputSchema) ]).optional(),
   created_at: z.union([ z.coerce.date(),z.lazy(() => DateTimeFieldUpdateOperationsInputSchema) ]).optional(),
   activated_at: z.union([ z.coerce.date(),z.lazy(() => NullableDateTimeFieldUpdateOperationsInputSchema) ]).optional().nullable(),
+  expired_at: z.union([ z.coerce.date(),z.lazy(() => NullableDateTimeFieldUpdateOperationsInputSchema) ]).optional().nullable(),
   password_hash: z.union([ z.string(),z.lazy(() => NullableStringFieldUpdateOperationsInputSchema) ]).optional().nullable(),
 }).strict();
 
@@ -1216,13 +1385,6 @@ export const SchoolAccountConfigSumOrderByAggregateInputSchema: z.ZodType<Prisma
   school_id: z.lazy(() => SortOrderSchema).optional()
 }).strict();
 
-export const EnumMembershipPurchaseChannelFilterSchema: z.ZodType<Prisma.EnumMembershipPurchaseChannelFilter> = z.object({
-  equals: z.lazy(() => MembershipPurchaseChannelSchema).optional(),
-  in: z.lazy(() => MembershipPurchaseChannelSchema).array().optional(),
-  notIn: z.lazy(() => MembershipPurchaseChannelSchema).array().optional(),
-  not: z.union([ z.lazy(() => MembershipPurchaseChannelSchema),z.lazy(() => NestedEnumMembershipPurchaseChannelFilterSchema) ]).optional(),
-}).strict();
-
 export const DateTimeFilterSchema: z.ZodType<Prisma.DateTimeFilter> = z.object({
   equals: z.coerce.date().optional(),
   in: z.coerce.date().array().optional(),
@@ -1232,6 +1394,79 @@ export const DateTimeFilterSchema: z.ZodType<Prisma.DateTimeFilter> = z.object({
   gt: z.coerce.date().optional(),
   gte: z.coerce.date().optional(),
   not: z.union([ z.coerce.date(),z.lazy(() => NestedDateTimeFilterSchema) ]).optional(),
+}).strict();
+
+export const EnumSystemServiceStatusFilterSchema: z.ZodType<Prisma.EnumSystemServiceStatusFilter> = z.object({
+  equals: z.lazy(() => SystemServiceStatusSchema).optional(),
+  in: z.lazy(() => SystemServiceStatusSchema).array().optional(),
+  notIn: z.lazy(() => SystemServiceStatusSchema).array().optional(),
+  not: z.union([ z.lazy(() => SystemServiceStatusSchema),z.lazy(() => NestedEnumSystemServiceStatusFilterSchema) ]).optional(),
+}).strict();
+
+export const SystemConfigurationUpdatesCountOrderByAggregateInputSchema: z.ZodType<Prisma.SystemConfigurationUpdatesCountOrderByAggregateInput> = z.object({
+  id: z.lazy(() => SortOrderSchema).optional(),
+  created_at: z.lazy(() => SortOrderSchema).optional(),
+  updated_at: z.lazy(() => SortOrderSchema).optional(),
+  service_status: z.lazy(() => SortOrderSchema).optional(),
+  contract_start_date: z.lazy(() => SortOrderSchema).optional(),
+  contract_end_date: z.lazy(() => SortOrderSchema).optional()
+}).strict();
+
+export const SystemConfigurationUpdatesAvgOrderByAggregateInputSchema: z.ZodType<Prisma.SystemConfigurationUpdatesAvgOrderByAggregateInput> = z.object({
+  id: z.lazy(() => SortOrderSchema).optional()
+}).strict();
+
+export const SystemConfigurationUpdatesMaxOrderByAggregateInputSchema: z.ZodType<Prisma.SystemConfigurationUpdatesMaxOrderByAggregateInput> = z.object({
+  id: z.lazy(() => SortOrderSchema).optional(),
+  created_at: z.lazy(() => SortOrderSchema).optional(),
+  updated_at: z.lazy(() => SortOrderSchema).optional(),
+  service_status: z.lazy(() => SortOrderSchema).optional(),
+  contract_start_date: z.lazy(() => SortOrderSchema).optional(),
+  contract_end_date: z.lazy(() => SortOrderSchema).optional()
+}).strict();
+
+export const SystemConfigurationUpdatesMinOrderByAggregateInputSchema: z.ZodType<Prisma.SystemConfigurationUpdatesMinOrderByAggregateInput> = z.object({
+  id: z.lazy(() => SortOrderSchema).optional(),
+  created_at: z.lazy(() => SortOrderSchema).optional(),
+  updated_at: z.lazy(() => SortOrderSchema).optional(),
+  service_status: z.lazy(() => SortOrderSchema).optional(),
+  contract_start_date: z.lazy(() => SortOrderSchema).optional(),
+  contract_end_date: z.lazy(() => SortOrderSchema).optional()
+}).strict();
+
+export const SystemConfigurationUpdatesSumOrderByAggregateInputSchema: z.ZodType<Prisma.SystemConfigurationUpdatesSumOrderByAggregateInput> = z.object({
+  id: z.lazy(() => SortOrderSchema).optional()
+}).strict();
+
+export const DateTimeWithAggregatesFilterSchema: z.ZodType<Prisma.DateTimeWithAggregatesFilter> = z.object({
+  equals: z.coerce.date().optional(),
+  in: z.coerce.date().array().optional(),
+  notIn: z.coerce.date().array().optional(),
+  lt: z.coerce.date().optional(),
+  lte: z.coerce.date().optional(),
+  gt: z.coerce.date().optional(),
+  gte: z.coerce.date().optional(),
+  not: z.union([ z.coerce.date(),z.lazy(() => NestedDateTimeWithAggregatesFilterSchema) ]).optional(),
+  _count: z.lazy(() => NestedIntFilterSchema).optional(),
+  _min: z.lazy(() => NestedDateTimeFilterSchema).optional(),
+  _max: z.lazy(() => NestedDateTimeFilterSchema).optional()
+}).strict();
+
+export const EnumSystemServiceStatusWithAggregatesFilterSchema: z.ZodType<Prisma.EnumSystemServiceStatusWithAggregatesFilter> = z.object({
+  equals: z.lazy(() => SystemServiceStatusSchema).optional(),
+  in: z.lazy(() => SystemServiceStatusSchema).array().optional(),
+  notIn: z.lazy(() => SystemServiceStatusSchema).array().optional(),
+  not: z.union([ z.lazy(() => SystemServiceStatusSchema),z.lazy(() => NestedEnumSystemServiceStatusWithAggregatesFilterSchema) ]).optional(),
+  _count: z.lazy(() => NestedIntFilterSchema).optional(),
+  _min: z.lazy(() => NestedEnumSystemServiceStatusFilterSchema).optional(),
+  _max: z.lazy(() => NestedEnumSystemServiceStatusFilterSchema).optional()
+}).strict();
+
+export const EnumMembershipPurchaseChannelFilterSchema: z.ZodType<Prisma.EnumMembershipPurchaseChannelFilter> = z.object({
+  equals: z.lazy(() => MembershipPurchaseChannelSchema).optional(),
+  in: z.lazy(() => MembershipPurchaseChannelSchema).array().optional(),
+  notIn: z.lazy(() => MembershipPurchaseChannelSchema).array().optional(),
+  not: z.union([ z.lazy(() => MembershipPurchaseChannelSchema),z.lazy(() => NestedEnumMembershipPurchaseChannelFilterSchema) ]).optional(),
 }).strict();
 
 export const DateTimeNullableFilterSchema: z.ZodType<Prisma.DateTimeNullableFilter> = z.object({
@@ -1269,6 +1504,7 @@ export const StudentMemberCountOrderByAggregateInputSchema: z.ZodType<Prisma.Stu
   purchase_channel: z.lazy(() => SortOrderSchema).optional(),
   created_at: z.lazy(() => SortOrderSchema).optional(),
   activated_at: z.lazy(() => SortOrderSchema).optional(),
+  expired_at: z.lazy(() => SortOrderSchema).optional(),
   password_hash: z.lazy(() => SortOrderSchema).optional()
 }).strict();
 
@@ -1285,6 +1521,7 @@ export const StudentMemberMaxOrderByAggregateInputSchema: z.ZodType<Prisma.Stude
   purchase_channel: z.lazy(() => SortOrderSchema).optional(),
   created_at: z.lazy(() => SortOrderSchema).optional(),
   activated_at: z.lazy(() => SortOrderSchema).optional(),
+  expired_at: z.lazy(() => SortOrderSchema).optional(),
   password_hash: z.lazy(() => SortOrderSchema).optional()
 }).strict();
 
@@ -1297,6 +1534,7 @@ export const StudentMemberMinOrderByAggregateInputSchema: z.ZodType<Prisma.Stude
   purchase_channel: z.lazy(() => SortOrderSchema).optional(),
   created_at: z.lazy(() => SortOrderSchema).optional(),
   activated_at: z.lazy(() => SortOrderSchema).optional(),
+  expired_at: z.lazy(() => SortOrderSchema).optional(),
   password_hash: z.lazy(() => SortOrderSchema).optional()
 }).strict();
 
@@ -1312,20 +1550,6 @@ export const EnumMembershipPurchaseChannelWithAggregatesFilterSchema: z.ZodType<
   _count: z.lazy(() => NestedIntFilterSchema).optional(),
   _min: z.lazy(() => NestedEnumMembershipPurchaseChannelFilterSchema).optional(),
   _max: z.lazy(() => NestedEnumMembershipPurchaseChannelFilterSchema).optional()
-}).strict();
-
-export const DateTimeWithAggregatesFilterSchema: z.ZodType<Prisma.DateTimeWithAggregatesFilter> = z.object({
-  equals: z.coerce.date().optional(),
-  in: z.coerce.date().array().optional(),
-  notIn: z.coerce.date().array().optional(),
-  lt: z.coerce.date().optional(),
-  lte: z.coerce.date().optional(),
-  gt: z.coerce.date().optional(),
-  gte: z.coerce.date().optional(),
-  not: z.union([ z.coerce.date(),z.lazy(() => NestedDateTimeWithAggregatesFilterSchema) ]).optional(),
-  _count: z.lazy(() => NestedIntFilterSchema).optional(),
-  _min: z.lazy(() => NestedDateTimeFilterSchema).optional(),
-  _max: z.lazy(() => NestedDateTimeFilterSchema).optional()
 }).strict();
 
 export const DateTimeNullableWithAggregatesFilterSchema: z.ZodType<Prisma.DateTimeNullableWithAggregatesFilter> = z.object({
@@ -1528,6 +1752,14 @@ export const PartnerSchoolUpdateOneRequiredWithoutGoogle_account_configNestedInp
   update: z.union([ z.lazy(() => PartnerSchoolUpdateToOneWithWhereWithoutGoogle_account_configInputSchema),z.lazy(() => PartnerSchoolUpdateWithoutGoogle_account_configInputSchema),z.lazy(() => PartnerSchoolUncheckedUpdateWithoutGoogle_account_configInputSchema) ]).optional(),
 }).strict();
 
+export const DateTimeFieldUpdateOperationsInputSchema: z.ZodType<Prisma.DateTimeFieldUpdateOperationsInput> = z.object({
+  set: z.coerce.date().optional()
+}).strict();
+
+export const EnumSystemServiceStatusFieldUpdateOperationsInputSchema: z.ZodType<Prisma.EnumSystemServiceStatusFieldUpdateOperationsInput> = z.object({
+  set: z.lazy(() => SystemServiceStatusSchema).optional()
+}).strict();
+
 export const PartnerSchoolCreateNestedOneWithoutStudentsInputSchema: z.ZodType<Prisma.PartnerSchoolCreateNestedOneWithoutStudentsInput> = z.object({
   create: z.union([ z.lazy(() => PartnerSchoolCreateWithoutStudentsInputSchema),z.lazy(() => PartnerSchoolUncheckedCreateWithoutStudentsInputSchema) ]).optional(),
   connectOrCreate: z.lazy(() => PartnerSchoolCreateOrConnectWithoutStudentsInputSchema).optional(),
@@ -1562,10 +1794,6 @@ export const PersonalMembershipOrderUncheckedCreateNestedOneWithoutMemberInputSc
 
 export const EnumMembershipPurchaseChannelFieldUpdateOperationsInputSchema: z.ZodType<Prisma.EnumMembershipPurchaseChannelFieldUpdateOperationsInput> = z.object({
   set: z.lazy(() => MembershipPurchaseChannelSchema).optional()
-}).strict();
-
-export const DateTimeFieldUpdateOperationsInputSchema: z.ZodType<Prisma.DateTimeFieldUpdateOperationsInput> = z.object({
-  set: z.coerce.date().optional()
 }).strict();
 
 export const NullableDateTimeFieldUpdateOperationsInputSchema: z.ZodType<Prisma.NullableDateTimeFieldUpdateOperationsInput> = z.object({
@@ -1910,13 +2138,6 @@ export const NestedIntNullableFilterSchema: z.ZodType<Prisma.NestedIntNullableFi
   not: z.union([ z.number(),z.lazy(() => NestedIntNullableFilterSchema) ]).optional().nullable(),
 }).strict();
 
-export const NestedEnumMembershipPurchaseChannelFilterSchema: z.ZodType<Prisma.NestedEnumMembershipPurchaseChannelFilter> = z.object({
-  equals: z.lazy(() => MembershipPurchaseChannelSchema).optional(),
-  in: z.lazy(() => MembershipPurchaseChannelSchema).array().optional(),
-  notIn: z.lazy(() => MembershipPurchaseChannelSchema).array().optional(),
-  not: z.union([ z.lazy(() => MembershipPurchaseChannelSchema),z.lazy(() => NestedEnumMembershipPurchaseChannelFilterSchema) ]).optional(),
-}).strict();
-
 export const NestedDateTimeFilterSchema: z.ZodType<Prisma.NestedDateTimeFilter> = z.object({
   equals: z.coerce.date().optional(),
   in: z.coerce.date().array().optional(),
@@ -1926,6 +2147,44 @@ export const NestedDateTimeFilterSchema: z.ZodType<Prisma.NestedDateTimeFilter> 
   gt: z.coerce.date().optional(),
   gte: z.coerce.date().optional(),
   not: z.union([ z.coerce.date(),z.lazy(() => NestedDateTimeFilterSchema) ]).optional(),
+}).strict();
+
+export const NestedEnumSystemServiceStatusFilterSchema: z.ZodType<Prisma.NestedEnumSystemServiceStatusFilter> = z.object({
+  equals: z.lazy(() => SystemServiceStatusSchema).optional(),
+  in: z.lazy(() => SystemServiceStatusSchema).array().optional(),
+  notIn: z.lazy(() => SystemServiceStatusSchema).array().optional(),
+  not: z.union([ z.lazy(() => SystemServiceStatusSchema),z.lazy(() => NestedEnumSystemServiceStatusFilterSchema) ]).optional(),
+}).strict();
+
+export const NestedDateTimeWithAggregatesFilterSchema: z.ZodType<Prisma.NestedDateTimeWithAggregatesFilter> = z.object({
+  equals: z.coerce.date().optional(),
+  in: z.coerce.date().array().optional(),
+  notIn: z.coerce.date().array().optional(),
+  lt: z.coerce.date().optional(),
+  lte: z.coerce.date().optional(),
+  gt: z.coerce.date().optional(),
+  gte: z.coerce.date().optional(),
+  not: z.union([ z.coerce.date(),z.lazy(() => NestedDateTimeWithAggregatesFilterSchema) ]).optional(),
+  _count: z.lazy(() => NestedIntFilterSchema).optional(),
+  _min: z.lazy(() => NestedDateTimeFilterSchema).optional(),
+  _max: z.lazy(() => NestedDateTimeFilterSchema).optional()
+}).strict();
+
+export const NestedEnumSystemServiceStatusWithAggregatesFilterSchema: z.ZodType<Prisma.NestedEnumSystemServiceStatusWithAggregatesFilter> = z.object({
+  equals: z.lazy(() => SystemServiceStatusSchema).optional(),
+  in: z.lazy(() => SystemServiceStatusSchema).array().optional(),
+  notIn: z.lazy(() => SystemServiceStatusSchema).array().optional(),
+  not: z.union([ z.lazy(() => SystemServiceStatusSchema),z.lazy(() => NestedEnumSystemServiceStatusWithAggregatesFilterSchema) ]).optional(),
+  _count: z.lazy(() => NestedIntFilterSchema).optional(),
+  _min: z.lazy(() => NestedEnumSystemServiceStatusFilterSchema).optional(),
+  _max: z.lazy(() => NestedEnumSystemServiceStatusFilterSchema).optional()
+}).strict();
+
+export const NestedEnumMembershipPurchaseChannelFilterSchema: z.ZodType<Prisma.NestedEnumMembershipPurchaseChannelFilter> = z.object({
+  equals: z.lazy(() => MembershipPurchaseChannelSchema).optional(),
+  in: z.lazy(() => MembershipPurchaseChannelSchema).array().optional(),
+  notIn: z.lazy(() => MembershipPurchaseChannelSchema).array().optional(),
+  not: z.union([ z.lazy(() => MembershipPurchaseChannelSchema),z.lazy(() => NestedEnumMembershipPurchaseChannelFilterSchema) ]).optional(),
 }).strict();
 
 export const NestedDateTimeNullableFilterSchema: z.ZodType<Prisma.NestedDateTimeNullableFilter> = z.object({
@@ -1947,20 +2206,6 @@ export const NestedEnumMembershipPurchaseChannelWithAggregatesFilterSchema: z.Zo
   _count: z.lazy(() => NestedIntFilterSchema).optional(),
   _min: z.lazy(() => NestedEnumMembershipPurchaseChannelFilterSchema).optional(),
   _max: z.lazy(() => NestedEnumMembershipPurchaseChannelFilterSchema).optional()
-}).strict();
-
-export const NestedDateTimeWithAggregatesFilterSchema: z.ZodType<Prisma.NestedDateTimeWithAggregatesFilter> = z.object({
-  equals: z.coerce.date().optional(),
-  in: z.coerce.date().array().optional(),
-  notIn: z.coerce.date().array().optional(),
-  lt: z.coerce.date().optional(),
-  lte: z.coerce.date().optional(),
-  gt: z.coerce.date().optional(),
-  gte: z.coerce.date().optional(),
-  not: z.union([ z.coerce.date(),z.lazy(() => NestedDateTimeWithAggregatesFilterSchema) ]).optional(),
-  _count: z.lazy(() => NestedIntFilterSchema).optional(),
-  _min: z.lazy(() => NestedDateTimeFilterSchema).optional(),
-  _max: z.lazy(() => NestedDateTimeFilterSchema).optional()
 }).strict();
 
 export const NestedDateTimeNullableWithAggregatesFilterSchema: z.ZodType<Prisma.NestedDateTimeNullableWithAggregatesFilter> = z.object({
@@ -2015,6 +2260,7 @@ export const StudentMemberCreateWithoutFederated_accountsInputSchema: z.ZodType<
   purchase_channel: z.lazy(() => MembershipPurchaseChannelSchema),
   created_at: z.coerce.date().optional(),
   activated_at: z.coerce.date().optional().nullable(),
+  expired_at: z.coerce.date().optional().nullable(),
   password_hash: z.string().optional().nullable(),
   school_attended: z.lazy(() => PartnerSchoolCreateNestedOneWithoutStudentsInputSchema),
   membership_order: z.lazy(() => PersonalMembershipOrderCreateNestedOneWithoutMemberInputSchema).optional()
@@ -2029,6 +2275,7 @@ export const StudentMemberUncheckedCreateWithoutFederated_accountsInputSchema: z
   purchase_channel: z.lazy(() => MembershipPurchaseChannelSchema),
   created_at: z.coerce.date().optional(),
   activated_at: z.coerce.date().optional().nullable(),
+  expired_at: z.coerce.date().optional().nullable(),
   password_hash: z.string().optional().nullable(),
   membership_order: z.lazy(() => PersonalMembershipOrderUncheckedCreateNestedOneWithoutMemberInputSchema).optional()
 }).strict();
@@ -2057,6 +2304,7 @@ export const StudentMemberUpdateWithoutFederated_accountsInputSchema: z.ZodType<
   purchase_channel: z.union([ z.lazy(() => MembershipPurchaseChannelSchema),z.lazy(() => EnumMembershipPurchaseChannelFieldUpdateOperationsInputSchema) ]).optional(),
   created_at: z.union([ z.coerce.date(),z.lazy(() => DateTimeFieldUpdateOperationsInputSchema) ]).optional(),
   activated_at: z.union([ z.coerce.date(),z.lazy(() => NullableDateTimeFieldUpdateOperationsInputSchema) ]).optional().nullable(),
+  expired_at: z.union([ z.coerce.date(),z.lazy(() => NullableDateTimeFieldUpdateOperationsInputSchema) ]).optional().nullable(),
   password_hash: z.union([ z.string(),z.lazy(() => NullableStringFieldUpdateOperationsInputSchema) ]).optional().nullable(),
   school_attended: z.lazy(() => PartnerSchoolUpdateOneRequiredWithoutStudentsNestedInputSchema).optional(),
   membership_order: z.lazy(() => PersonalMembershipOrderUpdateOneWithoutMemberNestedInputSchema).optional()
@@ -2071,6 +2319,7 @@ export const StudentMemberUncheckedUpdateWithoutFederated_accountsInputSchema: z
   purchase_channel: z.union([ z.lazy(() => MembershipPurchaseChannelSchema),z.lazy(() => EnumMembershipPurchaseChannelFieldUpdateOperationsInputSchema) ]).optional(),
   created_at: z.union([ z.coerce.date(),z.lazy(() => DateTimeFieldUpdateOperationsInputSchema) ]).optional(),
   activated_at: z.union([ z.coerce.date(),z.lazy(() => NullableDateTimeFieldUpdateOperationsInputSchema) ]).optional().nullable(),
+  expired_at: z.union([ z.coerce.date(),z.lazy(() => NullableDateTimeFieldUpdateOperationsInputSchema) ]).optional().nullable(),
   password_hash: z.union([ z.string(),z.lazy(() => NullableStringFieldUpdateOperationsInputSchema) ]).optional().nullable(),
   membership_order: z.lazy(() => PersonalMembershipOrderUncheckedUpdateOneWithoutMemberNestedInputSchema).optional()
 }).strict();
@@ -2295,6 +2544,7 @@ export const StudentMemberCreateWithoutMembership_orderInputSchema: z.ZodType<Pr
   purchase_channel: z.lazy(() => MembershipPurchaseChannelSchema),
   created_at: z.coerce.date().optional(),
   activated_at: z.coerce.date().optional().nullable(),
+  expired_at: z.coerce.date().optional().nullable(),
   password_hash: z.string().optional().nullable(),
   school_attended: z.lazy(() => PartnerSchoolCreateNestedOneWithoutStudentsInputSchema),
   federated_accounts: z.lazy(() => FederatedAccountCreateNestedManyWithoutMemberInputSchema).optional()
@@ -2309,6 +2559,7 @@ export const StudentMemberUncheckedCreateWithoutMembership_orderInputSchema: z.Z
   purchase_channel: z.lazy(() => MembershipPurchaseChannelSchema),
   created_at: z.coerce.date().optional(),
   activated_at: z.coerce.date().optional().nullable(),
+  expired_at: z.coerce.date().optional().nullable(),
   password_hash: z.string().optional().nullable(),
   federated_accounts: z.lazy(() => FederatedAccountUncheckedCreateNestedManyWithoutMemberInputSchema).optional()
 }).strict();
@@ -2359,6 +2610,7 @@ export const StudentMemberUpdateWithoutMembership_orderInputSchema: z.ZodType<Pr
   purchase_channel: z.union([ z.lazy(() => MembershipPurchaseChannelSchema),z.lazy(() => EnumMembershipPurchaseChannelFieldUpdateOperationsInputSchema) ]).optional(),
   created_at: z.union([ z.coerce.date(),z.lazy(() => DateTimeFieldUpdateOperationsInputSchema) ]).optional(),
   activated_at: z.union([ z.coerce.date(),z.lazy(() => NullableDateTimeFieldUpdateOperationsInputSchema) ]).optional().nullable(),
+  expired_at: z.union([ z.coerce.date(),z.lazy(() => NullableDateTimeFieldUpdateOperationsInputSchema) ]).optional().nullable(),
   password_hash: z.union([ z.string(),z.lazy(() => NullableStringFieldUpdateOperationsInputSchema) ]).optional().nullable(),
   school_attended: z.lazy(() => PartnerSchoolUpdateOneRequiredWithoutStudentsNestedInputSchema).optional(),
   federated_accounts: z.lazy(() => FederatedAccountUpdateManyWithoutMemberNestedInputSchema).optional()
@@ -2373,6 +2625,7 @@ export const StudentMemberUncheckedUpdateWithoutMembership_orderInputSchema: z.Z
   purchase_channel: z.union([ z.lazy(() => MembershipPurchaseChannelSchema),z.lazy(() => EnumMembershipPurchaseChannelFieldUpdateOperationsInputSchema) ]).optional(),
   created_at: z.union([ z.coerce.date(),z.lazy(() => DateTimeFieldUpdateOperationsInputSchema) ]).optional(),
   activated_at: z.union([ z.coerce.date(),z.lazy(() => NullableDateTimeFieldUpdateOperationsInputSchema) ]).optional().nullable(),
+  expired_at: z.union([ z.coerce.date(),z.lazy(() => NullableDateTimeFieldUpdateOperationsInputSchema) ]).optional().nullable(),
   password_hash: z.union([ z.string(),z.lazy(() => NullableStringFieldUpdateOperationsInputSchema) ]).optional().nullable(),
   federated_accounts: z.lazy(() => FederatedAccountUncheckedUpdateManyWithoutMemberNestedInputSchema).optional()
 }).strict();
@@ -2432,6 +2685,7 @@ export const StudentMemberCreateWithoutSchool_attendedInputSchema: z.ZodType<Pri
   purchase_channel: z.lazy(() => MembershipPurchaseChannelSchema),
   created_at: z.coerce.date().optional(),
   activated_at: z.coerce.date().optional().nullable(),
+  expired_at: z.coerce.date().optional().nullable(),
   password_hash: z.string().optional().nullable(),
   federated_accounts: z.lazy(() => FederatedAccountCreateNestedManyWithoutMemberInputSchema).optional(),
   membership_order: z.lazy(() => PersonalMembershipOrderCreateNestedOneWithoutMemberInputSchema).optional()
@@ -2445,6 +2699,7 @@ export const StudentMemberUncheckedCreateWithoutSchool_attendedInputSchema: z.Zo
   purchase_channel: z.lazy(() => MembershipPurchaseChannelSchema),
   created_at: z.coerce.date().optional(),
   activated_at: z.coerce.date().optional().nullable(),
+  expired_at: z.coerce.date().optional().nullable(),
   password_hash: z.string().optional().nullable(),
   federated_accounts: z.lazy(() => FederatedAccountUncheckedCreateNestedManyWithoutMemberInputSchema).optional(),
   membership_order: z.lazy(() => PersonalMembershipOrderUncheckedCreateNestedOneWithoutMemberInputSchema).optional()
@@ -2546,6 +2801,7 @@ export const StudentMemberScalarWhereInputSchema: z.ZodType<Prisma.StudentMember
   purchase_channel: z.union([ z.lazy(() => EnumMembershipPurchaseChannelFilterSchema),z.lazy(() => MembershipPurchaseChannelSchema) ]).optional(),
   created_at: z.union([ z.lazy(() => DateTimeFilterSchema),z.coerce.date() ]).optional(),
   activated_at: z.union([ z.lazy(() => DateTimeNullableFilterSchema),z.coerce.date() ]).optional().nullable(),
+  expired_at: z.union([ z.lazy(() => DateTimeNullableFilterSchema),z.coerce.date() ]).optional().nullable(),
   password_hash: z.union([ z.lazy(() => StringNullableFilterSchema),z.string() ]).optional().nullable(),
 }).strict();
 
@@ -2616,6 +2872,7 @@ export const StudentMemberCreateManySchool_attendedInputSchema: z.ZodType<Prisma
   purchase_channel: z.lazy(() => MembershipPurchaseChannelSchema),
   created_at: z.coerce.date().optional(),
   activated_at: z.coerce.date().optional().nullable(),
+  expired_at: z.coerce.date().optional().nullable(),
   password_hash: z.string().optional().nullable()
 }).strict();
 
@@ -2639,6 +2896,7 @@ export const StudentMemberUpdateWithoutSchool_attendedInputSchema: z.ZodType<Pri
   purchase_channel: z.union([ z.lazy(() => MembershipPurchaseChannelSchema),z.lazy(() => EnumMembershipPurchaseChannelFieldUpdateOperationsInputSchema) ]).optional(),
   created_at: z.union([ z.coerce.date(),z.lazy(() => DateTimeFieldUpdateOperationsInputSchema) ]).optional(),
   activated_at: z.union([ z.coerce.date(),z.lazy(() => NullableDateTimeFieldUpdateOperationsInputSchema) ]).optional().nullable(),
+  expired_at: z.union([ z.coerce.date(),z.lazy(() => NullableDateTimeFieldUpdateOperationsInputSchema) ]).optional().nullable(),
   password_hash: z.union([ z.string(),z.lazy(() => NullableStringFieldUpdateOperationsInputSchema) ]).optional().nullable(),
   federated_accounts: z.lazy(() => FederatedAccountUpdateManyWithoutMemberNestedInputSchema).optional(),
   membership_order: z.lazy(() => PersonalMembershipOrderUpdateOneWithoutMemberNestedInputSchema).optional()
@@ -2652,6 +2910,7 @@ export const StudentMemberUncheckedUpdateWithoutSchool_attendedInputSchema: z.Zo
   purchase_channel: z.union([ z.lazy(() => MembershipPurchaseChannelSchema),z.lazy(() => EnumMembershipPurchaseChannelFieldUpdateOperationsInputSchema) ]).optional(),
   created_at: z.union([ z.coerce.date(),z.lazy(() => DateTimeFieldUpdateOperationsInputSchema) ]).optional(),
   activated_at: z.union([ z.coerce.date(),z.lazy(() => NullableDateTimeFieldUpdateOperationsInputSchema) ]).optional().nullable(),
+  expired_at: z.union([ z.coerce.date(),z.lazy(() => NullableDateTimeFieldUpdateOperationsInputSchema) ]).optional().nullable(),
   password_hash: z.union([ z.string(),z.lazy(() => NullableStringFieldUpdateOperationsInputSchema) ]).optional().nullable(),
   federated_accounts: z.lazy(() => FederatedAccountUncheckedUpdateManyWithoutMemberNestedInputSchema).optional(),
   membership_order: z.lazy(() => PersonalMembershipOrderUncheckedUpdateOneWithoutMemberNestedInputSchema).optional()
@@ -2665,6 +2924,7 @@ export const StudentMemberUncheckedUpdateManyWithoutSchool_attendedInputSchema: 
   purchase_channel: z.union([ z.lazy(() => MembershipPurchaseChannelSchema),z.lazy(() => EnumMembershipPurchaseChannelFieldUpdateOperationsInputSchema) ]).optional(),
   created_at: z.union([ z.coerce.date(),z.lazy(() => DateTimeFieldUpdateOperationsInputSchema) ]).optional(),
   activated_at: z.union([ z.coerce.date(),z.lazy(() => NullableDateTimeFieldUpdateOperationsInputSchema) ]).optional().nullable(),
+  expired_at: z.union([ z.coerce.date(),z.lazy(() => NullableDateTimeFieldUpdateOperationsInputSchema) ]).optional().nullable(),
   password_hash: z.union([ z.string(),z.lazy(() => NullableStringFieldUpdateOperationsInputSchema) ]).optional().nullable(),
 }).strict();
 
@@ -2829,6 +3089,63 @@ export const SchoolAccountConfigFindUniqueOrThrowArgsSchema: z.ZodType<Prisma.Sc
   select: SchoolAccountConfigSelectSchema.optional(),
   include: SchoolAccountConfigIncludeSchema.optional(),
   where: SchoolAccountConfigWhereUniqueInputSchema,
+}).strict() ;
+
+export const SystemConfigurationUpdatesFindFirstArgsSchema: z.ZodType<Prisma.SystemConfigurationUpdatesFindFirstArgs> = z.object({
+  select: SystemConfigurationUpdatesSelectSchema.optional(),
+  where: SystemConfigurationUpdatesWhereInputSchema.optional(),
+  orderBy: z.union([ SystemConfigurationUpdatesOrderByWithRelationInputSchema.array(),SystemConfigurationUpdatesOrderByWithRelationInputSchema ]).optional(),
+  cursor: SystemConfigurationUpdatesWhereUniqueInputSchema.optional(),
+  take: z.number().optional(),
+  skip: z.number().optional(),
+  distinct: z.union([ SystemConfigurationUpdatesScalarFieldEnumSchema,SystemConfigurationUpdatesScalarFieldEnumSchema.array() ]).optional(),
+}).strict() ;
+
+export const SystemConfigurationUpdatesFindFirstOrThrowArgsSchema: z.ZodType<Prisma.SystemConfigurationUpdatesFindFirstOrThrowArgs> = z.object({
+  select: SystemConfigurationUpdatesSelectSchema.optional(),
+  where: SystemConfigurationUpdatesWhereInputSchema.optional(),
+  orderBy: z.union([ SystemConfigurationUpdatesOrderByWithRelationInputSchema.array(),SystemConfigurationUpdatesOrderByWithRelationInputSchema ]).optional(),
+  cursor: SystemConfigurationUpdatesWhereUniqueInputSchema.optional(),
+  take: z.number().optional(),
+  skip: z.number().optional(),
+  distinct: z.union([ SystemConfigurationUpdatesScalarFieldEnumSchema,SystemConfigurationUpdatesScalarFieldEnumSchema.array() ]).optional(),
+}).strict() ;
+
+export const SystemConfigurationUpdatesFindManyArgsSchema: z.ZodType<Prisma.SystemConfigurationUpdatesFindManyArgs> = z.object({
+  select: SystemConfigurationUpdatesSelectSchema.optional(),
+  where: SystemConfigurationUpdatesWhereInputSchema.optional(),
+  orderBy: z.union([ SystemConfigurationUpdatesOrderByWithRelationInputSchema.array(),SystemConfigurationUpdatesOrderByWithRelationInputSchema ]).optional(),
+  cursor: SystemConfigurationUpdatesWhereUniqueInputSchema.optional(),
+  take: z.number().optional(),
+  skip: z.number().optional(),
+  distinct: z.union([ SystemConfigurationUpdatesScalarFieldEnumSchema,SystemConfigurationUpdatesScalarFieldEnumSchema.array() ]).optional(),
+}).strict() ;
+
+export const SystemConfigurationUpdatesAggregateArgsSchema: z.ZodType<Prisma.SystemConfigurationUpdatesAggregateArgs> = z.object({
+  where: SystemConfigurationUpdatesWhereInputSchema.optional(),
+  orderBy: z.union([ SystemConfigurationUpdatesOrderByWithRelationInputSchema.array(),SystemConfigurationUpdatesOrderByWithRelationInputSchema ]).optional(),
+  cursor: SystemConfigurationUpdatesWhereUniqueInputSchema.optional(),
+  take: z.number().optional(),
+  skip: z.number().optional(),
+}).strict() ;
+
+export const SystemConfigurationUpdatesGroupByArgsSchema: z.ZodType<Prisma.SystemConfigurationUpdatesGroupByArgs> = z.object({
+  where: SystemConfigurationUpdatesWhereInputSchema.optional(),
+  orderBy: z.union([ SystemConfigurationUpdatesOrderByWithAggregationInputSchema.array(),SystemConfigurationUpdatesOrderByWithAggregationInputSchema ]).optional(),
+  by: SystemConfigurationUpdatesScalarFieldEnumSchema.array(),
+  having: SystemConfigurationUpdatesScalarWhereWithAggregatesInputSchema.optional(),
+  take: z.number().optional(),
+  skip: z.number().optional(),
+}).strict() ;
+
+export const SystemConfigurationUpdatesFindUniqueArgsSchema: z.ZodType<Prisma.SystemConfigurationUpdatesFindUniqueArgs> = z.object({
+  select: SystemConfigurationUpdatesSelectSchema.optional(),
+  where: SystemConfigurationUpdatesWhereUniqueInputSchema,
+}).strict() ;
+
+export const SystemConfigurationUpdatesFindUniqueOrThrowArgsSchema: z.ZodType<Prisma.SystemConfigurationUpdatesFindUniqueOrThrowArgs> = z.object({
+  select: SystemConfigurationUpdatesSelectSchema.optional(),
+  where: SystemConfigurationUpdatesWhereUniqueInputSchema,
 }).strict() ;
 
 export const StudentMemberFindFirstArgsSchema: z.ZodType<Prisma.StudentMemberFindFirstArgs> = z.object({
@@ -3059,6 +3376,11 @@ export const FederatedAccountUpdateManyArgsSchema: z.ZodType<Prisma.FederatedAcc
   where: FederatedAccountWhereInputSchema.optional(),
 }).strict() ;
 
+export const updateManyFederatedAccountCreateManyAndReturnArgsSchema: z.ZodType<Prisma.updateManyFederatedAccountCreateManyAndReturnArgs> = z.object({
+  data: z.union([ FederatedAccountUpdateManyMutationInputSchema,FederatedAccountUncheckedUpdateManyInputSchema ]),
+  where: FederatedAccountWhereInputSchema.optional(),
+}).strict() ;
+
 export const FederatedAccountDeleteManyArgsSchema: z.ZodType<Prisma.FederatedAccountDeleteManyArgs> = z.object({
   where: FederatedAccountWhereInputSchema.optional(),
 }).strict() ;
@@ -3105,8 +3427,60 @@ export const SchoolAccountConfigUpdateManyArgsSchema: z.ZodType<Prisma.SchoolAcc
   where: SchoolAccountConfigWhereInputSchema.optional(),
 }).strict() ;
 
+export const updateManySchoolAccountConfigCreateManyAndReturnArgsSchema: z.ZodType<Prisma.updateManySchoolAccountConfigCreateManyAndReturnArgs> = z.object({
+  data: z.union([ SchoolAccountConfigUpdateManyMutationInputSchema,SchoolAccountConfigUncheckedUpdateManyInputSchema ]),
+  where: SchoolAccountConfigWhereInputSchema.optional(),
+}).strict() ;
+
 export const SchoolAccountConfigDeleteManyArgsSchema: z.ZodType<Prisma.SchoolAccountConfigDeleteManyArgs> = z.object({
   where: SchoolAccountConfigWhereInputSchema.optional(),
+}).strict() ;
+
+export const SystemConfigurationUpdatesCreateArgsSchema: z.ZodType<Prisma.SystemConfigurationUpdatesCreateArgs> = z.object({
+  select: SystemConfigurationUpdatesSelectSchema.optional(),
+  data: z.union([ SystemConfigurationUpdatesCreateInputSchema,SystemConfigurationUpdatesUncheckedCreateInputSchema ]),
+}).strict() ;
+
+export const SystemConfigurationUpdatesUpsertArgsSchema: z.ZodType<Prisma.SystemConfigurationUpdatesUpsertArgs> = z.object({
+  select: SystemConfigurationUpdatesSelectSchema.optional(),
+  where: SystemConfigurationUpdatesWhereUniqueInputSchema,
+  create: z.union([ SystemConfigurationUpdatesCreateInputSchema,SystemConfigurationUpdatesUncheckedCreateInputSchema ]),
+  update: z.union([ SystemConfigurationUpdatesUpdateInputSchema,SystemConfigurationUpdatesUncheckedUpdateInputSchema ]),
+}).strict() ;
+
+export const SystemConfigurationUpdatesCreateManyArgsSchema: z.ZodType<Prisma.SystemConfigurationUpdatesCreateManyArgs> = z.object({
+  data: z.union([ SystemConfigurationUpdatesCreateManyInputSchema,SystemConfigurationUpdatesCreateManyInputSchema.array() ]),
+  skipDuplicates: z.boolean().optional(),
+}).strict() ;
+
+export const SystemConfigurationUpdatesCreateManyAndReturnArgsSchema: z.ZodType<Prisma.SystemConfigurationUpdatesCreateManyAndReturnArgs> = z.object({
+  data: z.union([ SystemConfigurationUpdatesCreateManyInputSchema,SystemConfigurationUpdatesCreateManyInputSchema.array() ]),
+  skipDuplicates: z.boolean().optional(),
+}).strict() ;
+
+export const SystemConfigurationUpdatesDeleteArgsSchema: z.ZodType<Prisma.SystemConfigurationUpdatesDeleteArgs> = z.object({
+  select: SystemConfigurationUpdatesSelectSchema.optional(),
+  where: SystemConfigurationUpdatesWhereUniqueInputSchema,
+}).strict() ;
+
+export const SystemConfigurationUpdatesUpdateArgsSchema: z.ZodType<Prisma.SystemConfigurationUpdatesUpdateArgs> = z.object({
+  select: SystemConfigurationUpdatesSelectSchema.optional(),
+  data: z.union([ SystemConfigurationUpdatesUpdateInputSchema,SystemConfigurationUpdatesUncheckedUpdateInputSchema ]),
+  where: SystemConfigurationUpdatesWhereUniqueInputSchema,
+}).strict() ;
+
+export const SystemConfigurationUpdatesUpdateManyArgsSchema: z.ZodType<Prisma.SystemConfigurationUpdatesUpdateManyArgs> = z.object({
+  data: z.union([ SystemConfigurationUpdatesUpdateManyMutationInputSchema,SystemConfigurationUpdatesUncheckedUpdateManyInputSchema ]),
+  where: SystemConfigurationUpdatesWhereInputSchema.optional(),
+}).strict() ;
+
+export const updateManySystemConfigurationUpdatesCreateManyAndReturnArgsSchema: z.ZodType<Prisma.updateManySystemConfigurationUpdatesCreateManyAndReturnArgs> = z.object({
+  data: z.union([ SystemConfigurationUpdatesUpdateManyMutationInputSchema,SystemConfigurationUpdatesUncheckedUpdateManyInputSchema ]),
+  where: SystemConfigurationUpdatesWhereInputSchema.optional(),
+}).strict() ;
+
+export const SystemConfigurationUpdatesDeleteManyArgsSchema: z.ZodType<Prisma.SystemConfigurationUpdatesDeleteManyArgs> = z.object({
+  where: SystemConfigurationUpdatesWhereInputSchema.optional(),
 }).strict() ;
 
 export const StudentMemberCreateArgsSchema: z.ZodType<Prisma.StudentMemberCreateArgs> = z.object({
@@ -3147,6 +3521,11 @@ export const StudentMemberUpdateArgsSchema: z.ZodType<Prisma.StudentMemberUpdate
 }).strict() ;
 
 export const StudentMemberUpdateManyArgsSchema: z.ZodType<Prisma.StudentMemberUpdateManyArgs> = z.object({
+  data: z.union([ StudentMemberUpdateManyMutationInputSchema,StudentMemberUncheckedUpdateManyInputSchema ]),
+  where: StudentMemberWhereInputSchema.optional(),
+}).strict() ;
+
+export const updateManyStudentMemberCreateManyAndReturnArgsSchema: z.ZodType<Prisma.updateManyStudentMemberCreateManyAndReturnArgs> = z.object({
   data: z.union([ StudentMemberUpdateManyMutationInputSchema,StudentMemberUncheckedUpdateManyInputSchema ]),
   where: StudentMemberWhereInputSchema.optional(),
 }).strict() ;
@@ -3197,6 +3576,11 @@ export const PersonalMembershipOrderUpdateManyArgsSchema: z.ZodType<Prisma.Perso
   where: PersonalMembershipOrderWhereInputSchema.optional(),
 }).strict() ;
 
+export const updateManyPersonalMembershipOrderCreateManyAndReturnArgsSchema: z.ZodType<Prisma.updateManyPersonalMembershipOrderCreateManyAndReturnArgs> = z.object({
+  data: z.union([ PersonalMembershipOrderUpdateManyMutationInputSchema,PersonalMembershipOrderUncheckedUpdateManyInputSchema ]),
+  where: PersonalMembershipOrderWhereInputSchema.optional(),
+}).strict() ;
+
 export const PersonalMembershipOrderDeleteManyArgsSchema: z.ZodType<Prisma.PersonalMembershipOrderDeleteManyArgs> = z.object({
   where: PersonalMembershipOrderWhereInputSchema.optional(),
 }).strict() ;
@@ -3239,6 +3623,11 @@ export const PartnerSchoolUpdateArgsSchema: z.ZodType<Prisma.PartnerSchoolUpdate
 }).strict() ;
 
 export const PartnerSchoolUpdateManyArgsSchema: z.ZodType<Prisma.PartnerSchoolUpdateManyArgs> = z.object({
+  data: z.union([ PartnerSchoolUpdateManyMutationInputSchema,PartnerSchoolUncheckedUpdateManyInputSchema ]),
+  where: PartnerSchoolWhereInputSchema.optional(),
+}).strict() ;
+
+export const updateManyPartnerSchoolCreateManyAndReturnArgsSchema: z.ZodType<Prisma.updateManyPartnerSchoolCreateManyAndReturnArgs> = z.object({
   data: z.union([ PartnerSchoolUpdateManyMutationInputSchema,PartnerSchoolUncheckedUpdateManyInputSchema ]),
   where: PartnerSchoolWhereInputSchema.optional(),
 }).strict() ;
