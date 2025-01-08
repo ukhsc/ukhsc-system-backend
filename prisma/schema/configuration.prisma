@@ -1,0 +1,14 @@
+model SystemConfigurationUpdates {
+  id         Int      @id @default(autoincrement())
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
+
+  service_status      SystemServiceStatus
+  contract_start_date DateTime
+  contract_end_date   DateTime
+}
+
+enum SystemServiceStatus {
+  Normal
+  Maintenance
+}

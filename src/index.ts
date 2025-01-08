@@ -1,17 +1,17 @@
 import { fromHono, OpenAPIRouterType } from "chanfana";
 import { Context, Hono } from "hono";
-import { ListPartnerSchool, registerAuth, registerForms } from "endpoints";
-import { prismaInitMiddleware } from "config/prisma";
+import { registerEndpoints } from "endpoints";
+import { prismaInitMiddleware } from "@utils/prisma";
 import dotenv from "dotenv";
 import { logger } from "hono/logger";
 import { PrismaClient } from "@prisma/client";
-import { HealthCheck } from "endpoints/HealthCheck";
 import process from "process";
-import { BaseTokenPayload } from "@config/auth";
+import { BaseTokenPayload } from "@utils/auth";
 import { cors } from "hono/cors";
-import { EnvConfig, initEnv } from "@config/env";
+import { EnvConfig, initEnv } from "@utils/env";
 import console from "console";
 import { serve } from "@hono/node-server";
+import { httpErrorMiddleware } from "@utils/error";
 
 interface Variables {
   prisma: PrismaClient;
@@ -46,27 +46,12 @@ openapi.registry.registerComponent("securitySchemes", "ordererAuth", {
   type: "http",
   scheme: "bearer",
 });
-
-// Register OpenAPI endpoints
-// TODO: fix ip restriction
-// openapi.use(
-//   "/health",
-//   ipRestriction(getConnInfo, {
-//     denyList: [],
-//     allowList: [
-//       "127.0.0.1", // IPv4 localhost
-//       "::1", // IPv6 localhost
-//       "172.16.0.0/12", // Docker default bridge network range
-//       "192.168.0.0/16", // Additional Docker network range
-//       "10.0.0.0/8", // Docker overlay network range
-//     ],
-//   }),
-// );
-openapi.get("/health", HealthCheck);
-openapi.get("/resources/partner-school", ListPartnerSchool);
-// Nesting routes is not working, see also: https://github.com/cloudflare/chanfana/issues/179.
-registerForms(openapi);
-registerAuth(openapi);
+openapi.registry.registerComponent("securitySchemes", "memberAuth", {
+  type: "http",
+  scheme: "bearer",
+});
+registerEndpoints(openapi);
+openapi.use(httpErrorMiddleware);
 openapi.onError((err, cxt) => {
   console.error(err);
   return cxt.text("Internal Server Error", 500);

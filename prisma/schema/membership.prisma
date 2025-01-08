@@ -7,11 +7,11 @@ model StudentMember {
   student_id         String?
   nickname           String?
   purchase_channel   MembershipPurchaseChannel
-  has_stickers       Boolean                   @default(false)
   federated_accounts FederatedAccount[]
 
   created_at   DateTime  @default(now())
   activated_at DateTime?
+  expired_at   DateTime?
 
   password_hash    String?
   membership_order PersonalMembershipOrder?
@@ -20,6 +20,7 @@ model StudentMember {
 enum MembershipPurchaseChannel {
   Personal // 填寫個人購買表單後經由學生會代收代付取得會員資格
   StudentCouncil // 由學生會統一代為團體購買
+  PartnerFree // 政策變更：所有合作學校學生皆免費
 }
 
 model PersonalMembershipOrder {

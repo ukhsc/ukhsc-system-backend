@@ -4,29 +4,17 @@
     "allowSyntheticDefaultImports": true,
     "baseUrl": "src",
     "paths": {
-      "@config/*": [
-        "config/*"
-      ],
-      "@endpoints/*": [
-        "endpoints/*"
-      ],
-      "@services/*": [
-        "services/*"
-      ],
-      "@tests/*": [
-        "../tests/*"
-      ],
-      "@test-helpers/*": [
-        "../tests/helpers/*"
-      ]
+      "@utils/*": ["utils/*"],
+      "@endpoints/*": ["endpoints/*"],
+      "@services/*": ["services/*"],
+      "@tests/*": ["../tests/*"],
+      "@test-helpers/*": ["../tests/helpers/*"]
     },
     "declaration": true,
     "sourceMap": true,
     "esModuleInterop": true,
     "inlineSourceMap": false,
-    "lib": [
-      "esnext"
-    ],
+    "lib": ["esnext"],
     "listEmittedFiles": false,
     "listFiles": false,
     "moduleResolution": "node",
@@ -42,10 +30,7 @@
     "target": "esnext",
     "module": "esnext"
   },
-  "exclude": [
-    "node_modules",
-    "dist"
-  ],
+  "exclude": ["node_modules", "dist"],
   "include": [
     "src",
     "tests",

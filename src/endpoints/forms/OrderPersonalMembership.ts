@@ -1,4 +1,4 @@
-import { OrdererTokenPayload, TokenRole } from "@config/auth";
+import { OrdererTokenPayload, TokenRole } from "@utils/auth";
 import { MembershipPurchaseChannel, Prisma } from "@prisma/client";
 import { AuthService } from "@services/auth";
 import { OpenAPIRoute } from "chanfana";
@@ -80,7 +80,6 @@ export class OrderPersonalMembership extends OpenAPIRoute {
                 },
               },
               purchase_channel: MembershipPurchaseChannel.Personal,
-              has_stickers: data.body.need_sticker,
             },
           },
           class: data.body.class,

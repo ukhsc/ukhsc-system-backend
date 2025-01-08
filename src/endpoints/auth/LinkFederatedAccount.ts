@@ -7,14 +7,10 @@ import { extendZodWithOpenApi } from "@asteasolutions/zod-to-openapi";
 // See Also: https://github.com/cloudflare/chanfana/issues/167
 extendZodWithOpenApi(z);
 import { AuthService, OpenAPIResponseForbidden, OpenAPIResponseUnauthorized } from "@services/auth";
-import { FederatedAccountService } from "@services/federated_account";
-import { isOrdererTokenPayload, OrdererTokenPayload } from "@config/auth";
+import { FederatedAccountService, GrantFlows } from "@services/federated_account";
+import { isOrdererTokenPayload } from "@utils/auth";
 import { FederatedProvider } from "@prisma/client";
-
-enum GrantFlows {
-  AuthorizationCode = "authorization_code",
-  Implicit = "token",
-}
+import { BadRequestError } from "@utils/error";
 
 export class LinkFederatedAccount extends OpenAPIRoute {
   schema = {
@@ -24,9 +20,11 @@ export class LinkFederatedAccount extends OpenAPIRoute {
     security: [{ ordererAuth: [] }],
     request: {
       params: z.object({
-        provider: FederatedProviderSchema.describe("社群帳號提供者（目前僅支援 Google）").openapi({
-          example: FederatedProvider.Google,
-        }),
+        provider: FederatedProviderSchema.exclude(["GoogleWorkspace"])
+          .describe("社群帳號提供者（目前僅支援 Google）")
+          .openapi({
+            example: FederatedProvider.Google,
+          }),
       }),
       body: {
         content: {
@@ -63,50 +61,34 @@ export class LinkFederatedAccount extends OpenAPIRoute {
 
   async handle(ctx: AppContext) {
     const data = await this.getValidatedData<typeof this.schema>();
-    const federated_service = new FederatedAccountService(ctx.var.prisma, ctx.env);
+    const db = ctx.var.prisma;
+    const federated_service = new FederatedAccountService(db, ctx.env, data.params.provider);
 
     // Validate authentication
-    const auth_service = new AuthService(ctx);
-    let auth_payload: OrdererTokenPayload;
+    const auth_service = new AuthService(ctx.req);
+    const auth_payload = auth_service.validate(ctx.env.JWT_SECRET, isOrdererTokenPayload);
+
     try {
-      auth_payload = auth_service.validate(isOrdererTokenPayload);
-    } catch (res) {
-      return res;
-    }
+      const { flow, redirect_uri, grant_value } = data.body;
+      const token = await federated_service.getAccessToken(flow, grant_value, redirect_uri);
+      const info = await federated_service.getUserInfo(token);
+      const order_id = auth_payload.order_id;
 
-    const provider = data.params.provider;
-    const { flow: grant_flow, redirect_uri, grant_value } = data.body;
+      const order = await db.personalMembershipOrder.findUnique({
+        where: { id: order_id },
+        include: {
+          member: { include: { federated_accounts: true } },
+        },
+      });
 
-    let access_token: string;
+      const member = order?.member;
+      if (!order || !member) {
+        return ctx.json({ error: `Order not found or member not found: ${order_id}` }, 404);
+      }
 
-    // Get access token
-    switch (grant_flow) {
-      case GrantFlows.AuthorizationCode:
-        if (!redirect_uri) {
-          return ctx.json(
-            {
-              error: "Redirect URI is required for authorization code flow",
-            },
-            400,
-          );
-        }
-        access_token = await federated_service.exchangeCodeForToken(
-          provider,
-          redirect_uri,
-          grant_value,
-        );
-        break;
-      case GrantFlows.Implicit:
-        access_token = grant_value;
-        break;
-    }
-
-    // Get user info and link account
-    try {
-      const info = await federated_service.getUserInfo(provider, access_token);
-      await federated_service.linkOrdererAccount(auth_payload.order_id, provider, info);
+      await federated_service.linkAccount(member, info);
     } catch (err) {
-      if (err instanceof Error) {
+      if (err instanceof BadRequestError) {
         return ctx.json({ error: err.message }, 400);
       }
       throw err;

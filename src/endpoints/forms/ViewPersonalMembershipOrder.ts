@@ -2,7 +2,7 @@ import { OpenAPIRoute } from "chanfana";
 import { AppContext } from "index";
 import { PersonalMembershipOrderSchema } from "schema";
 import { z } from "zod";
-import { isOrdererTokenPayload, OrdererTokenPayload } from "@config/auth";
+import { isOrdererTokenPayload } from "@utils/auth";
 import { AuthService, OpenAPIResponseForbidden, OpenAPIResponseUnauthorized } from "@services/auth";
 
 export class ViewPersonalMembershipOrder extends OpenAPIRoute {
@@ -38,13 +38,8 @@ export class ViewPersonalMembershipOrder extends OpenAPIRoute {
   };
 
   async handle(ctx: AppContext) {
-    let auth_payload: OrdererTokenPayload;
-    try {
-      const auth_service = new AuthService(ctx);
-      auth_payload = auth_service.validate(isOrdererTokenPayload);
-    } catch (res) {
-      return res;
-    }
+    const auth_service = new AuthService(ctx.req);
+    const auth_payload = auth_service.validate(ctx.env.JWT_SECRET, isOrdererTokenPayload);
 
     const db = ctx.var.prisma;
     const order = await db.personalMembershipOrder.findUnique({

@@ -55,6 +55,7 @@ describe("Health Check", () => {
 
   it("should return environment value from CURRENT_ENVIRONMENT", async () => {
     // Arrange
+    mockPrisma.$queryRaw.mockResolvedValueOnce([{ "?column?": 1 }]);
     const TEST_ENVIRONMENT = "test";
 
     // Act
@@ -68,6 +69,8 @@ describe("Health Check", () => {
     const body = await res.json();
 
     // Assert
+    expect(res.status).toBe(200);
+    // @ts-ignore
     expect(body.environment).toBe(TEST_ENVIRONMENT);
   });
 });

@@ -2,7 +2,7 @@ model PartnerSchool {
   id                    Int                  @id @default(autoincrement())
   short_name            String               @unique
   full_name             String               @unique
-  plan                  PartnerPlan
+  plan                  PartnerPlan?
   google_account_config SchoolAccountConfig?
 
   students        StudentMember[]
