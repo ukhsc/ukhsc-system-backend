@@ -43,23 +43,25 @@ export class OrderPersonalMembership extends OpenAPIRoute {
               access_token: z.string().describe("存取權杖"),
               refresh_token: z.string().describe("更新權杖"),
             }),
+          },
         },
-      },
-      400: {
-        description: "合作夥伴學校的 ID 錯誤或不存在",
-        content: {
-          "application/json": {
-            schema: z.object({
-              error: z.string(),
-            }),
-            example: {
-              error: "Invalid partner school ID",
+        400: {
+          description: "合作夥伴學校的 ID 錯誤或不存在",
+          content: {
+            "application/json": {
+              schema: z.object({
+                error: z.string(),
+              }),
+              example: {
+                error: "Invalid partner school ID",
+              },
             },
           },
         },
       },
     },
   };
+
   async handle(ctx: AppContext) {
     const data = await this.getValidatedData<typeof this.schema>();
     const db = ctx.var.prisma;

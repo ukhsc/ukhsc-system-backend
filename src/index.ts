@@ -4,7 +4,6 @@ import { registerEndpoints } from "endpoints";
 import { ExtendedPrismaClient, prismaInitMiddleware } from "@utils/prisma";
 import dotenv from "dotenv";
 import { logger } from "hono/logger";
-import { PrismaClient } from "@prisma/client";
 import process from "process";
 import { BaseTokenPayload } from "@utils/auth";
 import { cors } from "hono/cors";
@@ -30,7 +29,10 @@ const openapi = fromHono(app, {
 let isEnvInitialized = false;
 openapi.use(async (ctx, next) => {
   if (!isEnvInitialized) {
-    ctx.env = initEnv();
+    const result = initEnv();
+    for (const key in result) {
+      ctx.set(key as never, result[key as never]);
+    }
     isEnvInitialized = true;
   }
   return next();
