@@ -33,8 +33,9 @@ export class UpdatePersonalMembershipOrder extends OpenAPIRoute {
     const data = await this.getValidatedData<typeof this.schema>();
     const db = ctx.var.prisma;
 
-    const auth_payload = new AuthService(ctx.req).validate(
+    const auth_payload = AuthService.validate(
       ctx.env.JWT_SECRET,
+      AuthService.getBearerToken(ctx.req),
       isOrdererTokenPayload,
     );
 

@@ -37,7 +37,7 @@ model UserDevice {
 model LoginActivity {
   id         Int        @id @default(autoincrement())
   device_id  Int
-  device     UserDevice @relation(fields: [device_id], references: [id])
+  device     UserDevice @relation(fields: [device_id], references: [id], onDelete: Cascade)
   ip_address String?
   login_time DateTime   @default(now())
 }

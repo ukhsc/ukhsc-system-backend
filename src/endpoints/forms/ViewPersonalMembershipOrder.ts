@@ -38,8 +38,11 @@ export class ViewPersonalMembershipOrder extends OpenAPIRoute {
   };
 
   async handle(ctx: AppContext) {
-    const auth_service = new AuthService(ctx.req);
-    const auth_payload = auth_service.validate(ctx.env.JWT_SECRET, isOrdererTokenPayload);
+    const auth_payload = AuthService.validate(
+      ctx.env.JWT_SECRET,
+      AuthService.getBearerToken(ctx.req),
+      isOrdererTokenPayload,
+    );
 
     const db = ctx.var.prisma;
     const order = await db.personalMembershipOrder.findUnique({

@@ -25,4 +25,4 @@ CREATE TABLE "LoginActivity" (
 );
 
 -- AddForeignKey
-ALTER TABLE "LoginActivity" ADD CONSTRAINT "LoginActivity_device_id_fkey" FOREIGN KEY ("device_id") REFERENCES "UserDevice"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+ALTER TABLE "LoginActivity" ADD CONSTRAINT "LoginActivity_device_id_fkey" FOREIGN KEY ("device_id") REFERENCES "UserDevice"("id") ON DELETE CASCADE ON UPDATE CASCADE;

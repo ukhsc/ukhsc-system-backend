@@ -64,9 +64,11 @@ export class LinkFederatedAccount extends OpenAPIRoute {
     const db = ctx.var.prisma;
     const federated_service = new FederatedAccountService(db, ctx.env, data.params.provider);
 
-    // Validate authentication
-    const auth_service = new AuthService(ctx.req);
-    const auth_payload = auth_service.validate(ctx.env.JWT_SECRET, isOrdererTokenPayload);
+    const auth_payload = AuthService.validate(
+      ctx.env.JWT_SECRET,
+      AuthService.getBearerToken(ctx.req),
+      isOrdererTokenPayload,
+    );
 
     try {
       const { flow, redirect_uri, grant_value } = data.body;

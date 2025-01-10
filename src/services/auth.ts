@@ -5,30 +5,25 @@ import { ForbiddenError, UnauthorizedError } from "@utils/error";
 import { HonoRequest } from "hono";
 
 export class AuthService {
-  constructor(
-    private req: HonoRequest,
-    private custom_token?: string,
-  ) {}
-
-  /**
+  /*
    * Requires the request to be authenticated with a valid token.
    * @param secret - The secret key used to sign the token.
    * @param {(payload: BaseTokenPayload) => payload is P} type_guard - A type guard function to check the payload. See {@link isOrdererTokenPayload} for an example.
+   * @param token - The token to be validated.
    * @throws {HttpError} - Needs to be caught by the caller to return the response.
    *
    * Example usage:
    * ```ts
-   * const auth_service = new AuthService(ctx.req);
-   * const auth_payload = auth_service.validate(ctx.env.JWT_SECRET, isOrdererTokenPayload);
+   * const auth_payload = AuthService.validate(ctx.env.JWT_SECRET, token, isOrdererTokenPayload);
    * // The code below this line will only be executed if the request is authenticated
    * // and the payload is of type P (OrdererTokenPayload in this case)
    * ```
    */
-  validate<P extends BaseTokenPayload>(
+  static validate<P extends BaseTokenPayload>(
     secret: string,
+    token: string | null,
     type_guard?: (payload: BaseTokenPayload) => payload is P,
   ): P {
-    const token = this.custom_token || this.getBearerToken();
     if (!token) {
       throw new UnauthorizedError("No token provided");
     }
@@ -46,8 +41,8 @@ export class AuthService {
     }
   }
 
-  private getBearerToken(): string | null {
-    const authHeader = this.req.header("Authorization");
+  static getBearerToken(req: HonoRequest): string | null {
+    const authHeader = req.header("Authorization");
     if (!authHeader) {
       return null;
     }

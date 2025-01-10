@@ -42,8 +42,7 @@ export class RefreshToken extends OpenAPIRoute {
 
   async handle(ctx: AppContext) {
     const data = await this.getValidatedData<typeof this.schema>();
-    const auth_service = new AuthService(ctx.req, data.body.refresh_token);
-    const payload = auth_service.validate(ctx.env.JWT_SECRET);
+    const payload = AuthService.validate(ctx.env.JWT_SECRET, data.body.refresh_token);
 
     if (payload.device_id) {
       const device_service = new DeviceManagementService(ctx);
