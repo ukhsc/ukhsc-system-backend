@@ -26,22 +26,38 @@ export class DeviceManagementService {
     return device;
   }
 
-  async validateDevice(deviceId: number): Promise<boolean> {
+  async validateDevice(device_id: number): Promise<boolean | null> {
     const db = this.ctx.var.prisma;
     const device = await db.userDevice.findUnique({
       where: {
-        id: deviceId,
+        id: device_id,
       },
       include: {
         login_activities: true,
       },
     });
-    if (!device) return false;
+    if (!device) return null;
 
     const score = await this.getMatchScore(device);
     if (score < 0.3) return false;
 
     return true;
+  }
+
+  async addActivity(device_id: number, success: boolean): Promise<void> {
+    const db = this.ctx.var.prisma;
+    const ip_address = this.getIpAddress();
+    await db.loginActivity.create({
+      data: {
+        device: {
+          connect: {
+            id: device_id,
+          },
+        },
+        ip_address,
+        success,
+      },
+    });
   }
 
   private async getMatchScore(

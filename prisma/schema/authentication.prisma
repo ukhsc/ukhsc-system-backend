@@ -32,6 +32,11 @@ model UserDevice {
   type             DeviceType
   operating_system DeviceOperatingSystem
   login_activities LoginActivity[]
+
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
+
+  StudentMember StudentMember[]
 }
 
 model LoginActivity {
@@ -40,6 +45,9 @@ model LoginActivity {
   device     UserDevice @relation(fields: [device_id], references: [id], onDelete: Cascade)
   ip_address String?
   login_time DateTime   @default(now())
+  success    Boolean
+
+  @@index([login_time(sort: Desc)])
 }
 
 enum DeviceType {

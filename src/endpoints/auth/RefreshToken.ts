@@ -47,7 +47,15 @@ export class RefreshToken extends OpenAPIRoute {
     if (payload.device_id) {
       const device_service = new DeviceManagementService(ctx);
       const valid = await device_service.validateDevice(payload.device_id);
-      if (!valid) throw new ForbiddenError("Unauthorized device or access revoked");
+      if (valid === null) {
+        throw new ForbiddenError("Device access has been revoked");
+      }
+      if (!valid) {
+        await device_service.addActivity(payload.device_id, false);
+        throw new ForbiddenError("Unauthorized device");
+      }
+
+      await device_service.addActivity(payload.device_id, true);
     }
 
     const { access_token, refresh_token } = AuthService.generateToken(payload, ctx.env.JWT_SECRET);

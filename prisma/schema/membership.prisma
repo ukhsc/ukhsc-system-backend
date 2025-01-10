@@ -8,6 +8,7 @@ model StudentMember {
   nickname           String?
   purchase_channel   MembershipPurchaseChannel
   federated_accounts FederatedAccount[]
+  devices            UserDevice[]
 
   created_at   DateTime  @default(now())
   activated_at DateTime?
