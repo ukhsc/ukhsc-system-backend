@@ -23,6 +23,7 @@ export function registerEndpoints(router: AppRouter) {
   // );
 
   router.get("/health", HealthCheck);
+  router.get("/status", ServiceStatus);
 
   // Nesting routes is not working, see also: https://github.com/cloudflare/chanfana/issues/179.
   registerSchoolRoute(router);

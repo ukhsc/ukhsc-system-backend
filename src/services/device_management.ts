@@ -2,8 +2,22 @@ import { DeviceOperatingSystem, DeviceType, LoginActivity, UserDevice } from "@p
 import { AppContext } from "index";
 import { UAParser } from "ua-parser-js";
 
+interface MatchWeights {
+  nameMatch: number;
+  typeMatch: number;
+  osMatch: number;
+  ipMatch: number;
+}
+
 export class DeviceManagementService {
   constructor(private ctx: AppContext) {}
+
+  private readonly weights: MatchWeights = {
+    nameMatch: 0.3,
+    typeMatch: 0.1,
+    osMatch: 0.2,
+    ipMatch: 0.4,
+  };
 
   async registerDevice(): Promise<UserDevice> {
     const { name, type, os } = await this.getDeviceInfo();
@@ -18,6 +32,7 @@ export class DeviceManagementService {
         login_activities: {
           create: {
             ip_address,
+            success: true,
           },
         },
       },
@@ -46,6 +61,13 @@ export class DeviceManagementService {
 
   async addActivity(device_id: number, success: boolean): Promise<void> {
     const db = this.ctx.var.prisma;
+    const device = await db.userDevice.findUnique({
+      where: {
+        id: device_id,
+      },
+    });
+    if (!device) throw new Error("Device not found");
+
     const ip_address = this.getIpAddress();
     await db.loginActivity.create({
       data: {
@@ -69,11 +91,11 @@ export class DeviceManagementService {
     const ip_address = this.getIpAddress();
     let score = 0;
 
-    if (info.name === device.name) score += 0.2;
-    if (info.type === device.type) score += 0.1;
-    if (info.os === device.operating_system) score += 0.2;
+    if (info.name === device.name && info.name !== "Unknown") score += this.weights.nameMatch;
+    if (info.type === device.type) score += this.weights.typeMatch;
+    if (info.os === device.operating_system) score += this.weights.osMatch;
     if (device.login_activities.some((activity) => activity.ip_address === ip_address))
-      score += 0.5;
+      score += this.weights.ipMatch;
 
     return score;
   }
@@ -107,11 +129,18 @@ export class DeviceManagementService {
     return { name, type, os };
   }
 
+  private isValidIP(ip: string): boolean {
+    const ipv4Regex = /^(\d{1,3}\.){3}\d{1,3}$/;
+    const ipv6Regex = /^([0-9a-fA-F]{1,4}:){7}[0-9a-fA-F]{1,4}$/;
+    return ipv4Regex.test(ip) || ipv6Regex.test(ip);
+  }
+
   private getIpAddress(): string | undefined {
-    return (
+    const ip =
       this.ctx.req.header("cf-connecting-ip") ||
       this.ctx.req.header("x-forwarded-for") ||
-      this.ctx.env.incoming.socket?.remoteAddress
-    );
+      this.ctx.env.incoming.socket?.remoteAddress;
+
+    return ip && this.isValidIP(ip) ? ip : undefined;
   }
 }
