@@ -45,4 +45,4 @@ function getExtendedPrisma(prisma: PrismaClient) {
   });
 }
 
-type ExtendedPrismaClient = ReturnType<typeof getExtendedPrisma>;
+export type ExtendedPrismaClient = ReturnType<typeof getExtendedPrisma>;

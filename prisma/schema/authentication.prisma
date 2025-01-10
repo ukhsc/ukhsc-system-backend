@@ -25,3 +25,31 @@ model SchoolAccountConfig {
   school_id Int           @unique
   school    PartnerSchool @relation(fields: [school_id], references: [id])
 }
+
+model UserDevice {
+  id               Int                   @id @default(autoincrement())
+  name             String
+  type             DeviceType
+  operating_system DeviceOperatingSystem
+  login_activities LoginActivity[]
+}
+
+model LoginActivity {
+  id         Int        @id @default(autoincrement())
+  device_id  Int
+  device     UserDevice @relation(fields: [device_id], references: [id])
+  ip_address String?
+  login_time DateTime   @default(now())
+}
+
+enum DeviceType {
+  Browser
+  Mobile
+  Unknown
+}
+
+enum DeviceOperatingSystem {
+  Android
+  iOS
+  Unknown
+}

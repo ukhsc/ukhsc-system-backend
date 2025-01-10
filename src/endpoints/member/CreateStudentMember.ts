@@ -6,6 +6,7 @@ import { BadRequestError } from "@utils/error";
 import { OpenAPIRoute } from "chanfana";
 import { AppContext } from "index";
 import { z } from "zod";
+import { DeviceManagementService } from "@services/device_management";
 
 export class CreateStudentMember extends OpenAPIRoute {
   schema = {
@@ -35,13 +36,14 @@ export class CreateStudentMember extends OpenAPIRoute {
       },
     },
     responses: {
-      200: {
+      201: {
         description: "成功註冊新的學生會員帳號",
         content: {
-          "text/plain": {
-            schema: z.string().describe("會員帳號的存取權杖"),
-            example:
-              "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IlN0dWRlbnQgTWVtYmVyIiwiaWF0IjoxNTE2MjM5MDIyfQ.ZDViNTNhYTg0MDVlN2I4ZGE1MDQ1ZjYyYmRmMTZlZmI0ZjUxZWE3Mg",
+          "application/json": {
+            schema: z.object({
+              access_token: z.string().describe("存取權杖"),
+              refresh_token: z.string().describe("更新權杖"),
+            }),
           },
         },
       },
@@ -104,17 +106,21 @@ export class CreateStudentMember extends OpenAPIRoute {
         expired_at: system_config?.contract_end_date,
       },
     });
-
     await federated_service.linkAccount(member, info);
+
+    const device_service = new DeviceManagementService(ctx);
+    const device = await device_service.registerDevice();
+
     const token = AuthService.generateToken<StudentMemberTokenPayload>(
       {
         role: TokenRole.StudentMember,
+        device_id: device.id,
         member_id: member.id,
       },
       ctx.env.JWT_SECRET,
     );
 
-    return ctx.text(token, 201);
+    return ctx.json(token, 201);
   }
 
   private captureStudentId(email: string, config: SchoolAccountConfig): string {

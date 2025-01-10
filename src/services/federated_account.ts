@@ -4,6 +4,7 @@ import axios from "axios";
 import { EnvConfig } from "utils/env";
 import { BadRequestError } from "@utils/error";
 import console from "console";
+import { ExtendedPrismaClient } from "@utils/prisma";
 
 interface FederatedUserInfo {
   email: string;
@@ -29,7 +30,7 @@ export class AccountAlreadyLinkedError extends BadRequestError {
 
 export class FederatedAccountService {
   constructor(
-    private prisma: PrismaClient,
+    private prisma: ExtendedPrismaClient,
     private env: EnvConfig,
     private provider: FederatedProvider,
   ) {}

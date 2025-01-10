@@ -1,7 +1,7 @@
 import { fromHono, OpenAPIRouterType } from "chanfana";
 import { Context, Hono } from "hono";
 import { registerEndpoints } from "endpoints";
-import { prismaInitMiddleware } from "@utils/prisma";
+import { ExtendedPrismaClient, prismaInitMiddleware } from "@utils/prisma";
 import dotenv from "dotenv";
 import { logger } from "hono/logger";
 import { PrismaClient } from "@prisma/client";
@@ -10,14 +10,14 @@ import { BaseTokenPayload } from "@utils/auth";
 import { cors } from "hono/cors";
 import { EnvConfig, initEnv } from "@utils/env";
 import console from "console";
-import { serve } from "@hono/node-server";
+import { HttpBindings, serve } from "@hono/node-server";
 import { httpErrorMiddleware } from "@utils/error";
 
 interface Variables {
-  prisma: PrismaClient;
+  prisma: ExtendedPrismaClient;
   auth_payload?: BaseTokenPayload;
 }
-export type AppOptions = { Variables: Variables; Bindings: EnvConfig };
+export type AppOptions = { Variables: Variables; Bindings: EnvConfig & HttpBindings };
 export type AppContext = Context<AppOptions>;
 export type AppRouter = Hono<AppOptions> & OpenAPIRouterType<Hono<AppOptions>>;
 

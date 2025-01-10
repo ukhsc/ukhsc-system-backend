@@ -34,15 +34,15 @@ export class OrderPersonalMembership extends OpenAPIRoute {
     },
     responses: {
       // TODO: 更完整的錯誤處理
-      200: {
+      201: {
         description:
           "成功下單，並回傳用於查詢／編輯訂單的 Token（此時尚未綁定用於身份驗證之社群帳號）",
         content: {
-          "text/plain": {
-            schema: z.string().describe("訂購人的 Token"),
-            example:
-              "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJvcmRlcl9pZCI6MX0.ITogrM9A6N2QSvu2lbuxJjBrqa6btiNHzMAXG9HS0DM",
-          },
+          "application/json": {
+            schema: z.object({
+              access_token: z.string().describe("存取權杖"),
+              refresh_token: z.string().describe("更新權杖"),
+            }),
         },
       },
       400: {
@@ -97,7 +97,7 @@ export class OrderPersonalMembership extends OpenAPIRoute {
         },
         ctx.env.JWT_SECRET,
       );
-      return ctx.text(token);
+      return ctx.json(token, 201);
     } catch (e) {
       if (e instanceof Prisma.PrismaClientKnownRequestError) {
         if (e.code === "P2025") {

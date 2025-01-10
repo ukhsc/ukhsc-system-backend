@@ -5,7 +5,10 @@ import { ForbiddenError, UnauthorizedError } from "@utils/error";
 import { HonoRequest } from "hono";
 
 export class AuthService {
-  constructor(private req: HonoRequest) {}
+  constructor(
+    private req: HonoRequest,
+    private custom_token?: string,
+  ) {}
 
   /**
    * Requires the request to be authenticated with a valid token.
@@ -25,7 +28,7 @@ export class AuthService {
     secret: string,
     type_guard?: (payload: BaseTokenPayload) => payload is P,
   ): P {
-    const token = this.getBearerToken();
+    const token = this.custom_token || this.getBearerToken();
     if (!token) {
       throw new UnauthorizedError("No token provided");
     }
@@ -57,12 +60,24 @@ export class AuthService {
     return token;
   }
 
-  static generateToken<P extends BaseTokenPayload>(payload: P, secret: string): string {
-    const token = jwt.sign(payload, secret, {
-      expiresIn: "60 days",
+  static generateToken<P extends BaseTokenPayload>(
+    payload: P,
+    secret: string,
+  ): {
+    access_token: string;
+    refresh_token: string;
+  } {
+    const access_token = jwt.sign(payload, secret, {
+      expiresIn: "24h",
+    });
+    const refresh_token = jwt.sign(payload, secret, {
+      expiresIn: "45 days",
     });
 
-    return token;
+    return {
+      access_token,
+      refresh_token,
+    };
   }
 }
 

@@ -5,6 +5,7 @@ export enum TokenRole {
 
 export interface BaseTokenPayload {
   role: TokenRole;
+  device_id?: number;
   [key: string]: unknown;
 }
 export interface OrdererTokenPayload extends BaseTokenPayload {
@@ -13,6 +14,7 @@ export interface OrdererTokenPayload extends BaseTokenPayload {
 }
 export interface StudentMemberTokenPayload extends BaseTokenPayload {
   role: TokenRole.StudentMember;
+  device_id: number;
   member_id: string;
 }
 
@@ -25,5 +27,7 @@ export function isOrdererTokenPayload(payload: BaseTokenPayload): payload is Ord
 export function isStudentMemberTokenPayload(
   payload: BaseTokenPayload,
 ): payload is StudentMemberTokenPayload {
-  return payload.role === TokenRole.StudentMember && "member_id" in payload;
+  return (
+    payload.role === TokenRole.StudentMember && "device_id" in payload && "member_id" in payload
+  );
 }

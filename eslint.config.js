@@ -31,5 +31,6 @@ export default [
       "no-unused-vars": "off",
       "prettier/prettier": "error",
     },
+    ignores: ["node_modules/**", "dist/**", "prisma/schema/generated/**"],
   },
 ];
