@@ -1,6 +1,7 @@
 import { DeviceOperatingSystem, DeviceType, LoginActivity, UserDevice } from "@prisma/client";
 import { AppContext } from "index";
 import { UAParser } from "ua-parser-js";
+import { isIP } from "net";
 
 interface MatchWeights {
   nameMatch: number;
@@ -129,18 +130,12 @@ export class DeviceManagementService {
     return { name, type, os };
   }
 
-  private isValidIP(ip: string): boolean {
-    const ipv4Regex = /^(\d{1,3}\.){3}\d{1,3}$/;
-    const ipv6Regex = /^([0-9a-fA-F]{1,4}:){7}[0-9a-fA-F]{1,4}$/;
-    return ipv4Regex.test(ip) || ipv6Regex.test(ip);
-  }
-
   private getIpAddress(): string | undefined {
     const ip =
       this.ctx.req.header("cf-connecting-ip") ||
       this.ctx.req.header("x-forwarded-for") ||
       this.ctx.env.incoming.socket?.remoteAddress;
 
-    return ip && this.isValidIP(ip) ? ip : undefined;
+    return ip && isIP(ip) !== 0 ? ip : undefined;
   }
 }
