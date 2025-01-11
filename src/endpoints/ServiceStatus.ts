@@ -2,6 +2,7 @@ import { OpenAPIRoute } from "chanfana";
 import { AppContext } from "index";
 import { SystemServiceStatusSchema } from "schema";
 import { z } from "zod";
+import console from "console";
 
 export class ServiceStatus extends OpenAPIRoute {
   schema = {
@@ -37,9 +38,13 @@ export class ServiceStatus extends OpenAPIRoute {
       orderBy: {
         id: "desc",
       },
+      select: {
+        service_status: true,
+      },
     });
 
     if (!configuration) {
+      console.error("No system configuration found");
       return ctx.json(
         {
           error: "No configuration found",

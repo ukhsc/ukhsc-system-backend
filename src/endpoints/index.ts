@@ -4,6 +4,7 @@ import { registerFormsRoute } from "./forms";
 import { registerAuthRoute } from "./auth";
 import { registerMemberRoute } from "./member";
 import { AppRouter } from "index";
+import { ServiceStatus } from "./ServiceStatus";
 
 export function registerEndpoints(router: AppRouter) {
   // Register OpenAPI endpoints
