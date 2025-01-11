@@ -100,11 +100,14 @@ jobs:
 
           # Get and validate new migrations
           NEW_MIGRATIONS=$(git diff --name-only ${{ github.event.pull_request.base.sha }} ${{ github.sha }} -- prisma/migrations)
+          echo "new_migrations=${NEW_MIGRATIONS}" >> "$GITHUB_OUTPUT"
 
           # Apply and test new migrations
-          if ! pnpm prisma migrate deploy; then
-            echo "error_message=$(pnpm prisma migrate deploy 2>&1)" >> "$GITHUB_OUTPUT"
-            echo "new_migrations=${NEW_MIGRATIONS}" >> "$GITHUB_OUTPUT"
+          if ! ERROR_OUTPUT=$(pnpm prisma migrate deploy 2>&1); then
+            # Store error output
+            echo "error_output<<EOF" >> "$GITHUB_OUTPUT"
+            echo "$ERROR_OUTPUT" >> "$GITHUB_OUTPUT"
+            echo "EOF" >> "$GITHUB_OUTPUT"
             exit 1
           fi
 
@@ -117,8 +120,12 @@ jobs:
         uses: actions/github-script@v7
         with:
           script: |
-            const error = process.env.ERROR_MESSAGE;
-            const newMigrations = process.env.NEW_MIGRATIONS.split('\n');
+            const error = process.env.ERROR_MESSAGE || 'No error message available';
+            const newMigrations = (process.env.NEW_MIGRATIONS || '').split('\n').filter(Boolean);
+
+            const migrationsList = newMigrations.length
+              ? newMigrations.map(file => `- ${file}`).join('\n')
+              : '- No migration files found';
 
             await github.rest.issues.createComment({
               owner: context.repo.owner,
@@ -132,12 +139,12 @@ jobs:
               \`\`\`
 
               ### Affected Migration Files
-              ${newMigrations.map(file => `- ${file}`).join('\n')}
+              ${migrationsList}
 
               Please check the workflow logs for more details.`
             });
         env:
-          ERROR_MESSAGE: ${{ steps.test-migrations.outputs.error_message }}
+          ERROR_MESSAGE: ${{ steps.test-migrations.outputs.error_output }}
           NEW_MIGRATIONS: ${{ steps.test-migrations.outputs.new_migrations }}
 
       - name: Upload migration logs
