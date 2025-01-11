@@ -68,13 +68,36 @@ jobs:
         run: |
           export DATABASE_URL="postgresql://test:test@localhost:5432/test_db"
           export DIRECT_DATABASE_URL=$DATABASE_URL
+
+          # Create temporary directory for new migrations
+          TEMP_DIR=$(mktemp -d)
+          echo "temp_dir=${TEMP_DIR}" >> "$GITHUB_OUTPUT"
+
+          # Store current branch migrations in temp directory
           git checkout ${{ github.event.pull_request.head.ref }}
+          if [ -d "prisma/migrations" ]; then
+            cp -r prisma/migrations/* "$TEMP_DIR/"
+          fi
+
+          # Checkout base branch and apply base migrations
+          git checkout ${{ github.event.pull_request.base.ref }}
+
+          # Find all migrations after base_migration and remove them
+          cd prisma/migrations
+          for migration in $(find . -maxdepth 1 -type d | sort | grep -A 1000 "${{ steps.find-base.outputs.base_migration }}" | tail -n +2); do
+            echo "Removing migration after base: $migration"
+            rm -rf "$migration"
+          done
+          cd ../..
 
           # Validate base migration exists
           if [ ! -d "prisma/migrations/${{ steps.find-base.outputs.base_migration }}" ]; then
             echo "Error: Base migration ${{ steps.find-base.outputs.base_migration }} not found"
             exit 1
           fi
+
+          echo "Migrations after cleanup:"
+          ls -la prisma/migrations/
 
           # Reset database and apply base migrations
           pnpm prisma migrate reset --force
@@ -85,6 +108,19 @@ jobs:
         id: test-migrations
         run: |
           export DATABASE_URL="postgresql://test:test@localhost:5432/test_db"
+
+          # Get temp directory from previous step
+          TEMP_DIR="${{ steps.base-migrations.outputs.temp_dir }}"
+
+          # Checkout PR branch
+          git checkout ${{ github.event.pull_request.head.ref }}
+
+          # Clear current migrations and restore from temp
+          rm -rf prisma/migrations/*
+          cp -r "$TEMP_DIR"/* prisma/migrations/ 2>/dev/null || true
+
+          echo "Migrations after restore:"
+          ls -la prisma/migrations/
 
           # Get list of new migration files
           NEW_MIGRATIONS=$(git diff --name-only ${{ github.event.pull_request.base.sha }} ${{ github.sha }} -- prisma/migrations)
@@ -107,6 +143,9 @@ jobs:
 
           echo "Final database structure:" >> migration_output.log
           pnpm prisma db pull --print >> migration_output.log
+
+          # Cleanup temp directory
+          rm -rf "$TEMP_DIR"
 
       - name: Comment on PR
         if: failure() && steps.test-migrations.outcome == 'failure'
