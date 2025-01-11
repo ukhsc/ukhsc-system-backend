@@ -99,8 +99,8 @@ jobs:
           cp -r "${{ steps.setup.outputs.temp_dir }}"/* prisma/migrations/ 2>/dev/null || true
 
           # Get and validate new migrations
-          NEW_MIGRATIONS=$(git diff --name-only ${{ github.event.pull_request.base.sha }} ${{ github.sha }} -- prisma/migrations)
-          echo "new_migrations=${NEW_MIGRATIONS}" >> "$GITHUB_OUTPUT"
+          NEW_MIGRATIONS=$(git diff --name-only ${{ github.event.pull_request.base.sha }} ${{ github.sha }} -- prisma/migrations | xargs -I{} dirname {} | sort -u | sed 's|prisma/migrations/||')
+          echo "new_migrations=$(echo $NEW_MIGRATIONS | tr '\n' ',')" >> "$GITHUB_OUTPUT"
 
           # Apply and test new migrations
           if ! ERROR_OUTPUT=$(pnpm prisma migrate deploy 2>&1); then
@@ -121,7 +121,7 @@ jobs:
         with:
           script: |
             const error = process.env.ERROR_MESSAGE || 'No error message available';
-            const newMigrations = (process.env.NEW_MIGRATIONS || '').split('\n').filter(Boolean);
+            const newMigrations = (process.env.NEW_MIGRATIONS || '').split(',').filter(Boolean);
 
             const migrationsList = newMigrations.length
               ? newMigrations.map(file => `- ${file}`).join('\n')
