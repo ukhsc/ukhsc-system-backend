@@ -98,8 +98,13 @@ jobs:
           rm -rf prisma/migrations/*
           cp -r "${{ steps.setup.outputs.temp_dir }}"/* prisma/migrations/ 2>/dev/null || true
 
-          # Get and validate new migrations (using custom separator)
-          NEW_MIGRATIONS=$(git diff --name-only ${{ github.event.pull_request.base.sha }} ${{ github.sha }} -- prisma/migrations | xargs -I{} dirname {} | sort -u | sed 's|prisma/migrations/||' | paste -sd "|||" -)
+          # Get and validate new migrations
+          NEW_MIGRATIONS=$(git diff --name-only ${{ github.event.pull_request.base.sha }} ${{ github.sha }} -- prisma/migrations |
+            xargs -I{} dirname {} |
+            sort -u |
+            sed 's|prisma/migrations/||' |
+            tr '\n' '%' |
+            sed 's/%$//')
           echo "new_migrations=${NEW_MIGRATIONS}" >> "$GITHUB_OUTPUT"
 
           # Apply and test new migrations
@@ -122,7 +127,7 @@ jobs:
           script: |
             const error = process.env.ERROR_MESSAGE || 'No error message available';
             const newMigrations = (process.env.NEW_MIGRATIONS || '')
-              .split('|||')
+              .split('%')
               .filter(Boolean)
               .map(migration => `- \`${migration.trim()}\``)
               .join('\n');
