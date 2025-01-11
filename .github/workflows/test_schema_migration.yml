@@ -78,7 +78,10 @@ jobs:
 
           # Remove migrations after base_migration
           cd prisma/migrations
-          find . -maxdepth 1 -type d -newer "./${{ steps.setup.outputs.base_migration }}" -exec rm -rf {} +
+          for migration in $(find * -maxdepth 0 -type d | sort | grep -A 1000 "${{ steps.setup.outputs.base_migration }}" | tail -n +2); do
+            echo "Removing migration after base: $migration"
+            rm -rf "$migration"
+          done
           cd ../..
 
           # Reset and apply base migrations
