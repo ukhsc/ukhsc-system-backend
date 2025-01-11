@@ -48,8 +48,17 @@ jobs:
           # Get the base branch name from PR
           BASE_BRANCH="$(gh pr view "${{ github.event.pull_request.number }}" --json baseRefName -q .baseRefName)"
           git checkout "$BASE_BRANCH"
-          # Find the latest migration in base branch
-          BASE_MIGRATION="$(find prisma/migrations -maxdepth 1 -type d -printf "%f\n" | sort | tail -n 1)"
+
+          # Find the latest migration in base branch (fixed format)
+          BASE_MIGRATION="$(cd prisma && find migrations -maxdepth 1 -type d | sort | tail -n 1 | sed 's/migrations\///')"
+
+          # Check if we found a migration
+          if [ -z "$BASE_MIGRATION" ]; then
+            echo "No base migration found in $BASE_BRANCH branch"
+            BASE_MIGRATION="migrations"
+          fi
+
+          echo "Found base migration: $BASE_MIGRATION"
           echo "base_migration=${BASE_MIGRATION}" >> "$GITHUB_OUTPUT"
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
