@@ -45,10 +45,12 @@ jobs:
       - name: Find base migration
         id: find-base
         run: |
-          BASE_BRANCH=$(gh pr view ${{ github.event.pull_request.number }} --json baseRefName -q .baseRefName)
-          git checkout $BASE_BRANCH
-          BASE_MIGRATION=$(ls prisma/migrations | sort | tail -n 1)
-          echo "base_migration=${BASE_MIGRATION}" >> $GITHUB_OUTPUT
+          # Get the base branch name from PR
+          BASE_BRANCH="$(gh pr view "${{ github.event.pull_request.number }}" --json baseRefName -q .baseRefName)"
+          git checkout "$BASE_BRANCH"
+          # Find the latest migration in base branch
+          BASE_MIGRATION="$(find prisma/migrations -maxdepth 1 -type d -printf "%f\n" | sort | tail -n 1)"
+          echo "base_migration=${BASE_MIGRATION}" >> "$GITHUB_OUTPUT"
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
@@ -58,6 +60,14 @@ jobs:
           export DATABASE_URL="postgresql://test:test@localhost:5432/test_db"
           export DIRECT_DATABASE_URL=$DATABASE_URL
           git checkout ${{ github.event.pull_request.head.ref }}
+
+          # Validate base migration exists
+          if [ ! -d "prisma/migrations/${{ steps.find-base.outputs.base_migration }}" ]; then
+            echo "Error: Base migration ${{ steps.find-base.outputs.base_migration }} not found"
+            exit 1
+          fi
+
+          # Reset database and apply base migrations
           pnpm prisma migrate reset --force
           echo "Database structure after base migrations:" >> migration_output.log
           pnpm prisma db pull --print >> migration_output.log
@@ -67,9 +77,18 @@ jobs:
         run: |
           export DATABASE_URL="postgresql://test:test@localhost:5432/test_db"
 
-          # Get new migration files
+          # Get list of new migration files
           NEW_MIGRATIONS=$(git diff --name-only ${{ github.event.pull_request.base.sha }} ${{ github.sha }} -- prisma/migrations)
           echo "new_migrations=${NEW_MIGRATIONS}" >> $GITHUB_OUTPUT
+
+          # Verify new migrations are based on latest base migration
+          FIRST_NEW_MIGRATION=$(echo "$NEW_MIGRATIONS" | head -n1)
+          if [ -n "$FIRST_NEW_MIGRATION" ]; then
+            if [[ "$FIRST_NEW_MIGRATION" < "prisma/migrations/${{ steps.find-base.outputs.base_migration }}" ]]; then
+              echo "Error: New migrations must be based on the latest base migration ${{ steps.find-base.outputs.base_migration }}"
+              exit 1
+            fi
+          fi
 
           # Apply new migrations
           if ! pnpm prisma migrate deploy; then
