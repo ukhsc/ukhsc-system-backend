@@ -98,11 +98,9 @@ jobs:
           rm -rf prisma/migrations/*
           cp -r "${{ steps.setup.outputs.temp_dir }}"/* prisma/migrations/ 2>/dev/null || true
 
-          # Get and validate new migrations (using null character as separator)
-          NEW_MIGRATIONS=$(git diff --name-only ${{ github.event.pull_request.base.sha }} ${{ github.sha }} -- prisma/migrations | xargs -I{} dirname {} | sort -u | sed 's|prisma/migrations/||' | tr '\n' '\0')
-          echo "new_migrations<<EOF" >> "$GITHUB_OUTPUT"
-          echo "$NEW_MIGRATIONS" >> "$GITHUB_OUTPUT"
-          echo "EOF" >> "$GITHUB_OUTPUT"
+          # Get and validate new migrations (using custom separator)
+          NEW_MIGRATIONS=$(git diff --name-only ${{ github.event.pull_request.base.sha }} ${{ github.sha }} -- prisma/migrations | xargs -I{} dirname {} | sort -u | sed 's|prisma/migrations/||' | paste -sd "|||" -)
+          echo "new_migrations=${NEW_MIGRATIONS}" >> "$GITHUB_OUTPUT"
 
           # Apply and test new migrations
           if ! ERROR_OUTPUT=$(pnpm prisma migrate deploy 2>&1); then
@@ -124,7 +122,7 @@ jobs:
           script: |
             const error = process.env.ERROR_MESSAGE || 'No error message available';
             const newMigrations = (process.env.NEW_MIGRATIONS || '')
-              .split('\0')
+              .split('|||')
               .filter(Boolean)
               .map(migration => `- \`${migration.trim()}\``)
               .join('\n');
