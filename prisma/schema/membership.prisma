@@ -2,13 +2,12 @@ model StudentMember {
   id                 String        @id @default(cuid())
   school_attended_id Int
   school_attended    PartnerSchool @relation(fields: [school_attended_id], references: [id])
+  user_id            Int           @unique
+  user               User          @relation(fields: [user_id], references: [id])
 
-  primary_email      String?                   @unique
-  student_id         String?
-  nickname           String?
-  purchase_channel   MembershipPurchaseChannel
-  federated_accounts FederatedAccount[]
-  devices            UserDevice[]
+  student_id       String?
+  nickname         String?
+  purchase_channel MembershipPurchaseChannel
 
   created_at   DateTime  @default(now())
   activated_at DateTime?
