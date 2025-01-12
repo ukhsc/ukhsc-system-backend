@@ -28,9 +28,10 @@ let isEnvInitialized = false;
 openapi.use(async (ctx, next) => {
   if (!isEnvInitialized) {
     const result = initEnv();
-    for (const key in result) {
-      ctx.set(key as never, result[key as never]);
-    }
+    ctx.env = {
+      ...ctx.env,
+      ...result,
+    };
     isEnvInitialized = true;
   }
   await next();
