@@ -1,9 +1,9 @@
 import { HealthCheck } from "./HealthCheck";
 import { registerSchoolRoute } from "./school";
-import { registerFormsRoute } from "./forms";
 import { registerAuthRoute } from "./auth";
 import { registerMemberRoute } from "./member";
 import { AppRouter } from "index";
+import { ServiceStatus } from "./ServiceStatus";
 
 export function registerEndpoints(router: AppRouter) {
   // Register OpenAPI endpoints
@@ -23,10 +23,10 @@ export function registerEndpoints(router: AppRouter) {
   // );
 
   router.get("/health", HealthCheck);
+  router.get("/status", ServiceStatus);
 
   // Nesting routes is not working, see also: https://github.com/cloudflare/chanfana/issues/179.
   registerSchoolRoute(router);
-  registerFormsRoute(router);
   registerAuthRoute(router);
   registerMemberRoute(router);
 }

@@ -1,3 +1,4 @@
+/* eslint-disable no-undef */
 import { defineConfig } from "tsup";
 import { resolve } from "path";
 
@@ -8,7 +9,7 @@ export default defineConfig({
   clean: true,
   esbuildOptions(options) {
     options.alias = {
-      "@config": resolve(__dirname, "./src/config"),
+      "@utils": resolve(__dirname, "./src/utils"),
       "@endpoints": resolve(__dirname, "./src/endpoints"),
       "@services": resolve(__dirname, "./src/services"),
       "@tests": resolve(__dirname, "./tests"),

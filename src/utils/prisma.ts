@@ -32,7 +32,7 @@ function getExtendedPrisma(prisma: PrismaClient) {
             activated_at: true,
             expired_at: true,
           },
-          compute(data) {
+          compute(data): boolean {
             const now = new Date();
             if (!data.activated_at) return false;
             if (!data.expired_at) return false;
@@ -45,4 +45,4 @@ function getExtendedPrisma(prisma: PrismaClient) {
   });
 }
 
-type ExtendedPrismaClient = ReturnType<typeof getExtendedPrisma>;
+export type ExtendedPrismaClient = ReturnType<typeof getExtendedPrisma>;

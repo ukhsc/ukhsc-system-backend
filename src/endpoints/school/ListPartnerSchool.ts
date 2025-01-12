@@ -8,7 +8,7 @@ export class ListPartnerSchool extends OpenAPIRoute {
     tags: ["合作學校"],
     summary: "列出所有本屆次聯盟的合作學校",
     responses: {
-      "200": {
+      200: {
         description: "回傳有關合作學校資訊的陣列",
         content: {
           "application/json": {

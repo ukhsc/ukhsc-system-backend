@@ -2,10 +2,13 @@ model FederatedAccount {
   id                  Int               @id @default(autoincrement())
   provider            FederatedProvider
   provider_identifier String /// User identifier from the provider (e.g. Google ID)
-  email               String?
+  email               String
 
-  member_id String
-  member    StudentMember @relation(fields: [member_id], references: [id])
+  user_id Int
+  user    User @relation(fields: [user_id], references: [id])
+
+  @@index([provider, provider_identifier])
+  @@index([email])
 }
 
 enum FederatedProvider {
@@ -24,4 +27,16 @@ model SchoolAccountConfig {
 
   school_id Int           @unique
   school    PartnerSchool @relation(fields: [school_id], references: [id])
+}
+
+model LoginActivity {
+  id        Int        @id @default(autoincrement())
+  device_id Int
+  device    UserDevice @relation(fields: [device_id], references: [id], onDelete: Cascade)
+
+  ip_address String?
+  login_time DateTime @default(now())
+  success    Boolean
+
+  @@index([login_time(sort: Desc)])
 }

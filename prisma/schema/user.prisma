@@ -1,0 +1,39 @@
+model User {
+  id            Int    @id @default(autoincrement())
+  primary_email String @unique
+
+  federated_accounts FederatedAccount[]
+  devices            UserDevice[]
+
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
+
+  member_id String?
+  member    StudentMember?
+}
+
+model UserDevice {
+  id      Int  @id @default(autoincrement())
+  user_id Int
+  user    User @relation(fields: [user_id], references: [id])
+
+  name             String
+  type             DeviceType
+  operating_system DeviceOperatingSystem
+  login_activities LoginActivity[]
+
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
+}
+
+enum DeviceType {
+  Browser
+  Mobile
+  Unknown
+}
+
+enum DeviceOperatingSystem {
+  Android
+  iOS
+  Unknown
+}

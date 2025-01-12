@@ -5,7 +5,7 @@ import console from "console";
 
 export class HealthCheck extends OpenAPIRoute {
   schema = {
-    tags: ["Health Check"],
+    tags: ["基礎設施"],
     summary: "Health Check (Internal)",
     responses: {
       "200": {

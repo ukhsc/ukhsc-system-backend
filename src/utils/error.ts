@@ -1,6 +1,6 @@
 import { MiddlewareHandler } from "hono";
 import { ContentfulStatusCode } from "hono/utils/http-status";
-import { AppContext, AppOptions } from "index";
+import { AppOptions } from "index";
 
 export class HttpError extends Error {
   constructor(

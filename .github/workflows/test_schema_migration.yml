@@ -1,0 +1,162 @@
+name: Test Schema Migration
+
+on:
+  pull_request:
+    paths:
+      - "prisma/migrations/**"
+      - "prisma/schema.prisma"
+
+jobs:
+  test-schema-migration:
+    runs-on: ubuntu-latest
+
+    permissions:
+      contents: read
+      pull-requests: write
+
+    services:
+      postgres:
+        image: postgres:latest
+        env:
+          POSTGRES_USER: test
+          POSTGRES_PASSWORD: test
+          POSTGRES_DB: test_db
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    env:
+      DATABASE_URL: postgresql://test:test@localhost:5432/test_db
+      DIRECT_DATABASE_URL: postgresql://test:test@localhost:5432/test_db
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+
+      - name: Install dependencies
+        run: |
+          corepack enable
+          corepack prepare pnpm@latest --activate
+          pnpm install
+
+      - name: Setup migration environment
+        id: setup
+        run: |
+          # Get the base branch name and checkout
+          BASE_BRANCH="$(gh pr view "${{ github.event.pull_request.number }}" --json baseRefName -q .baseRefName)"
+          git checkout "$BASE_BRANCH"
+
+          # Find the latest migration in base branch
+          BASE_MIGRATION="$(cd prisma && find migrations -maxdepth 1 -type d | sort | tail -n 1 | sed 's/migrations\///')"
+
+          # Store current migrations in temp directory
+          TEMP_DIR=$(mktemp -d)
+          git checkout ${{ github.event.pull_request.head.ref }}
+          [ -d "prisma/migrations" ] && cp -r prisma/migrations/* "$TEMP_DIR/"
+
+          # Output variables
+          echo "base_migration=${BASE_MIGRATION:-migrations}" >> "$GITHUB_OUTPUT"
+          echo "temp_dir=${TEMP_DIR}" >> "$GITHUB_OUTPUT"
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Apply base migrations
+        run: |
+          # Checkout base branch
+          git checkout ${{ github.event.pull_request.base.ref }}
+
+          # Remove migrations after base_migration
+          cd prisma/migrations
+          for migration in $(find * -maxdepth 0 -type d | sort | grep -A 1000 "${{ steps.setup.outputs.base_migration }}" | tail -n +2); do
+            echo "Removing migration after base: $migration"
+            rm -rf "$migration"
+          done
+          cd ../..
+
+          # Reset and apply base migrations
+          pnpm prisma migrate reset --force
+          echo "Database structure after base migrations:" >> migration_output.log
+          pnpm prisma db pull --print >> migration_output.log
+
+      - name: Test new migrations
+        id: test-migrations
+        run: |
+          git checkout ${{ github.event.pull_request.head.ref }}
+
+          # Restore migrations from temp
+          rm -rf prisma/migrations/*
+          cp -r "${{ steps.setup.outputs.temp_dir }}"/* prisma/migrations/ 2>/dev/null || true
+
+          # Get and validate new migrations
+          NEW_MIGRATIONS=$(git diff --name-only ${{ github.event.pull_request.base.sha }} ${{ github.sha }} -- prisma/migrations |
+            xargs -I{} dirname {} |
+            sort -u |
+            sed 's|prisma/migrations/||' |
+            tr '\n' '%' |
+            sed 's/%$//')
+          echo "new_migrations=${NEW_MIGRATIONS}" >> "$GITHUB_OUTPUT"
+
+          # Apply and test new migrations
+          if ! ERROR_OUTPUT=$(pnpm prisma migrate deploy 2>&1); then
+            # Store error output
+            echo "error_output<<EOF" >> "$GITHUB_OUTPUT"
+            echo "$ERROR_OUTPUT" >> "$GITHUB_OUTPUT"
+            echo "EOF" >> "$GITHUB_OUTPUT"
+            exit 1
+          fi
+
+          echo "Final database structure:" >> migration_output.log
+          pnpm prisma db pull --print >> migration_output.log
+          rm -rf "${{ steps.setup.outputs.temp_dir }}"
+
+      - name: Comment on PR
+        if: failure() && steps.test-migrations.outcome == 'failure'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const error = process.env.ERROR_MESSAGE || 'No error message available';
+            const newMigrations = (process.env.NEW_MIGRATIONS || '')
+              .split('%')
+              .filter(Boolean)
+              .map(migration => `- \`${migration.trim()}\``)
+              .join('\n');
+
+            const migrationsList = newMigrations || '- No migration files found';
+
+            await github.rest.issues.createComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.issue.number,
+              body: `❌ Migration Test Failed
+
+              ### Error Message
+              \`\`\`
+              ${error}
+              \`\`\`
+
+              ### Affected Migration Files
+              ${migrationsList}
+
+              Please check the workflow logs for more details.`
+            });
+        env:
+          ERROR_MESSAGE: ${{ steps.test-migrations.outputs.error_output }}
+          NEW_MIGRATIONS: ${{ steps.test-migrations.outputs.new_migrations }}
+
+      - name: Upload migration logs
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: migration-logs
+          path: migration_output.log
