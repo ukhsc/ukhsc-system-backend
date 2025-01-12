@@ -1,5 +1,4 @@
-import { FederatedProvider, StudentMember } from "@prisma/client";
-import { PrismaClient } from "@prisma/client";
+import { FederatedProvider, User } from "@prisma/client";
 import axios from "axios";
 import { EnvConfig } from "utils/env";
 import { BadRequestError } from "@utils/error";
@@ -30,7 +29,6 @@ export class AccountAlreadyLinkedError extends BadRequestError {
 
 export class FederatedAccountService {
   constructor(
-    private prisma: ExtendedPrismaClient,
     private env: EnvConfig,
     private provider: FederatedProvider,
   ) {}
@@ -46,34 +44,25 @@ export class FederatedAccountService {
     }
   }
 
-  async linkAccount(member: StudentMember, info: FederatedUserInfo) {
+  async linkAccount(prisma: ExtendedPrismaClient, user: User, info: FederatedUserInfo) {
     const { email, identifier } = info;
 
-    const existingAccount = await this.prisma.federatedAccount.findFirst({
+    const existingAccount = await prisma.federatedAccount.findFirst({
       where: {
         provider: this.provider,
-        OR: [{ member_id: member.id }, { provider_identifier: identifier }],
+        OR: [{ user_id: user.id }, { provider_identifier: identifier }],
       },
     });
     if (existingAccount) throw new AccountAlreadyLinkedError(this.provider);
 
-    if (!member.primary_email) {
-      await this.prisma.studentMember.update({
-        where: { id: member.id },
-        data: {
-          primary_email: email,
-        },
-      });
-    }
-
-    await this.prisma.federatedAccount.create({
+    await prisma.federatedAccount.create({
       data: {
         provider: this.provider,
         provider_identifier: identifier,
         email,
-        member: {
+        user: {
           connect: {
-            id: member.id,
+            id: user.id,
           },
         },
       },

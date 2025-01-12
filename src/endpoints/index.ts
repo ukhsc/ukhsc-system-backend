@@ -1,6 +1,5 @@
 import { HealthCheck } from "./HealthCheck";
 import { registerSchoolRoute } from "./school";
-import { registerFormsRoute } from "./forms";
 import { registerAuthRoute } from "./auth";
 import { registerMemberRoute } from "./member";
 import { AppRouter } from "index";
@@ -28,7 +27,6 @@ export function registerEndpoints(router: AppRouter) {
 
   // Nesting routes is not working, see also: https://github.com/cloudflare/chanfana/issues/179.
   registerSchoolRoute(router);
-  registerFormsRoute(router);
   registerAuthRoute(router);
   registerMemberRoute(router);
 }

@@ -32,7 +32,7 @@ function getExtendedPrisma(prisma: PrismaClient) {
             activated_at: true,
             expired_at: true,
           },
-          compute(data) {
+          compute(data): boolean {
             const now = new Date();
             if (!data.activated_at) return false;
             if (!data.expired_at) return false;

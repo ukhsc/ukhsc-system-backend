@@ -11,7 +11,7 @@ export class RefreshToken extends OpenAPIRoute {
     summary: "更新存取權杖",
     description:
       "使用 refresh token 來更新 access token 以便延長時效，同時可取得新的 refresh token。",
-    security: [{ ordererAuth: [], memberAuth: [] }],
+    security: [{ userAuth: [] }],
     request: {
       body: {
         content: {
@@ -42,7 +42,8 @@ export class RefreshToken extends OpenAPIRoute {
 
   async handle(ctx: AppContext) {
     const data = await this.getValidatedData<typeof this.schema>();
-    const payload = AuthService.validate(ctx.env.JWT_SECRET, data.body.refresh_token);
+    const auth_service = new AuthService(ctx);
+    const payload = await auth_service.validate({ custom_token: data.body.refresh_token });
 
     if (payload.device_id) {
       const device_service = new DeviceManagementService(ctx);

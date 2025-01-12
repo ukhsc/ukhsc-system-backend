@@ -20,13 +20,18 @@ export class DeviceManagementService {
     ipMatch: 0.4,
   };
 
-  async registerDevice(): Promise<UserDevice> {
+  async registerDevice(user_id: number): Promise<UserDevice> {
     const { name, type, os } = await this.getDeviceInfo();
     const ip_address = this.getIpAddress();
     const db = this.ctx.var.prisma;
 
     const device = await db.userDevice.create({
       data: {
+        user: {
+          connect: {
+            id: user_id,
+          },
+        },
         name,
         type,
         operating_system: os,

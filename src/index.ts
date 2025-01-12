@@ -5,7 +5,6 @@ import { ExtendedPrismaClient, prismaInitMiddleware } from "@utils/prisma";
 import dotenv from "dotenv";
 import { logger } from "hono/logger";
 import process from "process";
-import { BaseTokenPayload } from "@utils/auth";
 import { cors } from "hono/cors";
 import { EnvConfig, initEnv } from "@utils/env";
 import console from "console";
@@ -14,7 +13,6 @@ import { httpErrorMiddleware } from "@utils/error";
 
 interface Variables {
   prisma: ExtendedPrismaClient;
-  auth_payload?: BaseTokenPayload;
 }
 export type AppOptions = { Variables: Variables; Bindings: EnvConfig & HttpBindings };
 export type AppContext = Context<AppOptions>;
@@ -44,13 +42,15 @@ openapi.use(
   }),
 );
 openapi.use(prismaInitMiddleware);
-openapi.registry.registerComponent("securitySchemes", "ordererAuth", {
+openapi.registry.registerComponent("securitySchemes", "userAuth", {
   type: "http",
   scheme: "bearer",
+  description: "Bearer token for users with 'user' role or higher.",
 });
 openapi.registry.registerComponent("securitySchemes", "memberAuth", {
   type: "http",
   scheme: "bearer",
+  description: "Bearer token for users with 'member' role",
 });
 registerEndpoints(openapi);
 openapi.use(httpErrorMiddleware);

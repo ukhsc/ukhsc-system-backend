@@ -1,12 +1,12 @@
-import { StudentMemberTokenPayload, TokenRole } from "@utils/auth";
 import { FederatedProvider, MembershipPurchaseChannel, SchoolAccountConfig } from "@prisma/client";
-import { AuthService } from "@services/auth";
-import { FederatedAccountService, GrantFlows } from "@services/federated_account";
+import { AuthService, UserRole } from "@services/auth";
+import { FederatedAccountService } from "@services/federated_account";
 import { BadRequestError } from "@utils/error";
 import { OpenAPIRoute } from "chanfana";
 import { AppContext } from "index";
 import { z } from "zod";
 import { DeviceManagementService } from "@services/device_management";
+import { ErrorResponseSchema, FederateOAuthSchema, TokenResponseSchema } from "schema";
 
 export class CreateStudentMember extends OpenAPIRoute {
   schema = {
@@ -18,18 +18,9 @@ export class CreateStudentMember extends OpenAPIRoute {
           "application/json": {
             schema: z.object({
               school_attended_id: z.number().describe("註冊者所就讀學校的 ID"),
-              google_workspace: z
-                .object({
-                  flow: z.nativeEnum(GrantFlows).describe("授權流程"),
-                  grant_value: z.string().describe("授權資訊（取決於授權流程）"),
-                  redirect_uri: z
-                    .string()
-                    .optional()
-                    .describe(
-                      "授權完成後的重新導向網址（必須與前端取得授權碼的網址相同）\n\n若授權認證流程（`flow`）為 `token`，則此欄位不需要",
-                    ),
-                })
-                .describe("Google Workspace for Education 的帳號授權資訊"),
+              google_workspace: FederateOAuthSchema.describe(
+                "Google Workspace for Education 的帳號授權資訊",
+              ),
             }),
           },
         },
@@ -40,10 +31,37 @@ export class CreateStudentMember extends OpenAPIRoute {
         description: "成功註冊新的學生會員帳號",
         content: {
           "application/json": {
-            schema: z.object({
-              access_token: z.string().describe("存取權杖"),
-              refresh_token: z.string().describe("更新權杖"),
-            }),
+            schema: TokenResponseSchema,
+          },
+        },
+      },
+      400: {
+        description: "無效的請求資訊",
+        content: {
+          "application/json": {
+            schema: ErrorResponseSchema,
+            examples: {
+              "School ID": {
+                value: {
+                  error: "Invalid partner school ID",
+                },
+              },
+              "School account configuration": {
+                value: {
+                  error: "School account configuration has not been set up by the administrator",
+                },
+              },
+              "School email": {
+                value: {
+                  error: "Invalid school email or it's not from our partner school",
+                },
+              },
+              "Email format": {
+                value: {
+                  error: "Invalid email format or it's owned by a teacher",
+                },
+              },
+            },
           },
         },
       },
@@ -58,13 +76,15 @@ export class CreateStudentMember extends OpenAPIRoute {
       where: { id: data.body.school_attended_id },
     });
     if (!school_attended) {
-      return ctx.json({
-        error: "Invalid partner school ID",
-      });
+      return ctx.json(
+        {
+          error: "Invalid partner school ID",
+        },
+        400,
+      );
     }
 
     const federated_service = new FederatedAccountService(
-      db,
       ctx.env,
       FederatedProvider.GoogleWorkspace,
     );
@@ -86,18 +106,29 @@ export class CreateStudentMember extends OpenAPIRoute {
         500,
       );
     }
-
     const student_id = this.captureStudentId(info.email, account_config);
     const system_config = await db.systemConfigurationUpdates.findFirst({
       orderBy: {
         id: "desc",
       },
     });
-    const member = await db.studentMember.create({
+
+    const user = await db.user.create({
+      data: {
+        primary_email: info.email,
+      },
+    });
+    await federated_service.linkAccount(db, user, info);
+    await db.studentMember.create({
       data: {
         school_attended: {
           connect: {
             id: school_attended.id,
+          },
+        },
+        user: {
+          connect: {
+            id: user.id,
           },
         },
         purchase_channel: MembershipPurchaseChannel.PartnerFree,
@@ -106,16 +137,15 @@ export class CreateStudentMember extends OpenAPIRoute {
         expired_at: system_config?.contract_end_date,
       },
     });
-    await federated_service.linkAccount(member, info);
 
     const device_service = new DeviceManagementService(ctx);
-    const device = await device_service.registerDevice();
+    const device = await device_service.registerDevice(user.id);
 
-    const token = AuthService.generateToken<StudentMemberTokenPayload>(
+    const token = AuthService.generateToken(
       {
-        role: TokenRole.StudentMember,
+        roles: [UserRole.StudentMember],
+        user_id: user.id,
         device_id: device.id,
-        member_id: member.id,
       },
       ctx.env.JWT_SECRET,
     );

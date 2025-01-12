@@ -1,48 +1,67 @@
 import jwt from "jsonwebtoken";
-import { z } from "zod";
-import { BaseTokenPayload } from "@utils/auth";
 import { ForbiddenError, UnauthorizedError } from "@utils/error";
-import { HonoRequest } from "hono";
+import { User } from "@prisma/client";
+import { AppContext } from "index";
+import { ErrorResponseSchema } from "schema";
+
+export enum UserRole {
+  StudentMember = "student_member",
+  SchoolRepresentative = "school_representative",
+  UnionStaff = "union_staff",
+}
+
+export interface TokenPayload {
+  roles: UserRole[];
+  user_id: number;
+  device_id: number;
+}
 
 export class AuthService {
-  /*
-   * Requires the request to be authenticated with a valid token.
-   * @param secret - The secret key used to sign the token.
-   * @param {(payload: BaseTokenPayload) => payload is P} type_guard - A type guard function to check the payload. See {@link isOrdererTokenPayload} for an example.
-   * @param token - The token to be validated.
-   * @throws {HttpError} - Needs to be caught by the caller to return the response.
-   *
-   * Example usage:
-   * ```ts
-   * const auth_payload = AuthService.validate(ctx.env.JWT_SECRET, token, isOrdererTokenPayload);
-   * // The code below this line will only be executed if the request is authenticated
-   * // and the payload is of type P (OrdererTokenPayload in this case)
-   * ```
-   */
-  static validate<P extends BaseTokenPayload>(
-    secret: string,
-    token: string | null,
-    type_guard?: (payload: BaseTokenPayload) => payload is P,
-  ): P {
+  constructor(private ctx: AppContext) {}
+
+  async validate(options?: { custom_token?: string; roles?: UserRole[] }): Promise<
+    TokenPayload & {
+      user: User;
+    }
+  > {
+    const token = options?.custom_token ?? this.getBearerToken();
     if (!token) {
       throw new UnauthorizedError("No token provided");
     }
 
     try {
-      const payload = jwt.verify(token, secret) as P;
+      const payload = jwt.verify(token, this.ctx.env.JWT_SECRET);
+      if (!this.isTokenPayload(payload)) {
+        throw new UnauthorizedError("Invalid token");
+      }
 
-      if (type_guard && !type_guard(payload)) {
+      const roles = options?.roles ?? [];
+      const hasPermission = roles.every((role) => payload.roles.includes(role));
+      if (!hasPermission) {
         throw new ForbiddenError("Insufficient permissions or role");
       }
 
-      return payload;
+      const db = this.ctx.var.prisma;
+      const user = await db.user.findUnique({
+        where: {
+          id: payload.user_id,
+        },
+      });
+      if (!user) {
+        throw new UnauthorizedError("User has been banned");
+      }
+
+      return {
+        user,
+        ...payload,
+      };
     } catch (_) {
       throw new UnauthorizedError("Invalid token");
     }
   }
 
-  static getBearerToken(req: HonoRequest): string | null {
-    const authHeader = req.header("Authorization");
+  private getBearerToken(): string | null {
+    const authHeader = this.ctx.req.header("Authorization");
     if (!authHeader) {
       return null;
     }
@@ -55,8 +74,18 @@ export class AuthService {
     return token;
   }
 
-  static generateToken<P extends BaseTokenPayload>(
-    payload: P,
+  private isTokenPayload(payload: unknown): payload is TokenPayload {
+    return (
+      typeof payload === "object" &&
+      payload !== null &&
+      "role" in payload &&
+      "user_id" in payload &&
+      "device_id" in payload
+    );
+  }
+
+  static generateToken(
+    payload: TokenPayload,
     secret: string,
   ): {
     access_token: string;
@@ -82,9 +111,7 @@ export const OpenAPIResponseUnauthorized = {
     description: "尚未經過身份驗證，可能是因為沒有提供存取權杖或存取權杖無效。",
     content: {
       "application/json": {
-        schema: z.object({
-          error: z.string(),
-        }),
+        schema: ErrorResponseSchema,
         example: {
           error: "Unauthorized (Invalid token)",
         },
@@ -98,9 +125,7 @@ export const OpenAPIResponseForbidden = {
     description: "沒有足夠的權限執行此操作。",
     content: {
       "application/json": {
-        schema: z.object({
-          error: z.string(),
-        }),
+        schema: ErrorResponseSchema,
         example: {
           error: "Forbidden (Insufficient permissions or role)",
         },
