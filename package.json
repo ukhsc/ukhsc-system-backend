@@ -12,7 +12,7 @@
     "migrate": "prisma migrate deploy",
     "generate": "prisma generate",
     "seed": "prisma db seed",
-    "lint": "eslint .",
+    "lint": "tsc --noEmit && eslint .",
     "lint:fix": "eslint . --fix"
   },
   "prisma": {
