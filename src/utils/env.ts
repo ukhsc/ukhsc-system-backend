@@ -35,5 +35,6 @@ export function initEnv(): EnvConfig {
     process.exit(1);
   }
 
+  console.log("✅ Environment variables initialized");
   return result.data;
 }

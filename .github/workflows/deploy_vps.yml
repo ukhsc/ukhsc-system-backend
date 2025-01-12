@@ -78,7 +78,9 @@ jobs:
               docker stop ukhsc-system-backend-api-$TARGET_ENV || true
               echo "Fetching logs from the failed container..."
               docker logs ukhsc-system-backend-api-$TARGET_ENV > deployment_failed_logs.txt
-              cat deployment_failed_logs.txt
+              TIMESTAMP=$(date +"%Y%m%d_%H%M%S")
+              mkdir -p deployment_logs
+              cp deployment_failed_logs.txt deployment_logs/deployment_failed_logs_$TIMESTAMP.txt
               docker rm ukhsc-system-backend-api-$TARGET_ENV || true
               exit 1
             fi

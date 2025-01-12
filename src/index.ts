@@ -33,7 +33,7 @@ openapi.use(async (ctx, next) => {
     }
     isEnvInitialized = true;
   }
-  return next();
+  await next();
 });
 openapi.use(logger());
 openapi.use(
