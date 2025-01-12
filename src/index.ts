@@ -45,12 +45,12 @@ openapi.use(prismaInitMiddleware);
 openapi.registry.registerComponent("securitySchemes", "userAuth", {
   type: "http",
   scheme: "bearer",
-  description: "Bearer token for users with 'user' role or higher.",
+  description: "Bearer token for authenticated users",
 });
 openapi.registry.registerComponent("securitySchemes", "memberAuth", {
   type: "http",
   scheme: "bearer",
-  description: "Bearer token for users with 'member' role",
+  description: "Bearer token for users with 'StudentMember' role",
 });
 registerEndpoints(openapi);
 openapi.use(httpErrorMiddleware);

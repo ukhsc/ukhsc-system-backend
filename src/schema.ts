@@ -28,6 +28,7 @@ export const FederateOAuthSchema = z
     grant_value: z.string().describe("社群帳號提供者的授權資訊（取決於授權流程）"),
     redirect_uri: z
       .string()
+      .url()
       .optional()
       .describe(
         "授權完成後的重新導向網址（必須與前端取得授權碼的網址相同）\n\n若授權認證流程（`flow`）為 `token`，則此欄位不需要",

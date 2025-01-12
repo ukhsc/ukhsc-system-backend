@@ -18,7 +18,6 @@ export class LoginFederatedAccount extends OpenAPIRoute {
     tags: ["身份驗證"],
     summary: "使用社群帳號登入",
     description: "使用社群帳號的授權資訊取得現有已綁定該社群帳號的使用者存取權杖。",
-    security: [{ userAuth: [] }],
     request: {
       params: z.object({
         provider: FederatedProviderSchema.describe("社群帳號提供者").openapi({
@@ -47,11 +46,15 @@ export class LoginFederatedAccount extends OpenAPIRoute {
         content: {
           "application/json": {
             schema: ErrorResponseSchema,
-            examples: {
-              未綁定使用者: {
-                value: { error: "The account is not linked to any user." },
-              },
-            },
+          },
+        },
+      },
+      401: {
+        description: "該社群帳號未綁定任何使用者",
+        content: {
+          "application/json": {
+            schema: ErrorResponseSchema,
+            example: { error: "The account is not linked to any user." },
           },
         },
       },
@@ -77,7 +80,7 @@ export class LoginFederatedAccount extends OpenAPIRoute {
       },
     });
     if (!account) {
-      return ctx.json({ error: "The account is not linked to any user." }, 400);
+      return ctx.json({ error: "The account is not linked to any user." }, 401);
     }
     if (account.email !== info.email) {
       await db.federatedAccount.update({

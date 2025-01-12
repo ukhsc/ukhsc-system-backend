@@ -76,12 +76,7 @@ export class CreateStudentMember extends OpenAPIRoute {
       where: { id: data.body.school_attended_id },
     });
     if (!school_attended) {
-      return ctx.json(
-        {
-          error: "Invalid partner school ID",
-        },
-        400,
-      );
+      throw new BadRequestError("Invalid partner school ID");
     }
 
     const federated_service = new FederatedAccountService(
