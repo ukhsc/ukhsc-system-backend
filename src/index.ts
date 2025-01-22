@@ -39,7 +39,7 @@ openapi.use(async (ctx, next) => {
 openapi.use(logger());
 openapi.use(
   cors({
-    origin: ["http://localhost:3000", "https://forms.ukhsc.org", "https://app.ukhsc.org"],
+    origin: ["http://localhost:3000", "https://forms.ukhsc.org", "https://web.ukhsc.org"],
   }),
 );
 openapi.use(prismaInitMiddleware);
