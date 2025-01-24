@@ -1,15 +1,16 @@
 import { fromHono, HonoOpenAPIRouterType } from "chanfana";
 import { Context, Hono } from "hono";
 import { registerEndpoints } from "endpoints";
-import { ExtendedPrismaClient, initPrisma } from "@utils/prisma";
+import { ExtendedPrismaClient } from "@utils/prisma";
 import dotenv from "dotenv";
 import { logger } from "hono/logger";
 import process from "process";
 import { cors } from "hono/cors";
-import { EnvConfig, initEnv } from "@utils/env";
+import { EnvConfig } from "@utils/env";
 import console from "console";
 import { HttpBindings, serve } from "@hono/node-server";
 import { httpErrorMiddleware } from "@utils/error";
+import { initialMiddleware } from "@utils/init";
 
 interface Variables {
   prisma: ExtendedPrismaClient;
@@ -30,15 +31,7 @@ const openapi = fromHono(app, {
   },
 });
 
-let initializationPromise: Promise<void> | null = null;
-openapi.use(async (ctx, next) => {
-  if (!initializationPromise) {
-    initializationPromise = initial(ctx);
-  }
-
-  await initializationPromise;
-  await next();
-});
+openapi.use(initialMiddleware);
 openapi.use(logger());
 openapi.use(
   cors({
@@ -69,14 +62,3 @@ serve(
 );
 
 export default app;
-
-async function initial(ctx: AppContext): Promise<void> {
-  const env = initEnv();
-  ctx.env = {
-    ...ctx.env,
-    ...env,
-  };
-
-  const prisma = initPrisma(ctx.env.DATABASE_URL);
-  ctx.set("prisma", prisma as ExtendedPrismaClient);
-}

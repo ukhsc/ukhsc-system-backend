@@ -1,8 +1,10 @@
 import { PrismaClient } from "@prisma/client";
 import console from "node:console";
+import process from "node:process";
 
-export function initPrisma(connection_string: string) {
+export function initPrisma(connection_string: string): ExtendedPrismaClient {
   try {
+    console.log("🔍 Initializing Prisma client...");
     const client = new PrismaClient({
       datasources: { db: { url: connection_string } },
     });
@@ -10,6 +12,7 @@ export function initPrisma(connection_string: string) {
     return getExtendedPrisma(client);
   } catch (error) {
     console.error("❌ Failed to initialize Prisma client:", error);
+    process.exit(1);
   }
 }
 
