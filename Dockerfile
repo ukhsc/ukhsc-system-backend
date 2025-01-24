@@ -4,10 +4,10 @@ WORKDIR /app
 
 COPY package.json pnpm-lock.yaml ./
 RUN corepack enable && corepack prepare pnpm@latest --activate
+RUN pnpm install --frozen-lockfile
 
 COPY . .
 
-RUN pnpm install --frozen-lockfile
 RUN pnpm prisma generate
 RUN pnpm build
 
