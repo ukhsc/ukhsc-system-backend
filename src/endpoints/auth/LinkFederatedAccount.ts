@@ -59,7 +59,7 @@ export class LinkFederatedAccount extends OpenAPIRoute {
     const auth_payload = await auth_service.validate();
 
     const { flow, redirect_uri, grant_value } = data.body;
-    const federated_service = new FederatedAccountService(ctx.env, data.params.provider);
+    const federated_service = new FederatedAccountService(ctx.var, data.params.provider);
     const token = await federated_service.getAccessToken(flow, grant_value, redirect_uri);
     const info = await federated_service.getUserInfo(token);
     await federated_service.linkAccount(db, auth_payload.user, info);

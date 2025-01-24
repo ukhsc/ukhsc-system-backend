@@ -1,7 +1,9 @@
 import { HealthCheck } from "@endpoints/HealthCheck";
 import { createTestClient, TestClient } from "@tests/helpers/client";
 import { createMockPrisma, MockPrisma } from "@tests/helpers/prisma_mock";
+import { EnvConfig } from "@utils/env";
 import { beforeEach, describe, expect, it } from "vitest";
+import { mock } from "vitest-mock-extended";
 
 describe("Health Check", () => {
   let client: TestClient;
@@ -11,6 +13,7 @@ describe("Health Check", () => {
     mockPrisma = createMockPrisma();
     client = createTestClient({
       prisma: mockPrisma,
+      ...mock<EnvConfig>(),
     });
     client.get("/health", HealthCheck);
   });

@@ -40,7 +40,7 @@ export class HealthCheck extends OpenAPIRoute {
     return ctx.json(
       {
         status,
-        environment: ctx.env.CURRENT_ENVIRONMENT || "unknown",
+        environment: ctx.var.CURRENT_ENVIRONMENT || "unknown",
         timestamp: new Date().toISOString(),
       },
       statusCode,

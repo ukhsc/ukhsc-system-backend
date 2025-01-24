@@ -1,6 +1,6 @@
 import { MiddlewareHandler } from "hono";
 import { ContentfulStatusCode } from "hono/utils/http-status";
-import { AppOptions } from "index";
+import console from "console";
 
 export class HttpError extends Error {
   constructor(
@@ -28,14 +28,15 @@ export class ForbiddenError extends HttpError {
 }
 
 // TODO: Add request id for debugging and tracking
-export const httpErrorMiddleware: MiddlewareHandler<AppOptions> = async (ctx, next) => {
+export const httpErrorMiddleware: MiddlewareHandler = async (ctx, next) => {
   try {
     await next();
   } catch (error) {
     if (error instanceof HttpError) {
       return ctx.json({ error: error.message }, error.status);
     } else {
-      throw error;
+      console.error(error);
+      return ctx.text("Internal Server Error", 500);
     }
   }
 };

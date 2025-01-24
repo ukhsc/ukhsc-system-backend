@@ -66,7 +66,7 @@ export class LoginFederatedAccount extends OpenAPIRoute {
     const db = ctx.var.prisma;
 
     const { flow, redirect_uri, grant_value } = data.body;
-    const federated_service = new FederatedAccountService(ctx.env, data.params.provider);
+    const federated_service = new FederatedAccountService(ctx.var, data.params.provider);
     const federated_token = await federated_service.getAccessToken(flow, grant_value, redirect_uri);
     const info = await federated_service.getUserInfo(federated_token);
 
@@ -99,7 +99,7 @@ export class LoginFederatedAccount extends OpenAPIRoute {
         user_id: user.id,
         device_id: device.id,
       },
-      ctx.env.JWT_SECRET,
+      ctx.var.JWT_SECRET,
     );
 
     return ctx.json({ token }, 200);

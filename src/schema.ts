@@ -1,3 +1,4 @@
+// TODO: https://github.com/chrishoermann/zod-prisma-types/issues/306
 import { z as fixedZod } from "zod";
 import { extendZodWithOpenApi } from "@asteasolutions/zod-to-openapi";
 import { StudentMemberSchema } from "../prisma/schema/generated/zod";

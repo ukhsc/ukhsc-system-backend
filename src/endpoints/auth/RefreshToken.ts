@@ -59,7 +59,7 @@ export class RefreshToken extends OpenAPIRoute {
       await device_service.addActivity(payload.device_id, true);
     }
 
-    const { access_token, refresh_token } = AuthService.generateToken(payload, ctx.env.JWT_SECRET);
+    const { access_token, refresh_token } = AuthService.generateToken(payload, ctx.var.JWT_SECRET);
 
     return ctx.json({ access_token, refresh_token }, 200);
   }

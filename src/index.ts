@@ -1,7 +1,7 @@
-import { fromHono, OpenAPIRouterType } from "chanfana";
+import { fromHono, HonoOpenAPIRouterType } from "chanfana";
 import { Context, Hono } from "hono";
 import { registerEndpoints } from "endpoints";
-import { ExtendedPrismaClient, prismaInitMiddleware } from "@utils/prisma";
+import { ExtendedPrismaClient, initPrisma } from "@utils/prisma";
 import dotenv from "dotenv";
 import { logger } from "hono/logger";
 import process from "process";
@@ -14,26 +14,37 @@ import { httpErrorMiddleware } from "@utils/error";
 interface Variables {
   prisma: ExtendedPrismaClient;
 }
-export type AppOptions = { Variables: Variables; Bindings: EnvConfig & HttpBindings };
+export type AppOptions = { Variables: Variables & EnvConfig; Bindings: HttpBindings };
 export type AppContext = Context<AppOptions>;
-export type AppRouter = Hono<AppOptions> & OpenAPIRouterType<Hono<AppOptions>>;
+export type AppRouter = HonoOpenAPIRouterType<AppOptions>;
 
 dotenv.config();
 const app = new Hono<AppOptions>();
 const openapi = fromHono(app, {
   docs_url: "/docs",
+  schema: {
+    info: {
+      title: "高雄高校特約聯盟 會員暨商家資訊整合系統 API",
+      version: "1.0.0",
+    },
+  },
 });
 
-let isEnvInitialized = false;
+let isServerInitialized = false;
 openapi.use(async (ctx, next) => {
-  if (!isEnvInitialized) {
-    const result = initEnv();
-    ctx.env = {
-      ...ctx.env,
-      ...result,
-    };
-    isEnvInitialized = true;
+  if (!isServerInitialized) {
+    const env = initEnv();
+    for (const item in env) {
+      const key = item as keyof EnvConfig;
+      ctx.set(key, env[key]);
+    }
+
+    const prisma = initPrisma(ctx.var.DATABASE_URL);
+    ctx.set("prisma", prisma);
+
+    isServerInitialized = true;
   }
+
   await next();
 });
 openapi.use(logger());
@@ -42,7 +53,6 @@ openapi.use(
     origin: ["http://localhost:3000", "https://forms.ukhsc.org", "https://web.ukhsc.org"],
   }),
 );
-openapi.use(prismaInitMiddleware);
 openapi.registry.registerComponent("securitySchemes", "userAuth", {
   type: "http",
   scheme: "bearer",
@@ -55,10 +65,6 @@ openapi.registry.registerComponent("securitySchemes", "memberAuth", {
 });
 registerEndpoints(openapi);
 openapi.use(httpErrorMiddleware);
-openapi.onError((err, cxt) => {
-  console.error(err);
-  return cxt.text("Internal Server Error", 500);
-});
 
 serve(
   {

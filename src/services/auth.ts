@@ -30,7 +30,7 @@ export class AuthService {
     }
 
     try {
-      const payload = jwt.verify(token, this.ctx.env.JWT_SECRET);
+      const payload = jwt.verify(token, this.ctx.var.JWT_SECRET);
       if (!this.isTokenPayload(payload)) {
         throw new UnauthorizedError("Invalid token");
       }
