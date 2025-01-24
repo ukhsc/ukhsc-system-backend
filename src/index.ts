@@ -30,21 +30,13 @@ const openapi = fromHono(app, {
   },
 });
 
-let isServerInitialized = false;
+let initializationPromise: Promise<void> | null = null;
 openapi.use(async (ctx, next) => {
-  if (!isServerInitialized) {
-    const env = initEnv();
-    ctx.env = {
-      ...ctx.env,
-      ...env,
-    };
-
-    const prisma = initPrisma(ctx.env.DATABASE_URL);
-    ctx.set("prisma", prisma);
-
-    isServerInitialized = true;
+  if (!initializationPromise) {
+    initializationPromise = initial(ctx);
   }
 
+  await initializationPromise;
   await next();
 });
 openapi.use(logger());
@@ -77,3 +69,14 @@ serve(
 );
 
 export default app;
+
+async function initial(ctx: AppContext): Promise<void> {
+  const env = initEnv();
+  ctx.env = {
+    ...ctx.env,
+    ...env,
+  };
+
+  const prisma = initPrisma(ctx.env.DATABASE_URL);
+  ctx.set("prisma", prisma as ExtendedPrismaClient);
+}

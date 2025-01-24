@@ -1,11 +1,16 @@
 import { PrismaClient } from "@prisma/client";
+import console from "node:console";
 
 export function initPrisma(connection_string: string) {
-  const client = new PrismaClient({
-    datasources: { db: { url: connection_string } },
-  });
+  try {
+    const client = new PrismaClient({
+      datasources: { db: { url: connection_string } },
+    });
 
-  return getExtendedPrisma(client);
+    return getExtendedPrisma(client);
+  } catch (error) {
+    console.error("❌ Failed to initialize Prisma client:", error);
+  }
 }
 
 function getExtendedPrisma(prisma: PrismaClient) {

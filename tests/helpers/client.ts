@@ -10,9 +10,8 @@ export function createTestClient(variables: AppOptions["Variables"]): TestClient
 
   client.use(async (ctx, next) => {
     if (Object.keys(ctx.var).length === 0) {
-      for (const item in variables) {
-        const key = item as keyof AppOptions["Variables"];
-        ctx.set(key, variables[key]);
+      for (const [key, value] of Object.entries(variables)) {
+        ctx.set(key as keyof AppOptions["Variables"], value);
       }
     }
     await next();

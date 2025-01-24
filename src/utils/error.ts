@@ -1,6 +1,6 @@
 import { MiddlewareHandler } from "hono";
 import { ContentfulStatusCode } from "hono/utils/http-status";
-import console from "console";
+import console from "node:console";
 
 export class HttpError extends Error {
   constructor(
