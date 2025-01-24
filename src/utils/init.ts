@@ -11,7 +11,7 @@ export const initialMiddleware: MiddlewareHandler<AppOptions> = async (ctx, next
     envCache = initEnv();
   }
   if (!prismaCache) {
-    prismaCache = initPrisma(ctx.env.DATABASE_URL);
+    prismaCache = initPrisma(envCache.DATABASE_URL);
   }
 
   ctx.env = {
