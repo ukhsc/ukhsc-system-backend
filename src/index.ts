@@ -1,48 +1,43 @@
-import { fromHono, OpenAPIRouterType } from "chanfana";
+import { fromHono, HonoOpenAPIRouterType } from "chanfana";
 import { Context, Hono } from "hono";
 import { registerEndpoints } from "endpoints";
-import { ExtendedPrismaClient, prismaInitMiddleware } from "@utils/prisma";
+import { ExtendedPrismaClient } from "@utils/prisma";
 import dotenv from "dotenv";
 import { logger } from "hono/logger";
 import process from "process";
 import { cors } from "hono/cors";
-import { EnvConfig, initEnv } from "@utils/env";
+import { EnvConfig } from "@utils/env";
 import console from "console";
 import { HttpBindings, serve } from "@hono/node-server";
 import { httpErrorMiddleware } from "@utils/error";
+import { initialMiddleware } from "@utils/init";
 
 interface Variables {
   prisma: ExtendedPrismaClient;
 }
 export type AppOptions = { Variables: Variables; Bindings: EnvConfig & HttpBindings };
 export type AppContext = Context<AppOptions>;
-export type AppRouter = Hono<AppOptions> & OpenAPIRouterType<Hono<AppOptions>>;
+export type AppRouter = HonoOpenAPIRouterType<AppOptions>;
 
 dotenv.config();
 const app = new Hono<AppOptions>();
 const openapi = fromHono(app, {
   docs_url: "/docs",
+  schema: {
+    info: {
+      title: "高雄高校特約聯盟 會員暨商家資訊整合系統 API",
+      version: "1.0.0",
+    },
+  },
 });
 
-let isEnvInitialized = false;
-openapi.use(async (ctx, next) => {
-  if (!isEnvInitialized) {
-    const result = initEnv();
-    ctx.env = {
-      ...ctx.env,
-      ...result,
-    };
-    isEnvInitialized = true;
-  }
-  await next();
-});
+openapi.use(initialMiddleware);
 openapi.use(logger());
 openapi.use(
   cors({
     origin: ["http://localhost:3000", "https://forms.ukhsc.org", "https://web.ukhsc.org"],
   }),
 );
-openapi.use(prismaInitMiddleware);
 openapi.registry.registerComponent("securitySchemes", "userAuth", {
   type: "http",
   scheme: "bearer",
@@ -55,10 +50,6 @@ openapi.registry.registerComponent("securitySchemes", "memberAuth", {
 });
 registerEndpoints(openapi);
 openapi.use(httpErrorMiddleware);
-openapi.onError((err, cxt) => {
-  console.error(err);
-  return cxt.text("Internal Server Error", 500);
-});
 
 serve(
   {

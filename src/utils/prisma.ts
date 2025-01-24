@@ -1,27 +1,20 @@
 import { PrismaClient } from "@prisma/client";
-import { MiddlewareHandler } from "hono";
-import { AppOptions } from "index";
+import console from "node:console";
+import process from "node:process";
 
-let prisma: ExtendedPrismaClient | null = null;
+export function initPrisma(connection_string: string): ExtendedPrismaClient {
+  try {
+    console.log("🔍 Initializing Prisma client...");
+    const client = new PrismaClient({
+      datasources: { db: { url: connection_string } },
+    });
 
-function initPrisma(connection_string: string) {
-  const client = new PrismaClient({
-    datasources: { db: { url: connection_string } },
-  });
-
-  prisma = getExtendedPrisma(client);
-}
-
-export const prismaInitMiddleware: MiddlewareHandler<AppOptions> = async (ctx, next) => {
-  if (!ctx.var.prisma) {
-    if (!prisma) {
-      initPrisma(ctx.env.DATABASE_URL);
-    }
-
-    ctx.set("prisma", prisma as never);
+    return getExtendedPrisma(client);
+  } catch (error) {
+    console.error("❌ Failed to initialize Prisma client:", error);
+    process.exit(1);
   }
-  await next();
-};
+}
 
 function getExtendedPrisma(prisma: PrismaClient) {
   return prisma.$extends({

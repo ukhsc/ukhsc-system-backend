@@ -16,6 +16,7 @@ const envSchema = z.object({
 export type EnvConfig = z.infer<typeof envSchema>;
 
 export function initEnv(): EnvConfig {
+  console.log("🔍 Initializing environment variables...");
   const result = envSchema.safeParse({
     DATABASE_URL: process.env.DATABASE_URL,
     DIRECT_DATABASE_URL: process.env.DIRECT_DATABASE_URL,
