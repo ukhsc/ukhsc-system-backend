@@ -14,7 +14,7 @@ import { httpErrorMiddleware } from "@utils/error";
 interface Variables {
   prisma: ExtendedPrismaClient;
 }
-export type AppOptions = { Variables: Variables & EnvConfig; Bindings: HttpBindings };
+export type AppOptions = { Variables: Variables; Bindings: EnvConfig & HttpBindings };
 export type AppContext = Context<AppOptions>;
 export type AppRouter = HonoOpenAPIRouterType<AppOptions>;
 
@@ -34,12 +34,12 @@ let isServerInitialized = false;
 openapi.use(async (ctx, next) => {
   if (!isServerInitialized) {
     const env = initEnv();
-    for (const item in env) {
-      const key = item as keyof EnvConfig;
-      ctx.set(key, env[key]);
-    }
+    ctx.env = {
+      ...ctx.env,
+      ...env,
+    };
 
-    const prisma = initPrisma(ctx.var.DATABASE_URL);
+    const prisma = initPrisma(ctx.env.DATABASE_URL);
     ctx.set("prisma", prisma);
 
     isServerInitialized = true;

@@ -8,7 +8,7 @@ RUN pnpm install --frozen-lockfile
 
 COPY . .
 
-RUN pnpm prisma generate
+RUN pnpm generate
 RUN pnpm build
 
 # Add EntryPoint script

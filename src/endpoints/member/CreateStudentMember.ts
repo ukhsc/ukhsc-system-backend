@@ -80,7 +80,7 @@ export class CreateStudentMember extends OpenAPIRoute {
     }
 
     const federated_service = new FederatedAccountService(
-      ctx.var,
+      ctx.env,
       FederatedProvider.GoogleWorkspace,
     );
 
@@ -142,7 +142,7 @@ export class CreateStudentMember extends OpenAPIRoute {
         user_id: user.id,
         device_id: device.id,
       },
-      ctx.var.JWT_SECRET,
+      ctx.env.JWT_SECRET,
     );
 
     return ctx.json(token, 201);
