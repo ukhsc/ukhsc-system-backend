@@ -9,7 +9,7 @@ import { cors } from "hono/cors";
 import { EnvConfig } from "@utils/env";
 import console from "console";
 import { HttpBindings, serve } from "@hono/node-server";
-import { httpErrorMiddleware } from "@utils/error";
+import { httpErrorHandler } from "@utils/error";
 import { initialMiddleware } from "@utils/init";
 
 interface Variables {
@@ -49,7 +49,7 @@ openapi.registry.registerComponent("securitySchemes", "memberAuth", {
   description: "Bearer token for users with 'StudentMember' role",
 });
 registerEndpoints(openapi);
-openapi.use(httpErrorMiddleware);
+openapi.onError(httpErrorHandler);
 
 serve(
   {

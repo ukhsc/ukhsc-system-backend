@@ -3,6 +3,7 @@ import { ForbiddenError, UnauthorizedError } from "@utils/error";
 import { User } from "@prisma/client";
 import { AppContext } from "index";
 import { ErrorResponseSchema } from "schema";
+import console from "node:console";
 
 export enum UserRole {
   StudentMember = "student_member",
@@ -56,6 +57,7 @@ export class AuthService {
         ...payload,
       };
     } catch (_) {
+      console.error(_);
       throw new UnauthorizedError("Invalid token");
     }
   }
@@ -78,7 +80,7 @@ export class AuthService {
     return (
       typeof payload === "object" &&
       payload !== null &&
-      "role" in payload &&
+      "roles" in payload &&
       "user_id" in payload &&
       "device_id" in payload
     );
