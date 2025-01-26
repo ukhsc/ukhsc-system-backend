@@ -11,7 +11,7 @@ import { ErrorResponseSchema, StudentMemberSchemaPublic, UserSchema } from "sche
 export class GetMyMemberInfo extends OpenAPIRoute {
   schema = {
     tags: ["學生會員"],
-    summary: "依據存取權杖取得目前會員的資訊",
+    summary: "依據 Access Token 取得目前會員的資訊",
     security: [{ memberAuth: [] }],
     responses: {
       200: {
