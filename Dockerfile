@@ -22,6 +22,7 @@ FROM node:22
 WORKDIR /app
 COPY --from=builder /app/dist /app/dist
 COPY --from=builder /app/node_modules /app/node_modules
+COPY --from=builder /app/prisma /app/prisma
 
 RUN corepack enable && corepack prepare pnpm@latest --activate
 

@@ -14,7 +14,8 @@
     "seed": "prisma db seed",
     "lint": "tsc --noEmit && eslint .",
     "lint:fix": "eslint . --fix",
-    "sentry:sourcemaps": "sentry-cli sourcemaps inject --org tcabbage --project ukhsc-backend ./dist && sentry-cli sourcemaps upload --org tcabbage --project ukhsc-backend ./dist"
+    "sentry:sourcemaps": "sentry-cli sourcemaps inject --org tcabbage --project ukhsc-backend ./dist && sentry-cli sourcemaps upload --org tcabbage --project ukhsc-backend ./dist",
+    "sentry:release": "sentry-cli releases set-commits \"$VERSION\" --auto && sentry-cli releases finalize \"$VERSION\""
   },
   "prisma": {
     "seed": "tsx prisma/seed.ts"

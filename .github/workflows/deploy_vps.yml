@@ -132,6 +132,11 @@ jobs:
               core.setFailed(error.message);
             }
 
+      - name: Generate ISO Timestamp
+        id: timestamp
+        run: |
+          echo "ISO_TIME=$(date -u -d @${{ github.event.repository.pushed_at }} +'%Y-%m-%dT%H:%M:%SZ')" >> $GITHUB_OUTPUT
+
       - name: Send Discord Notification
         uses: tsickert/discord-webhook@v6.0.0
         if: always()
@@ -145,7 +150,7 @@ jobs:
             **提交者：** ${{ github.actor }}
             **提交訊息：** ${{ github.event.head_commit.message }}
             **部署環境：** VPS Production
-            **部署時間：** ${{ github.event.repository.pushed_at }}
+            **部署時間：** <t:${{ github.event.repository.pushed_at }}:F>
 
             [查看部署詳細資訊](https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }})
             ${{
@@ -153,4 +158,4 @@ jobs:
             }}
           embed-color: ${{ job.status == 'success' && '65280' || '16711680' }}
           embed-footer-text: "UKHSC System Backend Deployment"
-          embed-timestamp: ${{ github.event.repository.pushed_at }}
+          embed-timestamp: ${{ steps.timestamp.outputs.ISO_TIME }}
