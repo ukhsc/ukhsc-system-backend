@@ -12,8 +12,8 @@ RUN pnpm generate
 
 # Used in the build command to upload source maps to Sentry.
 ARG SENTRY_AUTH_TOKEN
-RUN --mount=type=secret,id=sentry_token \
-    export SENTRY_AUTH_TOKEN=$(cat /run/secrets/sentry_token) && \
+RUN --mount=type=secret,id=sentry_token,target=/sentry_token \
+    export SENTRY_AUTH_TOKEN=$(cat /sentry_token) && \
     pnpm build && \
     unset SENTRY_AUTH_TOKEN
 
