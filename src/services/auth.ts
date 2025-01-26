@@ -45,7 +45,7 @@ export class AuthService {
       }
 
       const required_roles = options?.roles ?? [];
-      const user_roles = await this.getUserRoles(user.id);
+      const user_roles = await AuthService.getUserRoles(user.id);
       const hasPermission = required_roles.every((role) => user_roles.includes(role));
       if (!hasPermission) {
         throw new ForbiddenError(KnownErrorCode.INSUFFICIENT_PERMISSIONS);
