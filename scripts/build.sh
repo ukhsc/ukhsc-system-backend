@@ -6,15 +6,18 @@ if [ -f "/sentry_token" ] && [ -s "/sentry_token" ]; then
     export SENTRY_AUTH_TOKEN=$(cat /sentry_token)
 
     VERSION=$(pnpm sentry-cli releases propose-version)
-    pnpm sentry-cli releases new -o tcabbage -p ukhsc-backend $VERSION
-    pnpm sentry-cli releases set-commits -o tcabbage -p ukhsc-backend "$VERSION" --auto
+    SENTRY_ORG=tcabbage
+    SENTRY_PROJECT=ukhsc-backend
+
+    pnpm sentry-cli releases new $VERSION
+    pnpm sentry-cli releases set-commits "$VERSION" --auto
 
     pnpm build
 
-    pnpm sentry-cli sourcemaps inject -o tcabbage -p ukhsc-backend ./dist
-    pnpm sentry-cli sourcemaps upload -o tcabbage -p ukhsc-backend ./dist
-    pnpm sentry-cli releases finalize -o tcabbage -p ukhsc-backend $VERSION
-    pnpm sentry-cli releases deploys new -o tcabbage -p ukhsc-backend --release $VERSION -e production
+    pnpm sentry-cli sourcemaps inject ./dist
+    pnpm sentry-cli sourcemaps upload ./dist
+    pnpm sentry-cli releases finalize $VERSION
+    pnpm sentry-cli releases deploys new --release $VERSION -e production
 
     unset SENTRY_AUTH_TOKEN
 else
