@@ -1,5 +1,9 @@
 FROM node:22 AS builder
 
+# For Sentry
+ARG GIT_COMMIT
+ENV GIT_COMMIT=${GIT_COMMIT}
+
 WORKDIR /app
 
 COPY package.json pnpm-lock.yaml ./

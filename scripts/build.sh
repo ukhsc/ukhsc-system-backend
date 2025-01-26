@@ -5,12 +5,12 @@ if [ -f "/sentry_token" ] && [ -s "/sentry_token" ]; then
     echo "Sentry token found, executing full build with Sentry..."
     export SENTRY_AUTH_TOKEN=$(cat /sentry_token)
 
-    VERSION=$(pnpm sentry-cli releases propose-version)
+    VERSION=${GIT_COMMIT}
     SENTRY_ORG=tcabbage
     SENTRY_PROJECT=ukhsc-backend
 
     pnpm sentry-cli releases new $VERSION
-    pnpm sentry-cli releases set-commits "$VERSION" --auto
+    pnpm sentry-cli releases set-commits "$VERSION" --commit "ukhsc/ukhsc-system-backend@${GIT_COMMIT}"
 
     pnpm build
 
