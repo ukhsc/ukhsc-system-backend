@@ -1,9 +1,10 @@
 import { FederatedProvider, User } from "@prisma/client";
 import axios from "axios";
 import { EnvConfig } from "utils/env";
-import { BadRequestError } from "@utils/error";
-import console from "console";
+import { BadRequestError, InternalServerError, KnownErrorCode } from "@utils/error";
 import { ExtendedPrismaClient } from "@utils/prisma";
+import { hash } from "node:crypto";
+import { PinoLogger } from "hono-pino";
 
 interface FederatedUserInfo {
   email: string;
@@ -15,20 +16,9 @@ export enum GrantFlows {
   Implicit = "token",
 }
 
-export class MissingRedirectURIError extends BadRequestError {
-  constructor() {
-    super("Redirect URI is required for authorization code flow");
-  }
-}
-
-export class AccountAlreadyLinkedError extends BadRequestError {
-  constructor(provider: FederatedProvider) {
-    super(`Account already linked: ${provider}`);
-  }
-}
-
 export class FederatedAccountService {
   constructor(
+    private logger: PinoLogger,
     private env: EnvConfig,
     private provider: FederatedProvider,
   ) {}
@@ -36,7 +26,20 @@ export class FederatedAccountService {
   async getAccessToken(flow: GrantFlows, grant_value: string, redirect_uri?: string) {
     switch (flow) {
       case GrantFlows.AuthorizationCode:
-        if (!redirect_uri) throw new MissingRedirectURIError();
+        this.logger
+          .assign({
+            provider: this.provider,
+            grant_value: hash("sha256", grant_value),
+            redirect_uri,
+          })
+          .info("Getting access token for authorization code flow");
+
+        if (!redirect_uri) {
+          throw new BadRequestError(
+            KnownErrorCode.INVALID_FEDERATED_GRANT,
+            "Redirect URI is required for authorization code flow",
+          );
+        }
 
         return await this.exchangeCodeForToken(redirect_uri, grant_value);
       case GrantFlows.Implicit:
@@ -53,7 +56,28 @@ export class FederatedAccountService {
         OR: [{ user_id: user.id }, { provider_identifier: identifier }],
       },
     });
-    if (existingAccount) throw new AccountAlreadyLinkedError(this.provider);
+    if (existingAccount) {
+      const details = {
+        user: {
+          ...user,
+          primary_email: hash("sha256", user.primary_email),
+        },
+        federated_user_info: {
+          ...info,
+          email: hash("sha256", email),
+        },
+        existing_account: {
+          ...existingAccount,
+          email: hash("sha256", existingAccount.email),
+        },
+      };
+
+      throw new BadRequestError(
+        KnownErrorCode.FEDERATED_LINKED,
+        `User ${user.id} already linked with ${this.provider} account`,
+        details,
+      );
+    }
 
     await prisma.federatedAccount.create({
       data: {
@@ -105,10 +129,18 @@ export class FederatedAccountService {
     );
 
     if (response.status !== 200) {
-      console.error(
-        `Failed to exchange code for token: ${response.status} ${JSON.stringify(response.data)}`,
+      const details = {
+        provider: this.provider,
+        federated_server_response: {
+          status: response.status,
+          data: response.data,
+        },
+      };
+      throw new BadRequestError(
+        KnownErrorCode.INVALID_FEDERATED_GRANT,
+        "Failed to exchange code for token",
+        details,
       );
-      throw new BadRequestError("Failed to exchange code for token");
     }
 
     return response.data.access_token;
@@ -126,12 +158,18 @@ export class FederatedAccountService {
         });
 
         if (response.status !== 200) {
-          console.error(
-            `Failed to get federated account's user info: ${response.status} ${JSON.stringify(
-              response.data,
-            )}`,
+          const details = {
+            provider: this.provider,
+            federated_server_response: {
+              status: response.status,
+              data: response.data,
+            },
+          };
+          throw new InternalServerError(
+            KnownErrorCode.OAUTH_ERROR,
+            "Failed to get federated account's user info",
+            details,
           );
-          throw new BadRequestError("Failed to get federated account's user info");
         }
 
         return {

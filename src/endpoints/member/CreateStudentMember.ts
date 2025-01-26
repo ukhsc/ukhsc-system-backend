@@ -1,7 +1,12 @@
 import { FederatedProvider, MembershipPurchaseChannel, SchoolAccountConfig } from "@prisma/client";
 import { AuthService, UserRole } from "@services/auth";
 import { FederatedAccountService } from "@services/federated_account";
-import { BadRequestError } from "@utils/error";
+import {
+  BadRequestError,
+  InternalServerError,
+  KnownErrorCode,
+  UnprocessableEntityError,
+} from "@utils/error";
 import { OpenAPIRoute } from "chanfana";
 import { AppContext } from "index";
 import { z } from "zod";
@@ -70,16 +75,17 @@ export class CreateStudentMember extends OpenAPIRoute {
 
   async handle(ctx: AppContext) {
     const data = await this.getValidatedData<typeof this.schema>();
-    const db = ctx.var.prisma;
+    const { prisma: db, logger } = ctx.var;
 
     const school_attended = await db.partnerSchool.findUnique({
       where: { id: data.body.school_attended_id },
     });
     if (!school_attended) {
-      throw new BadRequestError("Invalid partner school ID");
+      throw new UnprocessableEntityError(KnownErrorCode.MISMATCH, "Invalid partner school ID");
     }
 
     const federated_service = new FederatedAccountService(
+      logger,
       ctx.env,
       FederatedProvider.GoogleWorkspace,
     );
@@ -94,11 +100,9 @@ export class CreateStudentMember extends OpenAPIRoute {
       },
     });
     if (!account_config) {
-      return ctx.json(
-        {
-          error: "School account configuration has not been set up by the administrator",
-        },
-        500,
+      throw new InternalServerError(
+        KnownErrorCode.CONFIGURATION_ERROR,
+        "School account configuration has not been set up by the administrator",
       );
     }
     const student_id = this.captureStudentId(info.email, account_config);
@@ -107,6 +111,11 @@ export class CreateStudentMember extends OpenAPIRoute {
         id: "desc",
       },
     });
+
+    const user_exists = await db.user.findUnique({ where: { primary_email: info.email } });
+    if (user_exists) {
+      throw new BadRequestError(KnownErrorCode.STUDENT_ALREADY_EXISTS);
+    }
 
     const user = await db.user.create({
       data: {
@@ -151,13 +160,19 @@ export class CreateStudentMember extends OpenAPIRoute {
   private captureStudentId(email: string, config: SchoolAccountConfig): string {
     const domain = email.split("@")[1];
     if (domain !== config.domain_name) {
-      throw new BadRequestError("Invalid school email or it's not from our partner school");
+      throw new UnprocessableEntityError(
+        KnownErrorCode.INVALID_SCHOOL_EMAIL,
+        "Invalid school email or it's not from our partner school",
+      );
     }
 
     const regex = new RegExp(config.student_username_format);
     const match = email.match(regex);
     if (!match) {
-      throw new BadRequestError("Invalid email format or it's owned by a teacher");
+      throw new UnprocessableEntityError(
+        KnownErrorCode.INVALID_SCHOOL_EMAIL,
+        "Invalid email format or it's owned by a teacher",
+      );
     }
 
     return match[1]; // The first capturing group is the student ID

@@ -1,7 +1,11 @@
 import { HealthCheck } from "@endpoints/HealthCheck";
 import { createTestClient, TestClient } from "@tests/helpers/client";
 import { createMockPrisma, MockPrisma } from "@tests/helpers/prisma_mock";
+import { PinoLogger } from "hono-pino";
+import pino from "pino";
 import { beforeEach, describe, expect, it } from "vitest";
+
+const TEST_REQUEST_ID = "test-request-id";
 
 describe("Health Check", () => {
   let client: TestClient;
@@ -11,6 +15,8 @@ describe("Health Check", () => {
     mockPrisma = createMockPrisma();
     client = createTestClient({
       prisma: mockPrisma,
+      request_id: TEST_REQUEST_ID,
+      logger: new PinoLogger(pino({ level: "silent" })),
     });
     client.get("/health", HealthCheck);
   });

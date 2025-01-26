@@ -11,6 +11,8 @@ export * from "../prisma/schema/generated/zod";
 extendZodWithOpenApi(fixedZod);
 export const z = fixedZod;
 
+// TODO: z.coerce.date() rendered as nullable
+// See also: https://github.com/asteasolutions/zod-to-openapi/issues/286
 export const StudentMemberSchemaPublic = StudentMemberSchema.omit({
   password_hash: true,
 }).extend({

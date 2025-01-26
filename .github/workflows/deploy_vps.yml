@@ -12,8 +12,37 @@ jobs:
     permissions:
       contents: read
       packages: write
+      deployments: write
 
     steps:
+      - name: Create GitHub Deployment
+        uses: actions/github-script@v7
+        id: deployment
+        with:
+          script: |
+            const deployment = await github.rest.repos.createDeployment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              ref: context.sha,
+              environment: 'production',
+              auto_merge: false,
+              required_contexts: []
+            });
+            console.log('Created deployment:', deployment.data.id);
+            return deployment.data.id;
+      - name: Set Deployment Status to In Progress
+        if: success()
+        uses: actions/github-script@v7
+        with:
+          script: |
+            await github.rest.repos.createDeploymentStatus({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              deployment_id: ${{ steps.deployment.outputs.result }},
+              state: 'in_progress',
+              description: 'Deployment in progress...',
+              log_url: `https://github.com/${context.repo.owner}/${context.repo.repo}/actions/runs/${context.runId}`
+            });
       - name: Checkout code
         uses: actions/checkout@v4
 
@@ -22,93 +51,95 @@ jobs:
 
       - name: Build and push Docker image
         run: |
-          docker build -t ghcr.io/${{ github.repository_owner }}/ukhsc-system-backend-api:latest .
+          docker build \
+            --secret id=sentry_token,env=SENTRY_AUTH_TOKEN=${{ secrets.SENTRY_AUTH_TOKEN }} \
+            -t ghcr.io/${{ github.repository_owner }}/ukhsc-system-backend-api:latest .
           docker push ghcr.io/${{ github.repository_owner }}/ukhsc-system-backend-api:latest
 
-      - name: Deploy to VPS using SSH
-        uses: appleboy/ssh-action@v1.2.0
+      - name: Copy deployment scripts to VPS
+        uses: appleboy/scp-action@v0.1.7
         with:
           host: ${{ secrets.VPS_IP }}
           username: root
           key: ${{ secrets.VPS_SSH_KEY }}
+          source: "scripts/*"
+          target: "/root/deployment"
+
+      - name: Deploy to VPS using SSH
+        uses: appleboy/ssh-action@v1.2.0
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+          DIRECT_DATABASE_URL: ${{ secrets.DATABASE_URL }}
+          JWT_SECRET: ${{ secrets.JWT_SECRET }}
+          GOOGLE_OAUTH_CLIENT_ID: ${{ secrets.GOOGLE_OAUTH_CLIENT_ID }}
+          GOOGLE_OAUTH_CLIENT_SECRET: ${{ secrets.GOOGLE_OAUTH_CLIENT_SECRET }}
+          SENTRY_DSN: ${{ secrets.SENTRY_DSN }}
+          DOCKER_IMAGE: ghcr.io/${{ github.repository_owner }}/ukhsc-system-backend-api:latest
+        with:
+          host: ${{ secrets.VPS_IP }}
+          username: root
+          key: ${{ secrets.VPS_SSH_KEY }}
+          envs: DATABASE_URL,DIRECT_DATABASE_URL,JWT_SECRET,GOOGLE_OAUTH_CLIENT_ID,GOOGLE_OAUTH_CLIENT_SECRET,SENTRY_DSN,DOCKER_IMAGE
           script: |
-            # Check both ports to determine current environment
-            if curl -s http://localhost:3000/health > /dev/null 2>&1; then
-              CURRENT_ENV=$(curl -s http://localhost:3000/health | jq -r '.environment')
-            elif curl -s http://localhost:3001/health > /dev/null 2>&1; then
-              CURRENT_ENV=$(curl -s http://localhost:3001/health | jq -r '.environment')
-            else
-              CURRENT_ENV="unknown"
-            fi
+            cd /root/deployment
 
-            if [ "$CURRENT_ENV" == "green" ]; then
-              TARGET_ENV="blue"
-              TARGET_PORT=3001
-            else
-              TARGET_ENV="green"
-              TARGET_PORT=3000
-            fi
+            mkdir -p /var/log/ukhsc-system-backend
+            chmod 755 /var/log/ukhsc-system-backend
 
-            echo "Current environment is $CURRENT_ENV. Deploying to $TARGET_ENV."
+            chmod +x scripts/*.sh
+            scripts/deploy.sh $DOCKER_IMAGE
 
-            # Stop and remove the target environment container if it exists
-            docker stop ukhsc-system-backend-api-$TARGET_ENV || true
-            docker rm ukhsc-system-backend-api-$TARGET_ENV || true
+      - name: Update Deployment Status
+        if: always()
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const { owner, repo } = context.repo;
+            const deployment_id = ${{ steps.deployment.outputs.result }};
+            const success = '${{ job.status }}' === 'success';
 
-            docker pull ghcr.io/${{ github.repository_owner }}/ukhsc-system-backend-api:latest
+            try {
+              const status = {
+                owner,
+                repo,
+                deployment_id,
+                state: success ? 'success' : 'failure',
+                description: success ? 'Deployment succeeded!' : 'Deployment failed',
+                log_url: `https://github.com/${owner}/${repo}/actions/runs/${context.runId}`,
+                environment_url: success ? 'https://api.ukhsc.org' : undefined,
+                auto_inactive: success
+              };
 
-            docker run -d --restart always --name ukhsc-system-backend-api-$TARGET_ENV -p $TARGET_PORT:8787 \
-              -e DATABASE_URL=${{ secrets.DATABASE_URL }} \
-              -e DIRECT_DATABASE_URL=${{ secrets.DATABASE_URL }} \
-              -e JWT_SECRET=${{ secrets.JWT_SECRET }} \
-              -e GOOGLE_OAUTH_CLIENT_ID=${{ secrets.GOOGLE_OAUTH_CLIENT_ID }} \
-              -e GOOGLE_OAUTH_CLIENT_SECRET=${{ secrets.GOOGLE_OAUTH_CLIENT_SECRET }} \
-              -e CURRENT_ENVIRONMENT=$TARGET_ENV \
-              ghcr.io/${{ github.repository_owner }}/ukhsc-system-backend-api:latest
+              console.log('Updating deployment status:', status);
+              await github.rest.repos.createDeploymentStatus(status);
 
-            COUNTER=0
-            SUCCESS_COUNT=0
-            REQUIRED_SUCCESSES=2
+              if (!success) {
+                core.setFailed('Deployment failed');
+              }
+            } catch (error) {
+              console.error('Error updating deployment status:', error);
+              core.setFailed(error.message);
+            }
 
-            while [ $SUCCESS_COUNT -lt $REQUIRED_SUCCESSES ] && [ $COUNTER -lt 12 ]; do
-              if curl --silent --fail http://localhost:$TARGET_PORT/health; then
-                echo "Health check passed ($((SUCCESS_COUNT + 1))/$REQUIRED_SUCCESSES)"
-                SUCCESS_COUNT=$((SUCCESS_COUNT + 1))
-              else
-                echo "Health check failed, resetting success count"
-                SUCCESS_COUNT=0
-              fi
-              sleep 5
-              COUNTER=$((COUNTER + 1))
-            done
+      - name: Send Discord Notification
+        uses: tsickert/discord-webhook@v6.0.0
+        if: always()
+        with:
+          webhook-url: ${{ secrets.DISCORD_WEBHOOK_URL }}
+          embed-title: 🍔 UKHSC 系統後端部署通知
+          embed-description: |
+            ### 部署狀態：${{ job.status == 'success' && '✅ 成功' || '❌ 失敗' }}
 
-            if [ $SUCCESS_COUNT -lt $REQUIRED_SUCCESSES ]; then
-              echo "Deployment failed: Service did not pass $REQUIRED_SUCCESSES consecutive health checks within 60 seconds"
-              docker stop ukhsc-system-backend-api-$TARGET_ENV || true
-              echo "Fetching logs from the failed container..."
-              docker logs ukhsc-system-backend-api-$TARGET_ENV > deployment_failed_logs.txt
-              TIMESTAMP=$(date +"%Y%m%d_%H%M%S")
-              mkdir -p deployment_logs
-              cp deployment_failed_logs.txt deployment_logs/deployment_failed_logs_$TIMESTAMP.txt
-              docker rm ukhsc-system-backend-api-$TARGET_ENV || true
-              exit 1
-            fi
+            **分支：** `${{ github.ref_name }}`
+            **提交者：** ${{ github.actor }}
+            **提交訊息：** ${{ github.event.head_commit.message }}
+            **部署環境：** VPS Production
+            **部署時間：** ${{ format(github.event.repository.pushed_at, 'YYYY-MM-DD HH:mm:ss') }}
 
-            sed -i "s/127.0.0.1:[0-9]*/127.0.0.1:$TARGET_PORT/" /etc/nginx/sites-available/default
-            systemctl reload nginx
-
-            if [ "$CURRENT_ENV" == "green" ]; then
-              docker stop ukhsc-system-backend-api-green || true
-              docker rm ukhsc-system-backend-api-green || true
-            else
-              docker stop ukhsc-system-backend-api-blue || true
-              docker rm ukhsc-system-backend-api-blue || true
-            fi
-
-            echo "Deployment successful!"
-
-            echo "Cleaning up old Docker resources..."
-            docker system prune -a -f --filter "until=24h"
-            docker image prune -a -f --filter "until=24h"
-            docker container prune -f --filter "until=24h"
-            docker volume prune -f
+            [查看部署詳細資訊](https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }})
+            ${{
+              job.status == 'success' && '[前往網站](https://api.ukhsc.org)' || ''
+            }}
+          embed-color: ${{ job.status == 'success' && '65280' || '16711680' }}
+          embed-footer-text: "UKHSC System Backend Deployment"
+          embed-timestamp: ${{ format(github.event.repository.pushed_at, 'YYYY-MM-DDTHH:mm:ss.sssZ') }}

@@ -1,8 +1,9 @@
 import jwt from "jsonwebtoken";
-import { ForbiddenError, UnauthorizedError } from "@utils/error";
+import { ForbiddenError, KnownErrorCode, UnauthorizedError } from "@utils/error";
 import { User } from "@prisma/client";
 import { AppContext } from "index";
 import { ErrorResponseSchema } from "schema";
+import console from "node:console";
 
 export enum UserRole {
   StudentMember = "student_member",
@@ -26,19 +27,19 @@ export class AuthService {
   > {
     const token = options?.custom_token ?? this.getBearerToken();
     if (!token) {
-      throw new UnauthorizedError("No token provided");
+      throw new UnauthorizedError(KnownErrorCode.NO_TOKEN);
     }
 
     try {
       const payload = jwt.verify(token, this.ctx.env.JWT_SECRET);
       if (!this.isTokenPayload(payload)) {
-        throw new UnauthorizedError("Invalid token");
+        throw new UnauthorizedError(KnownErrorCode.INVALID_TOKEN);
       }
 
       const roles = options?.roles ?? [];
       const hasPermission = roles.every((role) => payload.roles.includes(role));
       if (!hasPermission) {
-        throw new ForbiddenError("Insufficient permissions or role");
+        throw new ForbiddenError(KnownErrorCode.INSUFFICIENT_PERMISSIONS);
       }
 
       const db = this.ctx.var.prisma;
@@ -48,7 +49,7 @@ export class AuthService {
         },
       });
       if (!user) {
-        throw new UnauthorizedError("User has been banned");
+        throw new UnauthorizedError(KnownErrorCode.BANNED_USER);
       }
 
       return {
@@ -56,7 +57,8 @@ export class AuthService {
         ...payload,
       };
     } catch (_) {
-      throw new UnauthorizedError("Invalid token");
+      console.error(_);
+      throw new UnauthorizedError(KnownErrorCode.INVALID_TOKEN);
     }
   }
 
@@ -78,7 +80,7 @@ export class AuthService {
     return (
       typeof payload === "object" &&
       payload !== null &&
-      "role" in payload &&
+      "roles" in payload &&
       "user_id" in payload &&
       "device_id" in payload
     );
@@ -113,7 +115,7 @@ export const OpenAPIResponseUnauthorized = {
       "application/json": {
         schema: ErrorResponseSchema,
         example: {
-          error: "Unauthorized (Invalid token)",
+          code: KnownErrorCode.INVALID_TOKEN,
         },
       },
     },
@@ -127,7 +129,7 @@ export const OpenAPIResponseForbidden = {
       "application/json": {
         schema: ErrorResponseSchema,
         example: {
-          error: "Forbidden (Insufficient permissions or role)",
+          error: KnownErrorCode.INSUFFICIENT_PERMISSIONS,
         },
       },
     },

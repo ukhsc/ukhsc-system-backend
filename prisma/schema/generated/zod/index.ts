@@ -26,7 +26,7 @@ export const PersonalMembershipOrderScalarFieldEnumSchema = z.enum(['id','create
 
 export const PartnerSchoolScalarFieldEnumSchema = z.enum(['id','short_name','full_name','plan']);
 
-export const UserScalarFieldEnumSchema = z.enum(['id','primary_email','created_at','updated_at','member_id']);
+export const UserScalarFieldEnumSchema = z.enum(['id','primary_email','created_at','updated_at']);
 
 export const UserDeviceScalarFieldEnumSchema = z.enum(['id','user_id','name','type','operating_system','created_at','updated_at']);
 
@@ -193,7 +193,6 @@ export const UserSchema = z.object({
   primary_email: z.string(),
   created_at: z.coerce.date(),
   updated_at: z.coerce.date(),
-  member_id: z.string().nullable(),
 })
 
 export type User = z.infer<typeof UserSchema>
@@ -415,7 +414,6 @@ export const UserSelectSchema: z.ZodType<Prisma.UserSelect> = z.object({
   primary_email: z.boolean().optional(),
   created_at: z.boolean().optional(),
   updated_at: z.boolean().optional(),
-  member_id: z.boolean().optional(),
   federated_accounts: z.union([z.boolean(),z.lazy(() => FederatedAccountFindManyArgsSchema)]).optional(),
   devices: z.union([z.boolean(),z.lazy(() => UserDeviceFindManyArgsSchema)]).optional(),
   member: z.union([z.boolean(),z.lazy(() => StudentMemberArgsSchema)]).optional(),
@@ -995,7 +993,6 @@ export const UserWhereInputSchema: z.ZodType<Prisma.UserWhereInput> = z.object({
   primary_email: z.union([ z.lazy(() => StringFilterSchema),z.string() ]).optional(),
   created_at: z.union([ z.lazy(() => DateTimeFilterSchema),z.coerce.date() ]).optional(),
   updated_at: z.union([ z.lazy(() => DateTimeFilterSchema),z.coerce.date() ]).optional(),
-  member_id: z.union([ z.lazy(() => StringNullableFilterSchema),z.string() ]).optional().nullable(),
   federated_accounts: z.lazy(() => FederatedAccountListRelationFilterSchema).optional(),
   devices: z.lazy(() => UserDeviceListRelationFilterSchema).optional(),
   member: z.union([ z.lazy(() => StudentMemberNullableScalarRelationFilterSchema),z.lazy(() => StudentMemberWhereInputSchema) ]).optional().nullable(),
@@ -1006,7 +1003,6 @@ export const UserOrderByWithRelationInputSchema: z.ZodType<Prisma.UserOrderByWit
   primary_email: z.lazy(() => SortOrderSchema).optional(),
   created_at: z.lazy(() => SortOrderSchema).optional(),
   updated_at: z.lazy(() => SortOrderSchema).optional(),
-  member_id: z.union([ z.lazy(() => SortOrderSchema),z.lazy(() => SortOrderInputSchema) ]).optional(),
   federated_accounts: z.lazy(() => FederatedAccountOrderByRelationAggregateInputSchema).optional(),
   devices: z.lazy(() => UserDeviceOrderByRelationAggregateInputSchema).optional(),
   member: z.lazy(() => StudentMemberOrderByWithRelationInputSchema).optional()
@@ -1032,7 +1028,6 @@ export const UserWhereUniqueInputSchema: z.ZodType<Prisma.UserWhereUniqueInput> 
   NOT: z.union([ z.lazy(() => UserWhereInputSchema),z.lazy(() => UserWhereInputSchema).array() ]).optional(),
   created_at: z.union([ z.lazy(() => DateTimeFilterSchema),z.coerce.date() ]).optional(),
   updated_at: z.union([ z.lazy(() => DateTimeFilterSchema),z.coerce.date() ]).optional(),
-  member_id: z.union([ z.lazy(() => StringNullableFilterSchema),z.string() ]).optional().nullable(),
   federated_accounts: z.lazy(() => FederatedAccountListRelationFilterSchema).optional(),
   devices: z.lazy(() => UserDeviceListRelationFilterSchema).optional(),
   member: z.union([ z.lazy(() => StudentMemberNullableScalarRelationFilterSchema),z.lazy(() => StudentMemberWhereInputSchema) ]).optional().nullable(),
@@ -1043,7 +1038,6 @@ export const UserOrderByWithAggregationInputSchema: z.ZodType<Prisma.UserOrderBy
   primary_email: z.lazy(() => SortOrderSchema).optional(),
   created_at: z.lazy(() => SortOrderSchema).optional(),
   updated_at: z.lazy(() => SortOrderSchema).optional(),
-  member_id: z.union([ z.lazy(() => SortOrderSchema),z.lazy(() => SortOrderInputSchema) ]).optional(),
   _count: z.lazy(() => UserCountOrderByAggregateInputSchema).optional(),
   _avg: z.lazy(() => UserAvgOrderByAggregateInputSchema).optional(),
   _max: z.lazy(() => UserMaxOrderByAggregateInputSchema).optional(),
@@ -1059,7 +1053,6 @@ export const UserScalarWhereWithAggregatesInputSchema: z.ZodType<Prisma.UserScal
   primary_email: z.union([ z.lazy(() => StringWithAggregatesFilterSchema),z.string() ]).optional(),
   created_at: z.union([ z.lazy(() => DateTimeWithAggregatesFilterSchema),z.coerce.date() ]).optional(),
   updated_at: z.union([ z.lazy(() => DateTimeWithAggregatesFilterSchema),z.coerce.date() ]).optional(),
-  member_id: z.union([ z.lazy(() => StringNullableWithAggregatesFilterSchema),z.string() ]).optional().nullable(),
 }).strict();
 
 export const UserDeviceWhereInputSchema: z.ZodType<Prisma.UserDeviceWhereInput> = z.object({
@@ -1595,7 +1588,6 @@ export const UserCreateInputSchema: z.ZodType<Prisma.UserCreateInput> = z.object
   primary_email: z.string(),
   created_at: z.coerce.date().optional(),
   updated_at: z.coerce.date().optional(),
-  member_id: z.string().optional().nullable(),
   federated_accounts: z.lazy(() => FederatedAccountCreateNestedManyWithoutUserInputSchema).optional(),
   devices: z.lazy(() => UserDeviceCreateNestedManyWithoutUserInputSchema).optional(),
   member: z.lazy(() => StudentMemberCreateNestedOneWithoutUserInputSchema).optional()
@@ -1606,7 +1598,6 @@ export const UserUncheckedCreateInputSchema: z.ZodType<Prisma.UserUncheckedCreat
   primary_email: z.string(),
   created_at: z.coerce.date().optional(),
   updated_at: z.coerce.date().optional(),
-  member_id: z.string().optional().nullable(),
   federated_accounts: z.lazy(() => FederatedAccountUncheckedCreateNestedManyWithoutUserInputSchema).optional(),
   devices: z.lazy(() => UserDeviceUncheckedCreateNestedManyWithoutUserInputSchema).optional(),
   member: z.lazy(() => StudentMemberUncheckedCreateNestedOneWithoutUserInputSchema).optional()
@@ -1616,7 +1607,6 @@ export const UserUpdateInputSchema: z.ZodType<Prisma.UserUpdateInput> = z.object
   primary_email: z.union([ z.string(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
   created_at: z.union([ z.coerce.date(),z.lazy(() => DateTimeFieldUpdateOperationsInputSchema) ]).optional(),
   updated_at: z.union([ z.coerce.date(),z.lazy(() => DateTimeFieldUpdateOperationsInputSchema) ]).optional(),
-  member_id: z.union([ z.string(),z.lazy(() => NullableStringFieldUpdateOperationsInputSchema) ]).optional().nullable(),
   federated_accounts: z.lazy(() => FederatedAccountUpdateManyWithoutUserNestedInputSchema).optional(),
   devices: z.lazy(() => UserDeviceUpdateManyWithoutUserNestedInputSchema).optional(),
   member: z.lazy(() => StudentMemberUpdateOneWithoutUserNestedInputSchema).optional()
@@ -1627,7 +1617,6 @@ export const UserUncheckedUpdateInputSchema: z.ZodType<Prisma.UserUncheckedUpdat
   primary_email: z.union([ z.string(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
   created_at: z.union([ z.coerce.date(),z.lazy(() => DateTimeFieldUpdateOperationsInputSchema) ]).optional(),
   updated_at: z.union([ z.coerce.date(),z.lazy(() => DateTimeFieldUpdateOperationsInputSchema) ]).optional(),
-  member_id: z.union([ z.string(),z.lazy(() => NullableStringFieldUpdateOperationsInputSchema) ]).optional().nullable(),
   federated_accounts: z.lazy(() => FederatedAccountUncheckedUpdateManyWithoutUserNestedInputSchema).optional(),
   devices: z.lazy(() => UserDeviceUncheckedUpdateManyWithoutUserNestedInputSchema).optional(),
   member: z.lazy(() => StudentMemberUncheckedUpdateOneWithoutUserNestedInputSchema).optional()
@@ -1637,15 +1626,13 @@ export const UserCreateManyInputSchema: z.ZodType<Prisma.UserCreateManyInput> = 
   id: z.number().int().optional(),
   primary_email: z.string(),
   created_at: z.coerce.date().optional(),
-  updated_at: z.coerce.date().optional(),
-  member_id: z.string().optional().nullable()
+  updated_at: z.coerce.date().optional()
 }).strict();
 
 export const UserUpdateManyMutationInputSchema: z.ZodType<Prisma.UserUpdateManyMutationInput> = z.object({
   primary_email: z.union([ z.string(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
   created_at: z.union([ z.coerce.date(),z.lazy(() => DateTimeFieldUpdateOperationsInputSchema) ]).optional(),
   updated_at: z.union([ z.coerce.date(),z.lazy(() => DateTimeFieldUpdateOperationsInputSchema) ]).optional(),
-  member_id: z.union([ z.string(),z.lazy(() => NullableStringFieldUpdateOperationsInputSchema) ]).optional().nullable(),
 }).strict();
 
 export const UserUncheckedUpdateManyInputSchema: z.ZodType<Prisma.UserUncheckedUpdateManyInput> = z.object({
@@ -1653,7 +1640,6 @@ export const UserUncheckedUpdateManyInputSchema: z.ZodType<Prisma.UserUncheckedU
   primary_email: z.union([ z.string(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
   created_at: z.union([ z.coerce.date(),z.lazy(() => DateTimeFieldUpdateOperationsInputSchema) ]).optional(),
   updated_at: z.union([ z.coerce.date(),z.lazy(() => DateTimeFieldUpdateOperationsInputSchema) ]).optional(),
-  member_id: z.union([ z.string(),z.lazy(() => NullableStringFieldUpdateOperationsInputSchema) ]).optional().nullable(),
 }).strict();
 
 export const UserDeviceCreateInputSchema: z.ZodType<Prisma.UserDeviceCreateInput> = z.object({
@@ -2291,8 +2277,7 @@ export const UserCountOrderByAggregateInputSchema: z.ZodType<Prisma.UserCountOrd
   id: z.lazy(() => SortOrderSchema).optional(),
   primary_email: z.lazy(() => SortOrderSchema).optional(),
   created_at: z.lazy(() => SortOrderSchema).optional(),
-  updated_at: z.lazy(() => SortOrderSchema).optional(),
-  member_id: z.lazy(() => SortOrderSchema).optional()
+  updated_at: z.lazy(() => SortOrderSchema).optional()
 }).strict();
 
 export const UserAvgOrderByAggregateInputSchema: z.ZodType<Prisma.UserAvgOrderByAggregateInput> = z.object({
@@ -2303,16 +2288,14 @@ export const UserMaxOrderByAggregateInputSchema: z.ZodType<Prisma.UserMaxOrderBy
   id: z.lazy(() => SortOrderSchema).optional(),
   primary_email: z.lazy(() => SortOrderSchema).optional(),
   created_at: z.lazy(() => SortOrderSchema).optional(),
-  updated_at: z.lazy(() => SortOrderSchema).optional(),
-  member_id: z.lazy(() => SortOrderSchema).optional()
+  updated_at: z.lazy(() => SortOrderSchema).optional()
 }).strict();
 
 export const UserMinOrderByAggregateInputSchema: z.ZodType<Prisma.UserMinOrderByAggregateInput> = z.object({
   id: z.lazy(() => SortOrderSchema).optional(),
   primary_email: z.lazy(() => SortOrderSchema).optional(),
   created_at: z.lazy(() => SortOrderSchema).optional(),
-  updated_at: z.lazy(() => SortOrderSchema).optional(),
-  member_id: z.lazy(() => SortOrderSchema).optional()
+  updated_at: z.lazy(() => SortOrderSchema).optional()
 }).strict();
 
 export const UserSumOrderByAggregateInputSchema: z.ZodType<Prisma.UserSumOrderByAggregateInput> = z.object({
@@ -3155,7 +3138,6 @@ export const UserCreateWithoutFederated_accountsInputSchema: z.ZodType<Prisma.Us
   primary_email: z.string(),
   created_at: z.coerce.date().optional(),
   updated_at: z.coerce.date().optional(),
-  member_id: z.string().optional().nullable(),
   devices: z.lazy(() => UserDeviceCreateNestedManyWithoutUserInputSchema).optional(),
   member: z.lazy(() => StudentMemberCreateNestedOneWithoutUserInputSchema).optional()
 }).strict();
@@ -3165,7 +3147,6 @@ export const UserUncheckedCreateWithoutFederated_accountsInputSchema: z.ZodType<
   primary_email: z.string(),
   created_at: z.coerce.date().optional(),
   updated_at: z.coerce.date().optional(),
-  member_id: z.string().optional().nullable(),
   devices: z.lazy(() => UserDeviceUncheckedCreateNestedManyWithoutUserInputSchema).optional(),
   member: z.lazy(() => StudentMemberUncheckedCreateNestedOneWithoutUserInputSchema).optional()
 }).strict();
@@ -3190,7 +3171,6 @@ export const UserUpdateWithoutFederated_accountsInputSchema: z.ZodType<Prisma.Us
   primary_email: z.union([ z.string(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
   created_at: z.union([ z.coerce.date(),z.lazy(() => DateTimeFieldUpdateOperationsInputSchema) ]).optional(),
   updated_at: z.union([ z.coerce.date(),z.lazy(() => DateTimeFieldUpdateOperationsInputSchema) ]).optional(),
-  member_id: z.union([ z.string(),z.lazy(() => NullableStringFieldUpdateOperationsInputSchema) ]).optional().nullable(),
   devices: z.lazy(() => UserDeviceUpdateManyWithoutUserNestedInputSchema).optional(),
   member: z.lazy(() => StudentMemberUpdateOneWithoutUserNestedInputSchema).optional()
 }).strict();
@@ -3200,7 +3180,6 @@ export const UserUncheckedUpdateWithoutFederated_accountsInputSchema: z.ZodType<
   primary_email: z.union([ z.string(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
   created_at: z.union([ z.coerce.date(),z.lazy(() => DateTimeFieldUpdateOperationsInputSchema) ]).optional(),
   updated_at: z.union([ z.coerce.date(),z.lazy(() => DateTimeFieldUpdateOperationsInputSchema) ]).optional(),
-  member_id: z.union([ z.string(),z.lazy(() => NullableStringFieldUpdateOperationsInputSchema) ]).optional().nullable(),
   devices: z.lazy(() => UserDeviceUncheckedUpdateManyWithoutUserNestedInputSchema).optional(),
   member: z.lazy(() => StudentMemberUncheckedUpdateOneWithoutUserNestedInputSchema).optional()
 }).strict();
@@ -3335,7 +3314,6 @@ export const UserCreateWithoutMemberInputSchema: z.ZodType<Prisma.UserCreateWith
   primary_email: z.string(),
   created_at: z.coerce.date().optional(),
   updated_at: z.coerce.date().optional(),
-  member_id: z.string().optional().nullable(),
   federated_accounts: z.lazy(() => FederatedAccountCreateNestedManyWithoutUserInputSchema).optional(),
   devices: z.lazy(() => UserDeviceCreateNestedManyWithoutUserInputSchema).optional()
 }).strict();
@@ -3345,7 +3323,6 @@ export const UserUncheckedCreateWithoutMemberInputSchema: z.ZodType<Prisma.UserU
   primary_email: z.string(),
   created_at: z.coerce.date().optional(),
   updated_at: z.coerce.date().optional(),
-  member_id: z.string().optional().nullable(),
   federated_accounts: z.lazy(() => FederatedAccountUncheckedCreateNestedManyWithoutUserInputSchema).optional(),
   devices: z.lazy(() => UserDeviceUncheckedCreateNestedManyWithoutUserInputSchema).optional()
 }).strict();
@@ -3426,7 +3403,6 @@ export const UserUpdateWithoutMemberInputSchema: z.ZodType<Prisma.UserUpdateWith
   primary_email: z.union([ z.string(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
   created_at: z.union([ z.coerce.date(),z.lazy(() => DateTimeFieldUpdateOperationsInputSchema) ]).optional(),
   updated_at: z.union([ z.coerce.date(),z.lazy(() => DateTimeFieldUpdateOperationsInputSchema) ]).optional(),
-  member_id: z.union([ z.string(),z.lazy(() => NullableStringFieldUpdateOperationsInputSchema) ]).optional().nullable(),
   federated_accounts: z.lazy(() => FederatedAccountUpdateManyWithoutUserNestedInputSchema).optional(),
   devices: z.lazy(() => UserDeviceUpdateManyWithoutUserNestedInputSchema).optional()
 }).strict();
@@ -3436,7 +3412,6 @@ export const UserUncheckedUpdateWithoutMemberInputSchema: z.ZodType<Prisma.UserU
   primary_email: z.union([ z.string(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
   created_at: z.union([ z.coerce.date(),z.lazy(() => DateTimeFieldUpdateOperationsInputSchema) ]).optional(),
   updated_at: z.union([ z.coerce.date(),z.lazy(() => DateTimeFieldUpdateOperationsInputSchema) ]).optional(),
-  member_id: z.union([ z.string(),z.lazy(() => NullableStringFieldUpdateOperationsInputSchema) ]).optional().nullable(),
   federated_accounts: z.lazy(() => FederatedAccountUncheckedUpdateManyWithoutUserNestedInputSchema).optional(),
   devices: z.lazy(() => UserDeviceUncheckedUpdateManyWithoutUserNestedInputSchema).optional()
 }).strict();
@@ -3950,7 +3925,6 @@ export const UserCreateWithoutDevicesInputSchema: z.ZodType<Prisma.UserCreateWit
   primary_email: z.string(),
   created_at: z.coerce.date().optional(),
   updated_at: z.coerce.date().optional(),
-  member_id: z.string().optional().nullable(),
   federated_accounts: z.lazy(() => FederatedAccountCreateNestedManyWithoutUserInputSchema).optional(),
   member: z.lazy(() => StudentMemberCreateNestedOneWithoutUserInputSchema).optional()
 }).strict();
@@ -3960,7 +3934,6 @@ export const UserUncheckedCreateWithoutDevicesInputSchema: z.ZodType<Prisma.User
   primary_email: z.string(),
   created_at: z.coerce.date().optional(),
   updated_at: z.coerce.date().optional(),
-  member_id: z.string().optional().nullable(),
   federated_accounts: z.lazy(() => FederatedAccountUncheckedCreateNestedManyWithoutUserInputSchema).optional(),
   member: z.lazy(() => StudentMemberUncheckedCreateNestedOneWithoutUserInputSchema).optional()
 }).strict();
@@ -4008,7 +3981,6 @@ export const UserUpdateWithoutDevicesInputSchema: z.ZodType<Prisma.UserUpdateWit
   primary_email: z.union([ z.string(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
   created_at: z.union([ z.coerce.date(),z.lazy(() => DateTimeFieldUpdateOperationsInputSchema) ]).optional(),
   updated_at: z.union([ z.coerce.date(),z.lazy(() => DateTimeFieldUpdateOperationsInputSchema) ]).optional(),
-  member_id: z.union([ z.string(),z.lazy(() => NullableStringFieldUpdateOperationsInputSchema) ]).optional().nullable(),
   federated_accounts: z.lazy(() => FederatedAccountUpdateManyWithoutUserNestedInputSchema).optional(),
   member: z.lazy(() => StudentMemberUpdateOneWithoutUserNestedInputSchema).optional()
 }).strict();
@@ -4018,7 +3990,6 @@ export const UserUncheckedUpdateWithoutDevicesInputSchema: z.ZodType<Prisma.User
   primary_email: z.union([ z.string(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
   created_at: z.union([ z.coerce.date(),z.lazy(() => DateTimeFieldUpdateOperationsInputSchema) ]).optional(),
   updated_at: z.union([ z.coerce.date(),z.lazy(() => DateTimeFieldUpdateOperationsInputSchema) ]).optional(),
-  member_id: z.union([ z.string(),z.lazy(() => NullableStringFieldUpdateOperationsInputSchema) ]).optional().nullable(),
   federated_accounts: z.lazy(() => FederatedAccountUncheckedUpdateManyWithoutUserNestedInputSchema).optional(),
   member: z.lazy(() => StudentMemberUncheckedUpdateOneWithoutUserNestedInputSchema).optional()
 }).strict();

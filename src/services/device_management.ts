@@ -65,7 +65,7 @@ export class DeviceManagementService {
     return true;
   }
 
-  async addActivity(device_id: number, success: boolean): Promise<void> {
+  async addActivity(device_id: number, success: boolean): Promise<LoginActivity> {
     const db = this.ctx.var.prisma;
     const device = await db.userDevice.findUnique({
       where: {
@@ -75,7 +75,7 @@ export class DeviceManagementService {
     if (!device) throw new Error("Device not found");
 
     const ip_address = this.getIpAddress();
-    await db.loginActivity.create({
+    const activity = await db.loginActivity.create({
       data: {
         device: {
           connect: {
@@ -86,6 +86,8 @@ export class DeviceManagementService {
         success,
       },
     });
+
+    return activity;
   }
 
   private async getMatchScore(

@@ -1,6 +1,6 @@
 import { AuthService, OpenAPIResponseForbidden, OpenAPIResponseUnauthorized } from "@services/auth";
 import { DeviceManagementService } from "@services/device_management";
-import { ForbiddenError } from "@utils/error";
+import { ForbiddenError, KnownErrorCode } from "@utils/error";
 import { OpenAPIRoute } from "chanfana";
 import { AppContext } from "index";
 import { z } from "zod";
@@ -44,19 +44,28 @@ export class RefreshToken extends OpenAPIRoute {
     const data = await this.getValidatedData<typeof this.schema>();
     const auth_service = new AuthService(ctx);
     const payload = await auth_service.validate({ custom_token: data.body.refresh_token });
+    const { device_id } = payload;
 
-    if (payload.device_id) {
+    if (device_id) {
       const device_service = new DeviceManagementService(ctx);
-      const valid = await device_service.validateDevice(payload.device_id);
+      const valid = await device_service.validateDevice(device_id);
       if (valid === null) {
-        throw new ForbiddenError("Device access has been revoked");
+        throw new ForbiddenError(
+          KnownErrorCode.ACCESS_REVOKED,
+          `Device ${device_id} access has been revoked`,
+        );
       }
       if (!valid) {
-        await device_service.addActivity(payload.device_id, false);
-        throw new ForbiddenError("Unauthorized device");
+        const activity = await device_service.addActivity(device_id, false);
+        throw new ForbiddenError(
+          KnownErrorCode.UNAUTHORIZED_DEVICE,
+          `Device ${device_id} is unauthorized`,
+          { activity_id: activity.id },
+        );
       }
 
-      await device_service.addActivity(payload.device_id, true);
+      await device_service.addActivity(device_id, true);
+      ctx.var.logger.info({ device_id }, "Token refreshed successfully");
     }
 
     const { access_token, refresh_token } = AuthService.generateToken(payload, ctx.env.JWT_SECRET);
