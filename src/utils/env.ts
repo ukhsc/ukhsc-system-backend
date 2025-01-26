@@ -7,6 +7,8 @@ const envSchema = z.object({
   DIRECT_DATABASE_URL: z.string().optional(),
   JWT_SECRET: z.string(),
   CURRENT_ENVIRONMENT: z.string().optional(),
+  IS_PRODUCTION: z.boolean().default(false),
+  SENTRY_DSN: z.string().optional(),
 
   // OAuth
   GOOGLE_OAUTH_CLIENT_ID: z.string().default(""),
@@ -22,6 +24,8 @@ export function initEnv(): EnvConfig {
     DIRECT_DATABASE_URL: process.env.DIRECT_DATABASE_URL,
     JWT_SECRET: process.env.JWT_SECRET,
     CURRENT_ENVIRONMENT: process.env.CURRENT_ENVIRONMENT,
+    IS_PRODUCTION: process.env.IS_PRODUCTION === "true",
+    SENTRY_DSN: process.env.SENTRY_DSN,
 
     // OAuth
     GOOGLE_OAUTH_CLIENT_ID: process.env.GOOGLE_OAUTH_CLIENT_ID,

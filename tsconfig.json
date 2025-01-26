@@ -3,6 +3,7 @@
     "allowJs": true,
     "allowSyntheticDefaultImports": true,
     "baseUrl": "src",
+
     "paths": {
       "@utils/*": ["utils/*"],
       "@endpoints/*": ["endpoints/*"],
@@ -10,6 +11,7 @@
       "@tests/*": ["../tests/*"],
       "@test-helpers/*": ["../tests/helpers/*"]
     },
+
     "declaration": true,
     "sourceMap": true,
     "esModuleInterop": true,
@@ -28,7 +30,13 @@
     "traceResolution": false,
     "outDir": "dist",
     "target": "esnext",
-    "module": "esnext"
+    "module": "esnext",
+    "inlineSources": true,
+
+    // Set `sourceRoot` to  "/" to strip the build path prefix
+    // from generated source code references.
+    // This improves issue grouping in Sentry.
+    "sourceRoot": "/"
   },
   "exclude": ["node_modules", "dist"],
   "include": [

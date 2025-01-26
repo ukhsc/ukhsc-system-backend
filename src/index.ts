@@ -11,9 +11,11 @@ import console from "console";
 import { HttpBindings, serve } from "@hono/node-server";
 import { httpErrorHandler } from "@utils/error";
 import { initialMiddleware } from "@utils/init";
+import * as Sentry from "@sentry/node";
 
 interface Variables {
   prisma: ExtendedPrismaClient;
+  sentry?: Sentry.Scope;
 }
 export type AppOptions = { Variables: Variables; Bindings: EnvConfig & HttpBindings };
 export type AppContext = Context<AppOptions>;
@@ -38,6 +40,7 @@ openapi.use(
     origin: ["http://localhost:3000", "https://forms.ukhsc.org", "https://web.ukhsc.org"],
   }),
 );
+
 openapi.registry.registerComponent("securitySchemes", "userAuth", {
   type: "http",
   scheme: "bearer",

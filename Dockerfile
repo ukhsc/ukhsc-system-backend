@@ -1,4 +1,6 @@
-FROM node:22
+FROM node:22 AS builder
+# Used in the build command to upload source maps to Sentry.
+ARG SENTRY_AUTH_TOKEN
 
 WORKDIR /app
 
@@ -10,6 +12,11 @@ COPY . .
 
 RUN pnpm generate
 RUN pnpm build
+
+# Production image
+FROM node:22
+WORKDIR /app
+COPY --from=builder /app /app
 
 # Add EntryPoint script
 COPY entrypoint.sh /app/entrypoint.sh
