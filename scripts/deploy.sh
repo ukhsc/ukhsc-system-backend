@@ -10,8 +10,8 @@ mkdir -p $LOG_DIR
 echo "Deploying $1 to $TARGET_ENV..."
 determine_environment
 
-docker stop ukhsc-system-backend-api-$TARGET_ENV || true
-docker rm ukhsc-system-backend-api-$TARGET_ENV || true
+docker stop "ukhsc-system-backend-api-$TARGET_ENV" || true
+docker rm "ukhsc-system-backend-api-$TARGET_ENV" || true
 
 echo "Pulling latest Docker image..."
 docker pull $1

@@ -1,6 +1,4 @@
 FROM node:22 AS builder
-# Used in the build command to upload source maps to Sentry.
-ARG SENTRY_AUTH_TOKEN
 
 WORKDIR /app
 
@@ -11,7 +9,13 @@ RUN pnpm install --frozen-lockfile
 COPY . .
 
 RUN pnpm generate
-RUN pnpm build
+
+# Used in the build command to upload source maps to Sentry.
+ARG SENTRY_AUTH_TOKEN
+RUN --mount=type=secret,id=sentry_token \
+    export SENTRY_AUTH_TOKEN=$(cat /run/secrets/sentry_token) && \
+    pnpm build && \
+    unset SENTRY_AUTH_TOKEN
 
 # Production image
 FROM node:22
