@@ -25,92 +25,35 @@ jobs:
           docker build --build-arg SENTRY_AUTH_TOKEN=${{ secrets.SENTRY_AUTH_TOKEN }} -t ghcr.io/${{ github.repository_owner }}/ukhsc-system-backend-api:latest .
           docker push ghcr.io/${{ github.repository_owner }}/ukhsc-system-backend-api:latest
 
-      - name: Deploy to VPS using SSH
-        uses: appleboy/ssh-action@v1.2.0
+      - name: Copy deployment scripts to VPS
+        uses: appleboy/scp-action@v0.1.7
         with:
           host: ${{ secrets.VPS_IP }}
           username: root
           key: ${{ secrets.VPS_SSH_KEY }}
+          source: "scripts/*"
+          target: "/root/deployment"
+
+      - name: Deploy to VPS using SSH
+        uses: appleboy/ssh-action@v1.2.0
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+          DIRECT_DATABASE_URL: ${{ secrets.DATABASE_URL }}
+          JWT_SECRET: ${{ secrets.JWT_SECRET }}
+          GOOGLE_OAUTH_CLIENT_ID: ${{ secrets.GOOGLE_OAUTH_CLIENT_ID }}
+          GOOGLE_OAUTH_CLIENT_SECRET: ${{ secrets.GOOGLE_OAUTH_CLIENT_SECRET }}
+          SENTRY_DSN: ${{ secrets.SENTRY_DSN }}
+          DOCKER_IMAGE: ghcr.io/${{ github.repository_owner }}/ukhsc-system-backend-api:latest
+        with:
+          host: ${{ secrets.VPS_IP }}
+          username: root
+          key: ${{ secrets.VPS_SSH_KEY }}
+          envs: DATABASE_URL,DIRECT_DATABASE_URL,JWT_SECRET,GOOGLE_OAUTH_CLIENT_ID,GOOGLE_OAUTH_CLIENT_SECRET,SENTRY_DSN,DOCKER_IMAGE
           script: |
-            # Check both ports to determine current environment
-            if curl -s http://localhost:3000/health > /dev/null 2>&1; then
-              CURRENT_ENV=$(curl -s http://localhost:3000/health | jq -r '.environment')
-            elif curl -s http://localhost:3001/health > /dev/null 2>&1; then
-              CURRENT_ENV=$(curl -s http://localhost:3001/health | jq -r '.environment')
-            else
-              CURRENT_ENV="unknown"
-            fi
+            cd /root/deployment
 
-            if [ "$CURRENT_ENV" == "green" ]; then
-              TARGET_ENV="blue"
-              TARGET_PORT=3001
-            else
-              TARGET_ENV="green"
-              TARGET_PORT=3000
-            fi
+            mkdir -p /var/log/ukhsc-system-backend
+            chmod 755 /var/log/ukhsc-system-backend
 
-            echo "Current environment is $CURRENT_ENV. Deploying to $TARGET_ENV."
-
-            # Stop and remove the target environment container if it exists
-            docker stop ukhsc-system-backend-api-$TARGET_ENV || true
-            docker rm ukhsc-system-backend-api-$TARGET_ENV || true
-
-            docker pull ghcr.io/${{ github.repository_owner }}/ukhsc-system-backend-api:latest
-
-            docker run -d --restart always --name ukhsc-system-backend-api-$TARGET_ENV -p $TARGET_PORT:8787 \
-              -e DATABASE_URL=${{ secrets.DATABASE_URL }} \
-              -e DIRECT_DATABASE_URL=${{ secrets.DATABASE_URL }} \
-              -e JWT_SECRET=${{ secrets.JWT_SECRET }} \
-              -e GOOGLE_OAUTH_CLIENT_ID=${{ secrets.GOOGLE_OAUTH_CLIENT_ID }} \
-              -e GOOGLE_OAUTH_CLIENT_SECRET=${{ secrets.GOOGLE_OAUTH_CLIENT_SECRET }} \
-              -e SENTRY_DSN=${{ secrets.SENTRY_DSN }} \
-              -e CURRENT_ENVIRONMENT=$TARGET_ENV \
-              -e IS_PRODUCTION=true \
-              ghcr.io/${{ github.repository_owner }}/ukhsc-system-backend-api:latest
-
-            COUNTER=0
-            SUCCESS_COUNT=0
-            REQUIRED_SUCCESSES=2
-
-            while [ $SUCCESS_COUNT -lt $REQUIRED_SUCCESSES ] && [ $COUNTER -lt 12 ]; do
-              if curl --silent --fail http://localhost:$TARGET_PORT/health; then
-                echo "Health check passed ($((SUCCESS_COUNT + 1))/$REQUIRED_SUCCESSES)"
-                SUCCESS_COUNT=$((SUCCESS_COUNT + 1))
-              else
-                echo "Health check failed, resetting success count"
-                SUCCESS_COUNT=0
-              fi
-              sleep 5
-              COUNTER=$((COUNTER + 1))
-            done
-
-            if [ $SUCCESS_COUNT -lt $REQUIRED_SUCCESSES ]; then
-              echo "Deployment failed: Service did not pass $REQUIRED_SUCCESSES consecutive health checks within 60 seconds"
-              docker stop ukhsc-system-backend-api-$TARGET_ENV || true
-              echo "Fetching logs from the failed container..."
-              docker logs ukhsc-system-backend-api-$TARGET_ENV > deployment_failed_logs.txt
-              TIMESTAMP=$(date +"%Y%m%d_%H%M%S")
-              mkdir -p deployment_logs
-              cp deployment_failed_logs.txt deployment_logs/deployment_failed_logs_$TIMESTAMP.txt
-              docker rm ukhsc-system-backend-api-$TARGET_ENV || true
-              exit 1
-            fi
-
-            sed -i "s/127.0.0.1:[0-9]*/127.0.0.1:$TARGET_PORT/" /etc/nginx/sites-available/default
-            systemctl reload nginx
-
-            if [ "$CURRENT_ENV" == "green" ]; then
-              docker stop ukhsc-system-backend-api-green || true
-              docker rm ukhsc-system-backend-api-green || true
-            else
-              docker stop ukhsc-system-backend-api-blue || true
-              docker rm ukhsc-system-backend-api-blue || true
-            fi
-
-            echo "Deployment successful!"
-
-            echo "Cleaning up old Docker resources..."
-            docker system prune -a -f --filter "until=24h"
-            docker image prune -a -f --filter "until=24h"
-            docker container prune -f --filter "until=24h"
-            docker volume prune -f
+            chmod +x scripts/*.sh
+            scripts/deploy.sh $DOCKER_IMAGE
