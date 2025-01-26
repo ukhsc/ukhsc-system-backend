@@ -1,9 +1,8 @@
 import jwt from "jsonwebtoken";
-import { ForbiddenError, KnownErrorCode, UnauthorizedError } from "@utils/error";
+import { ForbiddenError, InternalError, KnownErrorCode, UnauthorizedError } from "@utils/error";
 import { User } from "@prisma/client";
-import { AppContext } from "index";
+import { getCtx } from "index";
 import { ErrorResponseSchema } from "schema";
-import console from "node:console";
 
 export enum UserRole {
   StudentMember = "student_member",
@@ -18,9 +17,7 @@ export interface TokenPayload {
 }
 
 export class AuthService {
-  constructor(private ctx: AppContext) {}
-
-  async validate(options?: { custom_token?: string; roles?: UserRole[] }): Promise<
+  static async validate(options?: { custom_token?: string; roles?: UserRole[] }): Promise<
     TokenPayload & {
       user: User;
     }
@@ -30,19 +27,14 @@ export class AuthService {
       throw new UnauthorizedError(KnownErrorCode.NO_TOKEN);
     }
 
+    const ctx = getCtx();
+    const { db, logger } = ctx.var;
     try {
-      const payload = jwt.verify(token, this.ctx.env.JWT_SECRET);
+      const payload = jwt.verify(token, ctx.env.JWT_SECRET);
       if (!this.isTokenPayload(payload)) {
         throw new UnauthorizedError(KnownErrorCode.INVALID_TOKEN);
       }
 
-      const roles = options?.roles ?? [];
-      const hasPermission = roles.every((role) => payload.roles.includes(role));
-      if (!hasPermission) {
-        throw new ForbiddenError(KnownErrorCode.INSUFFICIENT_PERMISSIONS);
-      }
-
-      const db = this.ctx.var.prisma;
       const user = await db.user.findUnique({
         where: {
           id: payload.user_id,
@@ -52,18 +44,26 @@ export class AuthService {
         throw new UnauthorizedError(KnownErrorCode.BANNED_USER);
       }
 
+      const required_roles = options?.roles ?? [];
+      const user_roles = await AuthService.getUserRoles(user.id);
+      const hasPermission = required_roles.every((role) => user_roles.includes(role));
+      if (!hasPermission) {
+        throw new ForbiddenError(KnownErrorCode.INSUFFICIENT_PERMISSIONS);
+      }
+
       return {
         user,
         ...payload,
+        roles: user_roles,
       };
-    } catch (_) {
-      console.error(_);
+    } catch (error) {
+      logger.assign({ token, error }).info("Failed to validate token.");
       throw new UnauthorizedError(KnownErrorCode.INVALID_TOKEN);
     }
   }
 
-  private getBearerToken(): string | null {
-    const authHeader = this.ctx.req.header("Authorization");
+  private static getBearerToken(): string | null {
+    const authHeader = getCtx().req.header("Authorization");
     if (!authHeader) {
       return null;
     }
@@ -76,7 +76,7 @@ export class AuthService {
     return token;
   }
 
-  private isTokenPayload(payload: unknown): payload is TokenPayload {
+  private static isTokenPayload(payload: unknown): payload is TokenPayload {
     return (
       typeof payload === "object" &&
       payload !== null &&
@@ -104,6 +104,26 @@ export class AuthService {
       access_token,
       refresh_token,
     };
+  }
+
+  static async getUserRoles(user_id: number): Promise<UserRole[]> {
+    const { db } = getCtx().var;
+    const roles = [];
+
+    const user = await db.user.findUnique({
+      where: { id: user_id },
+      include: { member: true },
+    });
+    if (!user) {
+      throw new InternalError("User not found when getting roles.", { user_id });
+    }
+
+    if (user.member) {
+      roles.push(UserRole.StudentMember);
+    }
+    // TODO: Add more roles here
+
+    return roles;
   }
 }
 

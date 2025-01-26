@@ -11,7 +11,7 @@ import { ErrorResponseSchema, StudentMemberSchemaPublic, UserSchema } from "sche
 export class GetMyMemberInfo extends OpenAPIRoute {
   schema = {
     tags: ["學生會員"],
-    summary: "依據存取權杖取得目前會員的資訊",
+    summary: "依據 Access Token 取得目前會員的資訊",
     security: [{ memberAuth: [] }],
     responses: {
       200: {
@@ -56,12 +56,11 @@ export class GetMyMemberInfo extends OpenAPIRoute {
   };
 
   async handle(ctx: AppContext) {
-    const auth_service = new AuthService(ctx);
-    const auth_payload = await auth_service.validate({
+    const auth_payload = await AuthService.validate({
       roles: [UserRole.StudentMember],
     });
 
-    const db = ctx.var.prisma;
+    const { db } = ctx.var;
     const member = await db.studentMember.findUnique({
       where: {
         user_id: auth_payload.user.id,
