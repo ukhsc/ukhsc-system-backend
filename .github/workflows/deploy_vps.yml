@@ -12,8 +12,37 @@ jobs:
     permissions:
       contents: read
       packages: write
+      deployments: write
 
     steps:
+      - name: Create GitHub Deployment
+        uses: actions/github-script@v7
+        id: deployment
+        with:
+          script: |
+            const deployment = await github.rest.repos.createDeployment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              ref: context.sha,
+              environment: 'production',
+              auto_merge: false,
+              required_contexts: []
+            });
+            console.log('Created deployment:', deployment.data.id);
+            return deployment.data.id;
+      - name: Set Deployment Status to In Progress
+        if: success()
+        uses: actions/github-script@v7
+        with:
+          script: |
+            await github.rest.repos.createDeploymentStatus({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              deployment_id: ${{ steps.deployment.outputs.result }},
+              state: 'in_progress',
+              description: 'Deployment in progress...',
+              log_url: `https://github.com/${context.repo.owner}/${context.repo.repo}/actions/runs/${context.runId}`
+            });
       - name: Checkout code
         uses: actions/checkout@v4
 
@@ -59,3 +88,58 @@ jobs:
 
             chmod +x scripts/*.sh
             scripts/deploy.sh $DOCKER_IMAGE
+
+      - name: Update Deployment Status
+        if: always()
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const { owner, repo } = context.repo;
+            const deployment_id = ${{ steps.deployment.outputs.result }};
+            const success = '${{ job.status }}' === 'success';
+
+            try {
+              const status = {
+                owner,
+                repo,
+                deployment_id,
+                state: success ? 'success' : 'failure',
+                description: success ? 'Deployment succeeded!' : 'Deployment failed',
+                log_url: `https://github.com/${owner}/${repo}/actions/runs/${context.runId}`,
+                environment_url: success ? 'https://api.ukhsc.org' : undefined,
+                auto_inactive: success
+              };
+
+              console.log('Updating deployment status:', status);
+              await github.rest.repos.createDeploymentStatus(status);
+
+              if (!success) {
+                core.setFailed('Deployment failed');
+              }
+            } catch (error) {
+              console.error('Error updating deployment status:', error);
+              core.setFailed(error.message);
+            }
+
+      - name: Send Discord Notification
+        uses: tsickert/discord-webhook@v6.0.0
+        if: always()
+        with:
+          webhook-url: ${{ secrets.DISCORD_WEBHOOK_URL }}
+          embed-title: 🍔 UKHSC 系統後端部署通知
+          embed-description: |
+            ### 部署狀態：${{ job.status == 'success' && '✅ 成功' || '❌ 失敗' }}
+
+            **分支：** `${{ github.ref_name }}`
+            **提交者：** ${{ github.actor }}
+            **提交訊息：** ${{ github.event.head_commit.message }}
+            **部署環境：** VPS Production
+            **部署時間：** ${{ format(now(), 'YYYY-MM-DD HH:mm:ss') }}
+
+            [查看部署詳細資訊](https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }})
+            ${{
+              job.status == 'success' && '[前往網站](https://api.ukhsc.org)' || ''
+            }}
+          embed-color: ${{ job.status == 'success' && '65280' || '16711680' }}
+          embed-footer-text: "UKHSC System Backend Deployment"
+          embed-timestamp: ${{ format(now(), 'YYYY-MM-DDTHH:mm:ss.sssZ') }}
