@@ -4,8 +4,8 @@ import { AppOptions } from "index";
 import { EnvConfig, initEnv } from "./env";
 import { ExtendedPrismaClient, initPrisma } from "./prisma";
 import * as Sentry from "@sentry/node";
-import { initSentry } from "./sentry";
-import { randomUUID } from "crypto";
+import { initScope, initSentry } from "./sentry";
+import { randomUUID } from "node:crypto";
 
 let envCache: EnvConfig | null = null;
 let prismaCache: ExtendedPrismaClient | null = null;
@@ -25,19 +25,7 @@ export const initialMiddleware: MiddlewareHandler<AppOptions> = async (ctx, next
   if (ctx.env.SENTRY_DSN && ctx.env.IS_PRODUCTION) {
     sentryCache ??= initSentry(ctx.env);
 
-    const scope = Sentry.getIsolationScope();
-    scope.setSDKProcessingMetadata({
-      normalizedRequest: {
-        url: ctx.req.url,
-        headers: ctx.req.header(),
-        method: ctx.req.method,
-        query_string: ctx.req.query(),
-        data: ctx.req.text(),
-      } satisfies Sentry.RequestEventData,
-    });
-    scope.setTransactionName(`[${ctx.req.method}] ${ctx.req.path}`);
-    scope.setContext("environment_vars", ctx.env);
-    ctx.set("sentry", scope);
+    ctx.set("sentry", initScope(ctx));
   }
 
   await next();

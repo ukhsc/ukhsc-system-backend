@@ -32,7 +32,7 @@ export class HealthCheck extends OpenAPIRoute {
       // Try a simple query to check DB connectivity
       await db.$queryRaw`SELECT 1`;
     } catch (err) {
-      logger.error(err);
+      logger.error({ err, query: "SELECT 1", service: "database" }, "Database health check failed");
       status = "error";
       statusCode = 500;
     }

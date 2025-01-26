@@ -9,7 +9,7 @@ export class KnownHttpError extends Error {
     public debug_message?: string,
     public details?: Record<string, unknown>,
   ) {
-    super(code);
+    super(debug_message ? `${code} - ${debug_message}` : code);
   }
 }
 
@@ -42,7 +42,7 @@ export const httpErrorHandler: ErrorHandler<AppOptions> = async (error, ctx) => 
     logger.assign({ event_id });
     logger.error(error);
 
-    return ctx.text("Internal Server Error", 500);
+    return ctx.json({ error: "Internal Server Error" }, 500);
   }
 };
 

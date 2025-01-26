@@ -3,7 +3,7 @@ import axios from "axios";
 import { EnvConfig } from "utils/env";
 import { BadRequestError, InternalServerError, KnownErrorCode } from "@utils/error";
 import { ExtendedPrismaClient } from "@utils/prisma";
-import { hash } from "crypto";
+import { hash } from "node:crypto";
 import { PinoLogger } from "hono-pino";
 
 interface FederatedUserInfo {
@@ -27,7 +27,11 @@ export class FederatedAccountService {
     switch (flow) {
       case GrantFlows.AuthorizationCode:
         this.logger
-          .assign({ grant_value: hash("sha256", grant_value), redirect_uri })
+          .assign({
+            provider: this.provider,
+            grant_value: hash("sha256", grant_value),
+            redirect_uri,
+          })
           .info("Getting access token for authorization code flow");
 
         if (!redirect_uri) {

@@ -2,18 +2,29 @@ import { z } from "zod";
 import process from "process";
 import console from "console";
 
-const envSchema = z.object({
-  DATABASE_URL: z.string(),
-  DIRECT_DATABASE_URL: z.string().optional(),
-  JWT_SECRET: z.string(),
-  CURRENT_ENVIRONMENT: z.string().optional(),
-  IS_PRODUCTION: z.boolean().default(false),
-  SENTRY_DSN: z.string().optional(),
+const envSchema = z
+  .object({
+    DATABASE_URL: z.string(),
+    DIRECT_DATABASE_URL: z.string().optional(),
+    JWT_SECRET: z.string(),
+    CURRENT_ENVIRONMENT: z.string().optional(),
+    IS_PRODUCTION: z.boolean().default(false),
+    SENTRY_DSN: z.string().optional(),
 
-  // OAuth
-  GOOGLE_OAUTH_CLIENT_ID: z.string().default(""),
-  GOOGLE_OAUTH_CLIENT_SECRET: z.string().default(""),
-});
+    // OAuth
+    GOOGLE_OAUTH_CLIENT_ID: z.string().default(""),
+    GOOGLE_OAUTH_CLIENT_SECRET: z.string().default(""),
+  })
+  .refine(
+    (data) => {
+      if (data.IS_PRODUCTION) return data.SENTRY_DSN !== undefined;
+      return true;
+    },
+    {
+      message: "SENTRY_DSN is required in production environment",
+      path: ["SENTRY_DSN"],
+    },
+  );
 
 export type EnvConfig = z.infer<typeof envSchema>;
 

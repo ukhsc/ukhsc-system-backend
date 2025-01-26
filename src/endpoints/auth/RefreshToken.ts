@@ -65,6 +65,7 @@ export class RefreshToken extends OpenAPIRoute {
       }
 
       await device_service.addActivity(device_id, true);
+      ctx.var.logger.info({ device_id }, "Token refreshed successfully");
     }
 
     const { access_token, refresh_token } = AuthService.generateToken(payload, ctx.env.JWT_SECRET);

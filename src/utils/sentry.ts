@@ -6,6 +6,8 @@ import pkg from "@prisma/instrumentation";
 const { PrismaInstrumentation } = pkg;
 
 import { EnvConfig } from "./env";
+import { AppContext } from "index";
+import assert from "node:assert";
 
 type PinoLevel = "trace" | "debug" | "info" | "warn" | "error" | "fatal";
 
@@ -41,6 +43,9 @@ export class SentryTransport {
 }
 
 export function initSentry(env: EnvConfig): Sentry.NodeClient | undefined {
+  assert(env.SENTRY_DSN, "SENTRY_DSN is required to initialize Sentry");
+  assert(env.IS_PRODUCTION, "Sentry should only be initialized in production");
+
   console.info("Initializing Sentry");
   const client = Sentry.init({
     dsn: env.SENTRY_DSN,
@@ -65,4 +70,21 @@ export function initSentry(env: EnvConfig): Sentry.NodeClient | undefined {
 
   console.info("Sentry initialized");
   return client;
+}
+
+export function initScope(ctx: AppContext): Sentry.Scope {
+  const scope = Sentry.getIsolationScope();
+  scope.setSDKProcessingMetadata({
+    normalizedRequest: {
+      url: ctx.req.url,
+      headers: ctx.req.header(),
+      method: ctx.req.method,
+      query_string: ctx.req.query(),
+      data: ctx.req.text(),
+    } satisfies Sentry.RequestEventData,
+  });
+  scope.setTransactionName(`[${ctx.req.method}] ${ctx.req.path}`);
+  scope.setContext("environment_vars", ctx.env);
+
+  return scope;
 }

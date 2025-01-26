@@ -5,6 +5,8 @@ import { PinoLogger } from "hono-pino";
 import pino from "pino";
 import { beforeEach, describe, expect, it } from "vitest";
 
+const TEST_REQUEST_ID = "test-request-id";
+
 describe("Health Check", () => {
   let client: TestClient;
   let mockPrisma: MockPrisma;
@@ -13,7 +15,7 @@ describe("Health Check", () => {
     mockPrisma = createMockPrisma();
     client = createTestClient({
       prisma: mockPrisma,
-      request_id: "test-request-id",
+      request_id: TEST_REQUEST_ID,
       logger: new PinoLogger(pino({ level: "silent" })),
     });
     client.get("/health", HealthCheck);
