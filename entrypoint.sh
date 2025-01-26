@@ -6,11 +6,19 @@ LOG_FILE=$LOG_DIR/latest.log
 
 mkdir -p $LOG_DIR
 
+set -o pipefail
+
 echo "Running database migrations..."
-pnpm prisma migrate deploy
+if ! pnpm prisma migrate deploy; then
+    echo "Database migration failed!" >&2
+    exit 1
+fi
 
 echo "Running database seeding..."
-pnpm seed
+if ! pnpm seed; then
+    echo "Database seeding failed!" >&2
+    exit 1
+fi
 
 echo "Starting application..."
 exec "$@" > $LOG_FILE 2>&1

@@ -12,10 +12,10 @@ determine_environment() {
 
     if [ "$CURRENT_ENV" == "green" ]; then
         TARGET_ENV="blue"
-        TARGET_PORT=3001
+        export TARGET_PORT=3001
     else
         TARGET_ENV="green"
-        TARGET_PORT=3000
+        export TARGET_PORT=3000
     fi
 
     echo "Current environment is $CURRENT_ENV. Deploying to $TARGET_ENV."

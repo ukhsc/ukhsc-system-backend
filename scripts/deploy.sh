@@ -16,16 +16,28 @@ docker rm ukhsc-system-backend-api-$TARGET_ENV || true
 echo "Pulling latest Docker image..."
 docker pull $1
 
+# Validate required environment variables
+required_vars=(
+    "DATABASE_URL"
+    "DIRECT_DATABASE_URL"
+    "JWT_SECRET"
+    "GOOGLE_OAUTH_CLIENT_ID"
+    "GOOGLE_OAUTH_CLIENT_SECRET"
+    "SENTRY_DSN"
+)
+
+for var in "${required_vars[@]}"; do
+    if [ -z "${!var}" ]; then
+        echo "Error: Required environment variable $var is not set" >&2
+        exit 1
+    fi
+done
+
 echo "Starting new Docker container..."
 docker run -d --restart always --name ukhsc-system-backend-api-$TARGET_ENV \
     -p $TARGET_PORT:8787 \
     -v $LOG_DIR:/app/logs \
-    -e DATABASE_URL="$DATABASE_URL" \
-    -e DIRECT_DATABASE_URL="$DIRECT_DATABASE_URL" \
-    -e JWT_SECRET="$JWT_SECRET" \
-    -e GOOGLE_OAUTH_CLIENT_ID="$GOOGLE_OAUTH_CLIENT_ID" \
-    -e GOOGLE_OAUTH_CLIENT_SECRET="$GOOGLE_OAUTH_CLIENT_SECRET" \
-    -e SENTRY_DSN="$SENTRY_DSN" \
+    --env-file <(env | grep -E '^(DATABASE_URL|DIRECT_DATABASE_URL|JWT_SECRET|GOOGLE_OAUTH_CLIENT_ID|GOOGLE_OAUTH_CLIENT_SECRET|SENTRY_DSN)=') \
     -e CURRENT_ENVIRONMENT=$TARGET_ENV \
     -e IS_PRODUCTION=true \
     $1
