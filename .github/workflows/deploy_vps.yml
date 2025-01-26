@@ -145,7 +145,7 @@ jobs:
             **提交者：** ${{ github.actor }}
             **提交訊息：** ${{ github.event.head_commit.message }}
             **部署環境：** VPS Production
-            **部署時間：** ${{ format(github.event.repository.pushed_at, 'YYYY-MM-DD HH:mm:ss') }}
+            **部署時間：** ${{ github.event.repository.pushed_at }}
 
             [查看部署詳細資訊](https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }})
             ${{
@@ -153,4 +153,4 @@ jobs:
             }}
           embed-color: ${{ job.status == 'success' && '65280' || '16711680' }}
           embed-footer-text: "UKHSC System Backend Deployment"
-          embed-timestamp: ${{ format(github.event.repository.pushed_at, 'YYYY-MM-DDTHH:mm:ss.sssZ') }}
+          embed-timestamp: ${{ github.event.repository.pushed_at }}

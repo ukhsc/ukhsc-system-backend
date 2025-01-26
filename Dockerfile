@@ -23,6 +23,8 @@ WORKDIR /app
 COPY --from=builder /app/dist /app/dist
 COPY --from=builder /app/node_modules /app/node_modules
 
+RUN corepack enable && corepack prepare pnpm@latest --activate
+
 # Add EntryPoint script
 COPY entrypoint.sh /app/entrypoint.sh
 RUN chmod +x /app/entrypoint.sh
