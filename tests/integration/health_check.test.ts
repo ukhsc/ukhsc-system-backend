@@ -15,6 +15,7 @@ describe("Health Check", () => {
     mockPrisma = createMockPrisma();
     client = createTestClient({
       prisma: mockPrisma,
+      db: mockPrisma,
       request_id: TEST_REQUEST_ID,
       logger: new PinoLogger(pino({ level: "silent" })),
     });

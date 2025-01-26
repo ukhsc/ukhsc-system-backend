@@ -1,7 +1,7 @@
 import { FederatedProvider, User } from "@prisma/client";
 import axios from "axios";
 import { EnvConfig } from "utils/env";
-import { BadRequestError, InternalServerError, KnownErrorCode } from "@utils/error";
+import { BadRequestError, InternalError, KnownErrorCode } from "@utils/error";
 import { ExtendedPrismaClient } from "@utils/prisma";
 import { hash } from "node:crypto";
 import { PinoLogger } from "hono-pino";
@@ -165,11 +165,7 @@ export class FederatedAccountService {
               data: response.data,
             },
           };
-          throw new InternalServerError(
-            KnownErrorCode.OAUTH_ERROR,
-            "Failed to get federated account's user info",
-            details,
-          );
+          throw new InternalError("Failed to get federated account's user info", details);
         }
 
         return {

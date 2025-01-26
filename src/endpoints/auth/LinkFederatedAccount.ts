@@ -53,10 +53,9 @@ export class LinkFederatedAccount extends OpenAPIRoute {
 
   async handle(ctx: AppContext) {
     const data = await this.getValidatedData<typeof this.schema>();
-    const { prisma: db, logger } = ctx.var;
+    const { db, logger } = ctx.var;
 
-    const auth_service = new AuthService(ctx);
-    const auth_payload = await auth_service.validate();
+    const auth_payload = await AuthService.validate();
 
     const { flow, redirect_uri, grant_value } = data.body;
     const federated_service = new FederatedAccountService(logger, ctx.env, data.params.provider);

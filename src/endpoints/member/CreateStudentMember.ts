@@ -3,7 +3,7 @@ import { AuthService, UserRole } from "@services/auth";
 import { FederatedAccountService } from "@services/federated_account";
 import {
   BadRequestError,
-  InternalServerError,
+  InternalError,
   KnownErrorCode,
   UnprocessableEntityError,
 } from "@utils/error";
@@ -75,7 +75,7 @@ export class CreateStudentMember extends OpenAPIRoute {
 
   async handle(ctx: AppContext) {
     const data = await this.getValidatedData<typeof this.schema>();
-    const { prisma: db, logger } = ctx.var;
+    const { db, logger } = ctx.var;
 
     const school_attended = await db.partnerSchool.findUnique({
       where: { id: data.body.school_attended_id },
@@ -100,9 +100,9 @@ export class CreateStudentMember extends OpenAPIRoute {
       },
     });
     if (!account_config) {
-      throw new InternalServerError(
-        KnownErrorCode.CONFIGURATION_ERROR,
+      throw new InternalError(
         "School account configuration has not been set up by the administrator",
+        { school_id: school_attended.id },
       );
     }
     const student_id = this.captureStudentId(info.email, account_config);
