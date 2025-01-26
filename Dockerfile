@@ -1,5 +1,9 @@
 FROM node:22 AS builder
 
+# For Sentry
+ARG GIT_COMMIT
+ENV GIT_COMMIT=${GIT_COMMIT}
+
 WORKDIR /app
 
 COPY package.json pnpm-lock.yaml ./
@@ -10,18 +14,15 @@ COPY . .
 
 RUN pnpm generate
 
-# Used in the build command to upload source maps to Sentry.
-ARG SENTRY_AUTH_TOKEN
-RUN --mount=type=secret,id=sentry_token \
-    export SENTRY_AUTH_TOKEN=$(cat /run/secrets/sentry_token) && \
-    pnpm build && \
-    unset SENTRY_AUTH_TOKEN
+RUN chmod +x ./scripts/build.sh
+RUN --mount=type=secret,id=sentry_token,target=/sentry_token ./scripts/build.sh
 
 # Production image
 FROM node:22
 WORKDIR /app
-COPY --from=builder /app/dist /app/dist
-COPY --from=builder /app/node_modules /app/node_modules
+COPY --from=builder /app /app
+
+RUN corepack enable && corepack prepare pnpm@latest --activate
 
 # Add EntryPoint script
 COPY entrypoint.sh /app/entrypoint.sh

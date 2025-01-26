@@ -6,7 +6,7 @@
   "scripts": {
     "dev": "NODE_ENV=development tsx watch src/index.ts | pino-pretty",
     "start": "NODE_ENV=production node dist/index.js",
-    "build": "tsup src/index.ts --format esm --dts --clean --sourcemap && pnpm sentry:sourcemaps",
+    "build": "tsup src/index.ts --format esm --dts --clean --sourcemap",
     "test": "vitest run",
     "test:watch": "vitest",
     "migrate": "prisma migrate deploy",
