@@ -1,8 +1,7 @@
 import { FederatedProvider } from "@prisma/client";
-import { AuthService, UserRole } from "@services/auth";
+import { AuthService } from "@services/auth";
 import { DeviceManagementService } from "@services/device_management";
 import { FederatedAccountService } from "@services/federated_account";
-import { ExtendedPrismaClient } from "@utils/prisma";
 import { OpenAPIRoute } from "chanfana";
 import { AppContext } from "index";
 import {
@@ -63,7 +62,7 @@ export class LoginFederatedAccount extends OpenAPIRoute {
 
   async handle(ctx: AppContext) {
     const data = await this.getValidatedData<typeof this.schema>();
-    const { prisma: db, logger } = ctx.var;
+    const { db, logger } = ctx.var;
 
     const { flow, redirect_uri, grant_value } = data.body;
     const federated_service = new FederatedAccountService(logger, ctx.env, data.params.provider);
@@ -95,7 +94,7 @@ export class LoginFederatedAccount extends OpenAPIRoute {
 
     const token = AuthService.generateToken(
       {
-        roles: await this.getUserRoles(db, user.id),
+        roles: await AuthService.getUserRoles(user.id),
         user_id: user.id,
         device_id: device.id,
       },
@@ -103,22 +102,5 @@ export class LoginFederatedAccount extends OpenAPIRoute {
     );
 
     return ctx.json({ token }, 200);
-  }
-
-  private async getUserRoles(db: ExtendedPrismaClient, user_id: number): Promise<UserRole[]> {
-    const roles = [];
-
-    const user = await db.user.findUnique({
-      where: { id: user_id },
-      include: { member: true },
-    });
-    if (!user) throw new Error("User not found when getting roles.");
-
-    if (user.member) {
-      roles.push(UserRole.StudentMember);
-    }
-    // TODO: Add more roles here
-
-    return roles;
   }
 }

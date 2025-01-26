@@ -20,7 +20,9 @@ export const initialMiddleware: MiddlewareHandler<AppOptions> = async (ctx, next
   };
 
   prismaCache ??= initPrisma(envCache.DATABASE_URL);
+  // TODO: deprecate prisma field in ctx
   ctx.set("prisma", prismaCache);
+  ctx.set("db", prismaCache);
 
   if (ctx.env.SENTRY_DSN && ctx.env.IS_PRODUCTION) {
     sentryCache ??= initSentry(ctx.env);

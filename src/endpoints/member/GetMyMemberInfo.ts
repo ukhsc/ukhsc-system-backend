@@ -56,12 +56,11 @@ export class GetMyMemberInfo extends OpenAPIRoute {
   };
 
   async handle(ctx: AppContext) {
-    const auth_service = new AuthService(ctx);
-    const auth_payload = await auth_service.validate({
+    const auth_payload = await AuthService.validate({
       roles: [UserRole.StudentMember],
     });
 
-    const db = ctx.var.prisma;
+    const { db } = ctx.var;
     const member = await db.studentMember.findUnique({
       where: {
         user_id: auth_payload.user.id,

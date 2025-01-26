@@ -1,6 +1,5 @@
 import { fromHono, HonoOpenAPIRouterType } from "chanfana";
 import { Context, Hono } from "hono";
-import { registerEndpoints } from "endpoints";
 import dotenv from "dotenv";
 import { logger } from "hono/logger";
 import process from "process";
@@ -9,7 +8,9 @@ import console from "console";
 import { HttpBindings, serve } from "@hono/node-server";
 import * as Sentry from "@sentry/node";
 import { type Env as HonoPinoEnv } from "hono-pino";
+import { contextStorage, getContext } from "hono/context-storage";
 
+import { registerEndpoints } from "endpoints";
 import { EnvConfig } from "@utils/env";
 import { ExtendedPrismaClient } from "@utils/prisma";
 import { httpErrorHandler } from "@utils/error";
@@ -17,13 +18,20 @@ import { initialMiddleware } from "@utils/init";
 import { loggingMiddleware } from "@utils/logging";
 
 interface Variables {
-  prisma: ExtendedPrismaClient;
+  db: ExtendedPrismaClient;
   sentry?: Sentry.Scope;
   request_id: string;
+
+  /** @deprecated */
+  prisma: ExtendedPrismaClient;
 }
 export type AppOptions = { Variables: Variables; Bindings: EnvConfig & HttpBindings } & HonoPinoEnv;
 export type AppContext = Context<AppOptions>;
 export type AppRouter = HonoOpenAPIRouterType<AppOptions>;
+
+export function getCtx(): AppContext {
+  return getContext<AppOptions>();
+}
 
 dotenv.config();
 const app = new Hono<AppOptions>();
@@ -48,6 +56,7 @@ const openapi = fromHono(app, {
 });
 
 openapi
+  .use(contextStorage())
   .use(
     cors({
       origin: ["http://localhost:3000", "https://forms.ukhsc.org", "https://web.ukhsc.org"],

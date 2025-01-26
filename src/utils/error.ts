@@ -2,6 +2,15 @@ import { ErrorHandler } from "hono";
 import { ContentfulStatusCode } from "hono/utils/http-status";
 import { AppOptions } from "index";
 
+export class InternalError extends Error {
+  constructor(
+    message: string,
+    public details?: Record<string, unknown>,
+  ) {
+    super(message);
+  }
+}
+
 export class KnownHttpError extends Error {
   constructor(
     code: KnownErrorCode,
@@ -25,7 +34,6 @@ export const BadRequestError = createHttpError(400);
 export const UnauthorizedError = createHttpError(401);
 export const ForbiddenError = createHttpError(403);
 export const UnprocessableEntityError = createHttpError(422);
-export const InternalServerError = createHttpError(500);
 
 export const httpErrorHandler: ErrorHandler<AppOptions> = async (error, ctx) => {
   const { logger } = ctx.var;
@@ -85,10 +93,8 @@ export enum KnownErrorCode {
   // 5000 ~ 5999: Partner shops management
 
   // 6000 ~ 6999: External services
-  OAUTH_ERROR = "U6000",
 
   // 7000 ~ 7999: Data validation
 
   // 8000 ~ 9999: Miscellaneous
-  CONFIGURATION_ERROR = "U8000",
 }

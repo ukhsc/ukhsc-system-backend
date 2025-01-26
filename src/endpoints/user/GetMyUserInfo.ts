@@ -1,7 +1,12 @@
-import { AuthService, OpenAPIResponseForbidden, OpenAPIResponseUnauthorized } from "@services/auth";
+import {
+  AuthService,
+  OpenAPIResponseForbidden,
+  OpenAPIResponseUnauthorized,
+  UserRole,
+} from "@services/auth";
 import { OpenAPIRoute } from "chanfana";
 import { AppContext } from "index";
-import { UserSchema } from "schema";
+import { UserSchema, z } from "schema";
 
 export class GetMyUserInfo extends OpenAPIRoute {
   schema = {
@@ -13,7 +18,9 @@ export class GetMyUserInfo extends OpenAPIRoute {
         description: "成功取得使用者資訊",
         content: {
           "application/json": {
-            schema: UserSchema,
+            schema: UserSchema.extend({
+              roles: z.array(z.nativeEnum(UserRole)),
+            }),
           },
         },
       },
@@ -23,9 +30,14 @@ export class GetMyUserInfo extends OpenAPIRoute {
   };
 
   async handle(ctx: AppContext) {
-    const auth_service = new AuthService(ctx);
-    const { user } = await auth_service.validate();
+    const { user, roles } = await AuthService.validate();
 
-    return ctx.json(user, 200);
+    return ctx.json(
+      {
+        ...user,
+        roles,
+      },
+      200,
+    );
   }
 }
