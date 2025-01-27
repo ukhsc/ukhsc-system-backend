@@ -7,7 +7,7 @@ import { AppContext } from "index";
 import { z } from "zod";
 import { DeviceManagementService } from "@services/device_management";
 import { ErrorResponseSchema, FederateOAuthSchema, TokenResponseSchema } from "schema";
-import { hash } from "node:crypto";
+import { hashWithSalt } from "@utils/hash";
 
 export class CreateStudentMember extends OpenAPIRoute {
   schema = {
@@ -116,7 +116,7 @@ export class CreateStudentMember extends OpenAPIRoute {
                 id: school_attended.id,
               },
             },
-            student_id_hash: hash("sha256", student_id),
+            student_id_hash: await hashWithSalt(student_id),
             activated_at: new Date(),
             expired_at: system_config?.contract_end_date,
           },

@@ -1,8 +1,8 @@
 import { FederatedProvider, User } from "@prisma/client";
 import axios from "axios";
 import { BadRequestError, InternalError, KnownErrorCode } from "@utils/error";
-import { hash } from "node:crypto";
 import { getCtx } from "index";
+import { simpleHash } from "@utils/hash";
 
 interface FederatedUserInfo {
   email: string;
@@ -24,7 +24,7 @@ export class FederatedAccountService {
         logger
           .assign({
             provider: this.provider,
-            grant_value: hash("sha256", grant_value),
+            grant_value: simpleHash(grant_value),
             redirect_uri,
           })
           .info("Getting access token for authorization code flow");

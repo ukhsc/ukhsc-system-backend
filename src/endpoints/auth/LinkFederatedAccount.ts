@@ -4,8 +4,8 @@ import { OpenAPIRoute } from "chanfana";
 import { AuthService, OpenAPIResponseForbidden, OpenAPIResponseUnauthorized } from "@services/auth";
 import { FederatedAccountService } from "@services/federated_account";
 import { FederatedProvider } from "@prisma/client";
-import { hash } from "node:crypto";
 import { BadRequestError, KnownErrorCode } from "@utils/error";
+import { simpleHash } from "@utils/hash";
 
 export class LinkFederatedAccount extends OpenAPIRoute {
   schema = {
@@ -69,11 +69,11 @@ export class LinkFederatedAccount extends OpenAPIRoute {
       const details = {
         user: {
           ...user,
-          primary_email: hash("sha256", user.primary_email),
+          primary_email: simpleHash(user.primary_email),
         },
         federated_user_info: {
           ...info,
-          email: hash("sha256", info.email),
+          email: simpleHash(info.email),
         },
       };
 
