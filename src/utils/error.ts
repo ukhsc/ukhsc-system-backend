@@ -14,7 +14,7 @@ export class InternalError extends Error {
 
 export class KnownHttpError extends Error {
   constructor(
-    code: KnownErrorCode,
+    public code: KnownErrorCode,
     public status: ContentfulStatusCode,
     public debug_message?: string,
     public details?: Record<string, unknown>,
@@ -42,7 +42,7 @@ export const httpErrorHandler: ErrorHandler<AppOptions> = async (error, ctx) => 
   const { logger } = ctx.var;
   if (error instanceof KnownHttpError && error.status < 500) {
     logger.debug({ msg: "Known error", error });
-    return ctx.json({ error: error.message }, error.status);
+    return ctx.json({ code: error.code }, error.status);
   } else {
     const res = ctx.env.outgoing;
     const event_id = ctx.var.sentry?.captureException(error, {
