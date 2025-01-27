@@ -1,6 +1,6 @@
 import * as argon2 from "argon2";
-import { Buffer } from "buffer";
-import { createHash } from "crypto";
+import { Buffer } from "node:buffer";
+import { createHash } from "node:crypto";
 import { getCtx } from "index";
 
 export function simpleHash(data: string): string {
