@@ -16,9 +16,14 @@ export interface TokenPayload {
   device_id: number;
 }
 
+export type TokenRawPayload = TokenPayload & {
+  iat: number;
+  exp: number;
+};
+
 export class AuthService {
   static async validate(options?: { custom_token?: string; roles?: UserRole[] }): Promise<
-    TokenPayload & {
+    TokenRawPayload & {
       user: User;
     }
   > {
