@@ -91,7 +91,6 @@ export enum KnownErrorCode {
 
   // 4000 ~ 4999: Membership management
   INVALID_SCHOOL_EMAIL = "U4000",
-  STUDENT_ALREADY_EXISTS = "U4001",
 
   // 5000 ~ 5999: Partner shops management
 

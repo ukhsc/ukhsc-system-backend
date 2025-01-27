@@ -1,17 +1,13 @@
-import { FederatedProvider, MembershipPurchaseChannel, SchoolAccountConfig } from "@prisma/client";
+import { FederatedProvider, SchoolAccountConfig } from "@prisma/client";
 import { AuthService, UserRole } from "@services/auth";
 import { FederatedAccountService } from "@services/federated_account";
-import {
-  BadRequestError,
-  InternalError,
-  KnownErrorCode,
-  UnprocessableEntityError,
-} from "@utils/error";
+import { InternalError, KnownErrorCode, UnprocessableEntityError } from "@utils/error";
 import { OpenAPIRoute } from "chanfana";
 import { AppContext } from "index";
 import { z } from "zod";
 import { DeviceManagementService } from "@services/device_management";
 import { ErrorResponseSchema, FederateOAuthSchema, TokenResponseSchema } from "schema";
+import { hash } from "node:crypto";
 
 export class CreateStudentMember extends OpenAPIRoute {
   schema = {
@@ -84,11 +80,7 @@ export class CreateStudentMember extends OpenAPIRoute {
       throw new UnprocessableEntityError(KnownErrorCode.MISMATCH, "Invalid partner school ID");
     }
 
-    const federated_service = new FederatedAccountService(
-      logger,
-      ctx.env,
-      FederatedProvider.GoogleWorkspace,
-    );
+    const federated_service = new FederatedAccountService(FederatedProvider.GoogleWorkspace);
 
     const { flow, grant_value, redirect_uri } = data.body.google_workspace;
     const google_token = await federated_service.getAccessToken(flow, grant_value, redirect_uri);
@@ -112,35 +104,26 @@ export class CreateStudentMember extends OpenAPIRoute {
       },
     });
 
-    const user_exists = await db.user.findUnique({ where: { primary_email: info.email } });
-    if (user_exists) {
-      throw new BadRequestError(KnownErrorCode.STUDENT_ALREADY_EXISTS);
-    }
-
-    const user = await db.user.create({
-      data: {
+    const user = await db.user.upsert({
+      where: { primary_email: info.email },
+      update: {},
+      create: {
         primary_email: info.email,
-      },
-    });
-    await federated_service.linkAccount(db, user, info);
-    await db.studentMember.create({
-      data: {
-        school_attended: {
-          connect: {
-            id: school_attended.id,
+        member: {
+          create: {
+            school_attended: {
+              connect: {
+                id: school_attended.id,
+              },
+            },
+            student_id_hash: hash("sha256", student_id),
+            activated_at: new Date(),
+            expired_at: system_config?.contract_end_date,
           },
         },
-        user: {
-          connect: {
-            id: user.id,
-          },
-        },
-        purchase_channel: MembershipPurchaseChannel.PartnerFree,
-        student_id,
-        activated_at: new Date(),
-        expired_at: system_config?.contract_end_date,
       },
     });
+    await federated_service.linkAccount(user, info);
 
     const device_service = new DeviceManagementService(ctx);
     const device = await device_service.registerDevice(user.id);
