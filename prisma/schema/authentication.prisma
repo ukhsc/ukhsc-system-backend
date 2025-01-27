@@ -7,6 +7,8 @@ model FederatedAccount {
   user_id Int
   user    User @relation(fields: [user_id], references: [id])
 
+  @@unique([provider, provider_identifier], name: "unique_provider_identifier")
+  @@unique([provider, user_id], name: "unique_provider_user")
   @@index([provider, provider_identifier])
   @@index([email])
 }

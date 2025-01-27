@@ -1,10 +1,8 @@
 import { FederatedProvider, User } from "@prisma/client";
 import axios from "axios";
-import { EnvConfig } from "utils/env";
 import { BadRequestError, InternalError, KnownErrorCode } from "@utils/error";
-import { ExtendedPrismaClient } from "@utils/prisma";
-import { hash } from "node:crypto";
-import { PinoLogger } from "hono-pino";
+import { getCtx } from "index";
+import { simpleHash } from "@utils/hash";
 
 interface FederatedUserInfo {
   email: string;
@@ -17,19 +15,16 @@ export enum GrantFlows {
 }
 
 export class FederatedAccountService {
-  constructor(
-    private logger: PinoLogger,
-    private env: EnvConfig,
-    private provider: FederatedProvider,
-  ) {}
+  constructor(private provider: FederatedProvider) {}
 
   async getAccessToken(flow: GrantFlows, grant_value: string, redirect_uri?: string) {
+    const { logger } = getCtx().var;
     switch (flow) {
       case GrantFlows.AuthorizationCode:
-        this.logger
+        logger
           .assign({
             provider: this.provider,
-            grant_value: hash("sha256", grant_value),
+            grant_value: simpleHash(grant_value),
             redirect_uri,
           })
           .info("Getting access token for authorization code flow");
@@ -47,40 +42,33 @@ export class FederatedAccountService {
     }
   }
 
-  async linkAccount(prisma: ExtendedPrismaClient, user: User, info: FederatedUserInfo) {
-    const { email, identifier } = info;
-
-    const existingAccount = await prisma.federatedAccount.findFirst({
+  async isLinked(user: User, info: FederatedUserInfo): Promise<boolean> {
+    const { db } = getCtx().var;
+    const existingAccount = await db.federatedAccount.findFirst({
       where: {
-        provider: this.provider,
-        OR: [{ user_id: user.id }, { provider_identifier: identifier }],
+        AND: { provider: this.provider },
+        OR: [{ user_id: user.id }, { provider_identifier: info.identifier }],
       },
     });
-    if (existingAccount) {
-      const details = {
-        user: {
-          ...user,
-          primary_email: hash("sha256", user.primary_email),
-        },
-        federated_user_info: {
-          ...info,
-          email: hash("sha256", email),
-        },
-        existing_account: {
-          ...existingAccount,
-          email: hash("sha256", existingAccount.email),
-        },
-      };
 
-      throw new BadRequestError(
-        KnownErrorCode.FEDERATED_LINKED,
-        `User ${user.id} already linked with ${this.provider} account`,
-        details,
-      );
-    }
+    return existingAccount !== null;
+  }
 
-    await prisma.federatedAccount.create({
-      data: {
+  async linkAccount(user: User, info: FederatedUserInfo) {
+    const { db } = getCtx().var;
+    const { email, identifier } = info;
+
+    await db.federatedAccount.upsert({
+      where: {
+        unique_provider_user: {
+          provider: this.provider,
+          user_id: user.id,
+        },
+      },
+      update: {
+        email,
+      },
+      create: {
         provider: this.provider,
         provider_identifier: identifier,
         email,
@@ -102,14 +90,15 @@ export class FederatedAccountService {
       scope?: string;
     }
 
+    const { env } = getCtx();
     let exchangeConfig: ExchangeTokenConfig;
     switch (this.provider) {
       case FederatedProvider.Google:
       case FederatedProvider.GoogleWorkspace: {
         exchangeConfig = {
           server_url: "https://oauth2.googleapis.com/token",
-          client_id: this.env.GOOGLE_OAUTH_CLIENT_ID,
-          client_secret: this.env.GOOGLE_OAUTH_CLIENT_SECRET,
+          client_id: env.GOOGLE_OAUTH_CLIENT_ID,
+          client_secret: env.GOOGLE_OAUTH_CLIENT_SECRET,
           redirect_uri,
           scope: "https://www.googleapis.com/auth/userinfo.email openid",
         };

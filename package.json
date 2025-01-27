@@ -27,6 +27,7 @@
     "@sentry/cli": "^2.41.1",
     "@sentry/node": "^8.51.0",
     "@sentry/profiling-node": "^8.51.0",
+    "argon2": "^0.41.1",
     "axios": "^1.7.9",
     "chanfana": "^2.6.3",
     "dotenv": "^16.4.7",

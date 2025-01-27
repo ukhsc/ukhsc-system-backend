@@ -62,10 +62,10 @@ export class LoginFederatedAccount extends OpenAPIRoute {
 
   async handle(ctx: AppContext) {
     const data = await this.getValidatedData<typeof this.schema>();
-    const { db, logger } = ctx.var;
+    const { db } = ctx.var;
 
     const { flow, redirect_uri, grant_value } = data.body;
-    const federated_service = new FederatedAccountService(logger, ctx.env, data.params.provider);
+    const federated_service = new FederatedAccountService(data.params.provider);
     const federated_token = await federated_service.getAccessToken(flow, grant_value, redirect_uri);
     const info = await federated_service.getUserInfo(federated_token);
 

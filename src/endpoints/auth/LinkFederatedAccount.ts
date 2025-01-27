@@ -4,6 +4,8 @@ import { OpenAPIRoute } from "chanfana";
 import { AuthService, OpenAPIResponseForbidden, OpenAPIResponseUnauthorized } from "@services/auth";
 import { FederatedAccountService } from "@services/federated_account";
 import { FederatedProvider } from "@prisma/client";
+import { BadRequestError, KnownErrorCode } from "@utils/error";
+import { simpleHash } from "@utils/hash";
 
 export class LinkFederatedAccount extends OpenAPIRoute {
   schema = {
@@ -53,15 +55,36 @@ export class LinkFederatedAccount extends OpenAPIRoute {
 
   async handle(ctx: AppContext) {
     const data = await this.getValidatedData<typeof this.schema>();
-    const { db, logger } = ctx.var;
-
-    const auth_payload = await AuthService.validate();
+    const { user } = await AuthService.validate();
 
     const { flow, redirect_uri, grant_value } = data.body;
-    const federated_service = new FederatedAccountService(logger, ctx.env, data.params.provider);
+    const { provider } = data.params;
+
+    const federated_service = new FederatedAccountService(provider);
     const token = await federated_service.getAccessToken(flow, grant_value, redirect_uri);
     const info = await federated_service.getUserInfo(token);
-    await federated_service.linkAccount(db, auth_payload.user, info);
+
+    const isLinked = await federated_service.isLinked(user, info);
+    if (isLinked) {
+      const details = {
+        user: {
+          ...user,
+          primary_email: simpleHash(user.primary_email),
+        },
+        federated_user_info: {
+          ...info,
+          email: simpleHash(info.email),
+        },
+      };
+
+      throw new BadRequestError(
+        KnownErrorCode.FEDERATED_LINKED,
+        `User ${user.id} already linked with ${provider} account`,
+        details,
+      );
+    }
+
+    await federated_service.linkAccount(user, info);
 
     return ctx.json({
       message: "Successfully linked the federated account",

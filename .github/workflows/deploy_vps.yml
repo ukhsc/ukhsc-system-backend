@@ -74,6 +74,7 @@ jobs:
           DATABASE_URL: ${{ secrets.DATABASE_URL }}
           DIRECT_DATABASE_URL: ${{ secrets.DATABASE_URL }}
           JWT_SECRET: ${{ secrets.JWT_SECRET }}
+          ARGON2_SECRET: ${{ secrets.ARGON2_SECRET }}
           GOOGLE_OAUTH_CLIENT_ID: ${{ secrets.GOOGLE_OAUTH_CLIENT_ID }}
           GOOGLE_OAUTH_CLIENT_SECRET: ${{ secrets.GOOGLE_OAUTH_CLIENT_SECRET }}
           SENTRY_DSN: ${{ secrets.SENTRY_DSN }}
@@ -82,7 +83,7 @@ jobs:
           host: ${{ secrets.VPS_IP }}
           username: root
           key: ${{ secrets.VPS_SSH_KEY }}
-          envs: DATABASE_URL,DIRECT_DATABASE_URL,JWT_SECRET,GOOGLE_OAUTH_CLIENT_ID,GOOGLE_OAUTH_CLIENT_SECRET,SENTRY_DSN,DOCKER_IMAGE
+          envs: DATABASE_URL,DIRECT_DATABASE_URL,JWT_SECRET,ARGON2_SECRET,GOOGLE_OAUTH_CLIENT_ID,GOOGLE_OAUTH_CLIENT_SECRET,SENTRY_DSN,DOCKER_IMAGE
           script: |
             cd /root/deployment
 
