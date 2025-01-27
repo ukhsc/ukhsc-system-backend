@@ -9,7 +9,8 @@ services:
       - DIRECT_DATABASE_URL=postgresql://postgres:postgres@db:5432/mydb
       - JWT_SECRET=local_dev_secret_key
     depends_on:
-      - db
+      db:
+        condition: service_healthy
     env_file:
       - .env
   db:
