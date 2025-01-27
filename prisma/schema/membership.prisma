@@ -5,37 +5,11 @@ model StudentMember {
   user_id            Int           @unique
   user               User          @relation(fields: [user_id], references: [id])
 
-  student_id       String?
-  nickname         String?
-  purchase_channel MembershipPurchaseChannel
+  nickname        String?
+  student_id_hash String?
+  password_hash   String?
 
   created_at   DateTime  @default(now())
   activated_at DateTime?
   expired_at   DateTime?
-
-  password_hash    String?
-  membership_order PersonalMembershipOrder?
-}
-
-enum MembershipPurchaseChannel {
-  Personal // 填寫個人購買表單後經由學生會代收代付取得會員資格
-  StudentCouncil // 由學生會統一代為團體購買
-  PartnerFree // 政策變更：所有合作學校學生皆免費
-}
-
-model PersonalMembershipOrder {
-  id         Int      @id @default(autoincrement())
-  created_at DateTime @default(now())
-  updated_at DateTime @updatedAt
-
-  member_id String?        @unique
-  member    StudentMember? @relation(fields: [member_id], references: [id])
-  school_id Int
-  school    PartnerSchool  @relation(fields: [school_id], references: [id])
-
-  class        String
-  number       String
-  real_name    String
-  need_sticker Boolean
-  is_paid      Boolean
 }
