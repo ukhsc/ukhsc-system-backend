@@ -1,4 +1,4 @@
-import { ErrorResponseSchema, FederatedProviderSchema, FederateOAuthSchema, z } from "schema";
+import { KnownErrorSchema, FederatedProviderSchema, FederateOAuthSchema, z } from "schema";
 import { AppContext } from "index";
 import { OpenAPIRoute } from "chanfana";
 import { AuthService, OpenAPIResponseForbidden, OpenAPIResponseUnauthorized } from "@services/auth";
@@ -44,7 +44,7 @@ export class LinkFederatedAccount extends OpenAPIRoute {
         description: "提供的授權資訊無效",
         content: {
           "application/json": {
-            schema: ErrorResponseSchema,
+            schema: KnownErrorSchema,
           },
         },
       },

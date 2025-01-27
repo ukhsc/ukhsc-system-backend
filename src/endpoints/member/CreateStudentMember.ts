@@ -6,8 +6,8 @@ import { OpenAPIRoute } from "chanfana";
 import { AppContext } from "index";
 import { z } from "zod";
 import { DeviceManagementService } from "@services/device_management";
-import { ErrorResponseSchema, FederateOAuthSchema, TokenResponseSchema } from "schema";
 import { hashWithSalt } from "@utils/hash";
+import { FederateOAuthSchema, KnownErrorSchema, TokenResponseSchema } from "schema";
 
 export class CreateStudentMember extends OpenAPIRoute {
   schema = {
@@ -36,30 +36,20 @@ export class CreateStudentMember extends OpenAPIRoute {
           },
         },
       },
-      400: {
+      402: {
         description: "無效的請求資訊",
         content: {
           "application/json": {
-            schema: ErrorResponseSchema,
+            schema: KnownErrorSchema,
             examples: {
               "School ID": {
                 value: {
-                  error: "Invalid partner school ID",
-                },
-              },
-              "School account configuration": {
-                value: {
-                  error: "School account configuration has not been set up by the administrator",
+                  code: KnownErrorCode.MISMATCH,
                 },
               },
               "School email": {
                 value: {
-                  error: "Invalid school email or it's not from our partner school",
-                },
-              },
-              "Email format": {
-                value: {
-                  error: "Invalid email format or it's owned by a teacher",
+                  code: KnownErrorCode.INVALID_SCHOOL_EMAIL,
                 },
               },
             },
@@ -71,7 +61,7 @@ export class CreateStudentMember extends OpenAPIRoute {
 
   async handle(ctx: AppContext) {
     const data = await this.getValidatedData<typeof this.schema>();
-    const { db, logger } = ctx.var;
+    const { db } = ctx.var;
 
     const school_attended = await db.partnerSchool.findUnique({
       where: { id: data.body.school_attended_id },

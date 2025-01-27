@@ -4,9 +4,11 @@ import {
   OpenAPIResponseUnauthorized,
   UserRole,
 } from "@services/auth";
+import { InternalError } from "@utils/error";
+import { simpleHash } from "@utils/hash";
 import { OpenAPIRoute } from "chanfana";
 import { AppContext } from "index";
-import { ErrorResponseSchema, StudentMemberSchemaPublic, UserSchema } from "schema";
+import { StudentMemberSchemaPublic, UserSchema } from "schema";
 
 export class GetMyMemberInfo extends OpenAPIRoute {
   schema = {
@@ -39,17 +41,6 @@ export class GetMyMemberInfo extends OpenAPIRoute {
           },
         },
       },
-      404: {
-        description: "找不到會員資訊",
-        content: {
-          "application/json": {
-            schema: ErrorResponseSchema,
-            example: {
-              error: "Member not found",
-            },
-          },
-        },
-      },
       ...OpenAPIResponseForbidden,
       ...OpenAPIResponseUnauthorized,
     },
@@ -60,7 +51,7 @@ export class GetMyMemberInfo extends OpenAPIRoute {
       roles: [UserRole.StudentMember],
     });
 
-    const { db } = ctx.var;
+    const { db, logger } = ctx.var;
     const member = await db.studentMember.findUnique({
       where: {
         user_id: auth_payload.user.id,
@@ -71,12 +62,18 @@ export class GetMyMemberInfo extends OpenAPIRoute {
     });
 
     if (!member) {
-      return ctx.json(
-        {
-          error: "Member not found",
-        },
-        404,
-      );
+      logger
+        .assign({
+          auth_payload: {
+            ...auth_payload,
+            user: {
+              ...auth_payload.user,
+              primary_email: simpleHash(auth_payload.user.primary_email),
+            },
+          },
+        })
+        .error("Member not found but the validation passed.");
+      throw new InternalError("The member does not exist.");
     }
 
     return ctx.json(

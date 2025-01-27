@@ -2,7 +2,7 @@ import jwt from "jsonwebtoken";
 import { ForbiddenError, InternalError, KnownErrorCode, UnauthorizedError } from "@utils/error";
 import { User } from "@prisma/client";
 import { getCtx } from "index";
-import { ErrorResponseSchema } from "schema";
+import { KnownErrorSchema } from "schema";
 
 export enum UserRole {
   StudentMember = "student_member",
@@ -133,7 +133,7 @@ export const OpenAPIResponseUnauthorized = {
     description: "尚未經過身份驗證，可能是因為沒有提供存取權杖或存取權杖無效。",
     content: {
       "application/json": {
-        schema: ErrorResponseSchema,
+        schema: KnownErrorSchema,
         example: {
           code: KnownErrorCode.INVALID_TOKEN,
         },
@@ -147,7 +147,7 @@ export const OpenAPIResponseForbidden = {
     description: "沒有足夠的權限執行此操作。",
     content: {
       "application/json": {
-        schema: ErrorResponseSchema,
+        schema: KnownErrorSchema,
         example: {
           error: KnownErrorCode.INSUFFICIENT_PERMISSIONS,
         },

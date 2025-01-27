@@ -18,10 +18,40 @@ export class SentryTransport {
     try {
       const log = JSON.parse(data);
       const levelName = pino.levels.labels[log.level] as PinoLevel;
+      const breadcrumb: Sentry.Breadcrumb = {
+        type: this.getBreadcrumbType(levelName),
+        category: "log",
+        level: this.getSentryLevel(levelName),
+        message: log.msg,
+        data: this.formatData(log),
+        timestamp: log.time,
+      };
 
-      this.sentry.captureMessage(data, this.getSentryLevel(levelName));
+      this.sentry.addBreadcrumb(breadcrumb);
     } catch (err) {
       console.error("Sentry transport error:", err);
+    }
+  }
+
+  private formatData(log: Record<string, unknown>): Record<string, unknown> {
+    const data = { ...log };
+    delete data.level;
+    delete data.msg;
+    delete data.time;
+    return data;
+  }
+
+  private getBreadcrumbType(pinoLevel: PinoLevel): string {
+    switch (pinoLevel) {
+      case "trace":
+      case "debug":
+      case "info":
+        return "debug";
+      case "warn":
+        return "default";
+      case "error":
+      case "fatal":
+        return "error";
     }
   }
 

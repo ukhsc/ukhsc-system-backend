@@ -1,6 +1,6 @@
 import { OpenAPIRoute } from "chanfana";
 import { AppContext } from "index";
-import { ErrorResponseSchema, SystemServiceStatusSchema } from "schema";
+import { InternalErrorResponseSchema, SystemServiceStatusSchema } from "schema";
 import { z } from "zod";
 import console from "console";
 
@@ -24,10 +24,7 @@ export class ServiceStatus extends OpenAPIRoute {
         description: "伺服器錯誤",
         content: {
           "application/json": {
-            schema: ErrorResponseSchema,
-            example: {
-              error: "No configuration found",
-            },
+            schema: InternalErrorResponseSchema,
           },
         },
       },
