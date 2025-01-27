@@ -3,6 +3,7 @@ import { z as fixedZod } from "zod";
 import { extendZodWithOpenApi } from "@asteasolutions/zod-to-openapi";
 import { StudentMemberSchema } from "../prisma/schema/generated/zod";
 import { GrantFlows } from "@services/federated_account";
+import { KnownErrorCode } from "@utils/error";
 
 export * from "../prisma/schema/generated/zod";
 
@@ -19,11 +20,16 @@ export const StudentMemberSchemaPublic = StudentMemberSchema.omit({
   is_activated: z.boolean(),
 });
 
-export const ErrorResponseSchema = z
+export const KnownErrorSchema = z
   .object({
-    error: z.string().describe("錯誤訊息"),
+    code: z.nativeEnum(KnownErrorCode).describe("已知錯誤代號"),
   })
-  .openapi("標準錯誤回應格式");
+  .openapi("標準已知錯誤回應格式");
+export const InternalErrorResponseSchema = z
+  .object({
+    error: z.string().describe("錯誤訊息").openapi({ example: "Internal Server Error" }),
+  })
+  .openapi("內部錯誤回應格式");
 
 export const FederateOAuthSchema = z
   .object({

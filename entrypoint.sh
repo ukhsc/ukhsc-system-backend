@@ -23,7 +23,7 @@ if ! pnpm seed 2>&1 | tee -a $LOG_FILE; then
 fi
 
 echo "Starting application..."
-if [ "$IS_PRODUCTION" == "true" ]; then
+if [ "${IS_PRODUCTION}" = "true" ]; then
     exec "$@" > $LOG_FILE 2>&1
 else
     exec "$@" 2>&1 | tee -a $LOG_FILE

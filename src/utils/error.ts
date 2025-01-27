@@ -88,6 +88,7 @@ export enum KnownErrorCode {
   // 3000 ~ 3999: User management
   INVALID_FEDERATED_GRANT = "U3000",
   FEDERATED_LINKED = "U3001",
+  FEDERATED_NOT_LINKED = "U3002",
 
   // 4000 ~ 4999: Membership management
   INVALID_SCHOOL_EMAIL = "U4000",

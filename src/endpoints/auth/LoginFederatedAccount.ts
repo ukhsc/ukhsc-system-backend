@@ -2,12 +2,14 @@ import { FederatedProvider } from "@prisma/client";
 import { AuthService } from "@services/auth";
 import { DeviceManagementService } from "@services/device_management";
 import { FederatedAccountService } from "@services/federated_account";
+import { KnownErrorCode, UnauthorizedError } from "@utils/error";
+import { simpleHash } from "@utils/hash";
 import { OpenAPIRoute } from "chanfana";
 import { AppContext } from "index";
 import {
-  ErrorResponseSchema,
   FederatedProviderSchema,
   FederateOAuthSchema,
+  KnownErrorSchema,
   TokenResponseSchema,
 } from "schema";
 import { z } from "zod";
@@ -44,7 +46,8 @@ export class LoginFederatedAccount extends OpenAPIRoute {
         description: "無效的授權資訊",
         content: {
           "application/json": {
-            schema: ErrorResponseSchema,
+            schema: KnownErrorSchema,
+            example: { code: KnownErrorCode.INVALID_FEDERATED_GRANT },
           },
         },
       },
@@ -52,8 +55,8 @@ export class LoginFederatedAccount extends OpenAPIRoute {
         description: "該社群帳號未綁定任何使用者",
         content: {
           "application/json": {
-            schema: ErrorResponseSchema,
-            example: { error: "The account is not linked to any user." },
+            schema: KnownErrorSchema,
+            example: { code: KnownErrorCode.FEDERATED_NOT_LINKED },
           },
         },
       },
@@ -63,15 +66,16 @@ export class LoginFederatedAccount extends OpenAPIRoute {
   async handle(ctx: AppContext) {
     const data = await this.getValidatedData<typeof this.schema>();
     const { db } = ctx.var;
+    const { provider } = data.params;
 
     const { flow, redirect_uri, grant_value } = data.body;
-    const federated_service = new FederatedAccountService(data.params.provider);
+    const federated_service = new FederatedAccountService(provider);
     const federated_token = await federated_service.getAccessToken(flow, grant_value, redirect_uri);
     const info = await federated_service.getUserInfo(federated_token);
 
     const account = await db.federatedAccount.findFirst({
       where: {
-        provider: data.params.provider,
+        provider: provider,
         provider_identifier: info.identifier,
       },
       include: {
@@ -79,7 +83,18 @@ export class LoginFederatedAccount extends OpenAPIRoute {
       },
     });
     if (!account) {
-      return ctx.json({ error: "The account is not linked to any user." }, 401);
+      const details = {
+        provider: provider,
+        federated_info: {
+          ...info,
+          email: simpleHash(info.email),
+        },
+      };
+      throw new UnauthorizedError(
+        KnownErrorCode.FEDERATED_NOT_LINKED,
+        "The federated account is not linked to any user.",
+        details,
+      );
     }
     if (account.email !== info.email) {
       await db.federatedAccount.update({
