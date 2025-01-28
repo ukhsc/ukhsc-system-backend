@@ -1,4 +1,9 @@
-import { AuthService, OpenAPIResponseForbidden, OpenAPIResponseUnauthorized } from "@services/auth";
+import {
+  AuthService,
+  OpenAPIResponseForbidden,
+  OpenAPIResponseUnauthorized,
+  TokenPayload,
+} from "@services/auth";
 import { DeviceManagementService } from "@services/device_management";
 import { ForbiddenError, KnownErrorCode } from "@utils/error";
 import { OpenAPIRoute } from "chanfana";
@@ -67,7 +72,13 @@ export class RefreshToken extends OpenAPIRoute {
       ctx.var.logger.info({ device_id }, "Token refreshed successfully");
     }
 
-    const { access_token, refresh_token } = AuthService.generateToken(payload, ctx.env.JWT_SECRET);
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    // Exclude JWT metadata to allow the library to generate fresh timestamps
+    const { iat, exp, user, ...tokenPayload } = payload;
+    const { access_token, refresh_token } = AuthService.generateToken(
+      tokenPayload,
+      ctx.env.JWT_SECRET,
+    );
 
     return ctx.json({ access_token, refresh_token }, 200);
   }
