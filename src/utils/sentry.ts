@@ -79,9 +79,8 @@ export function initSentry(env: EnvConfig): Sentry.NodeClient | undefined {
 
   console.info("Initializing Sentry");
   const client = Sentry.init({
-    debug: true,
     dsn: env.SENTRY_DSN,
-    release: env.SENTRY_RELEASE || "207a1406b04ed79a680f3cb5c88424bca9c1c9f4",
+    release: env.SENTRY_RELEASE,
     environment: "production",
 
     tracesSampleRate: 1.0,
