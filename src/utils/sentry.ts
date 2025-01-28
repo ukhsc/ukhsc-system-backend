@@ -118,7 +118,6 @@ export function initScope(ctx: AppContext): Sentry.Scope {
     },
   });
   scope.setSession(session);
-  scope.setTransactionName(`[${ctx.req.method}] ${ctx.req.path}`);
   scope.setContext("environment_vars", ctx.env);
   scope.addEventProcessor((event) => {
     if (event.request?.headers) {
