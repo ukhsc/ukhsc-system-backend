@@ -11,6 +11,7 @@ const envSchema = z
     CURRENT_ENVIRONMENT: z.string().optional(),
     IS_PRODUCTION: z.boolean().default(false),
     SENTRY_DSN: z.string().optional(),
+    SENTRY_RELEASE: z.string().optional(),
 
     // OAuth
     GOOGLE_OAUTH_CLIENT_ID: z.string().default(""),

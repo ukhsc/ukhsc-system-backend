@@ -1,6 +1,7 @@
-import { ErrorHandler } from "hono";
+import { SpanStatusCode } from "@opentelemetry/api";
+import { HTTPResponseError } from "hono/types";
 import { ContentfulStatusCode } from "hono/utils/http-status";
-import { AppOptions } from "index";
+import { AppContext } from "index";
 
 export class InternalError extends Error {
   constructor(
@@ -38,17 +39,23 @@ export const UnauthorizedError = createHttpError(401, "UnauthorizedError");
 export const ForbiddenError = createHttpError(403, "ForbiddenError");
 export const UnprocessableEntityError = createHttpError(422, "UnprocessableEntityError");
 
-export const httpErrorHandler: ErrorHandler<AppOptions> = async (error, ctx) => {
+export const httpErrorHandler = async (error: Error | HTTPResponseError, ctx: AppContext) => {
   const { logger } = ctx.var;
   if (error instanceof KnownHttpError && error.status < 500) {
     logger.debug({ msg: "Known error", error });
     return ctx.json({ code: error.code }, error.status);
   } else {
     const res = ctx.env.outgoing;
+
     const event_id = ctx.var.sentry?.captureException(error, {
       mechanism: { type: "middleware", handled: false },
     });
     (res as { sentry?: string }).sentry = event_id;
+    ctx.var.span?.setStatus({
+      code: SpanStatusCode.ERROR,
+      message: error instanceof Error ? error.message : "Unknown error",
+    });
+    ctx.var.span?.recordException(error);
 
     logger.assign({ event_id });
     logger.error(error);

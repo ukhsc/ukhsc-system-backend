@@ -24,7 +24,8 @@ required_vars=(
     "ARGON2_SECRET"
     "GOOGLE_OAUTH_CLIENT_ID"
     "GOOGLE_OAUTH_CLIENT_SECRET"
-    "SENTRY_DSN"
+    "SENTRY_DSN",
+    "SENTRY_RELEASE"
 )
 
 for var in "${required_vars[@]}"; do
@@ -38,7 +39,7 @@ echo "Starting new Docker container..."
 docker run -d --restart always --name ukhsc-system-backend-api-$TARGET_ENV \
     -p $TARGET_PORT:8787 \
     -v $LOG_DIR:/app/logs \
-    --env-file <(env | grep -E '^(DATABASE_URL|DIRECT_DATABASE_URL|JWT_SECRET|ARGON2_SECRET|GOOGLE_OAUTH_CLIENT_ID|GOOGLE_OAUTH_CLIENT_SECRET|SENTRY_DSN)=') \
+    --env-file <(env | grep -E '^(DATABASE_URL|DIRECT_DATABASE_URL|JWT_SECRET|ARGON2_SECRET|GOOGLE_OAUTH_CLIENT_ID|GOOGLE_OAUTH_CLIENT_SECRET|SENTRY_DSN|SENTRY_RELEASE)=') \
     -e CURRENT_ENVIRONMENT=$TARGET_ENV \
     -e IS_PRODUCTION=true \
     $1

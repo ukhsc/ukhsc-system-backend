@@ -8,6 +8,7 @@ const { PrismaInstrumentation } = pkg;
 import { EnvConfig } from "./env";
 import { AppContext } from "index";
 import assert from "node:assert";
+import { DeviceManagementService } from "@services/device_management";
 
 type PinoLevel = "trace" | "debug" | "info" | "warn" | "error" | "fatal";
 
@@ -78,24 +79,28 @@ export function initSentry(env: EnvConfig): Sentry.NodeClient | undefined {
 
   console.info("Initializing Sentry");
   const client = Sentry.init({
+    debug: true,
     dsn: env.SENTRY_DSN,
-    integrations: [
-      nodeProfilingIntegration(),
-      Sentry.extraErrorDataIntegration(),
-      Sentry.prismaIntegration({ prismaInstrumentation: new PrismaInstrumentation() }),
-      Sentry.captureConsoleIntegration(),
-      Sentry.anrIntegration({ captureStackTrace: true }),
-    ],
+    release: env.SENTRY_RELEASE || "207a1406b04ed79a680f3cb5c88424bca9c1c9f4",
+    environment: "production",
 
     tracesSampleRate: 1.0,
     profilesSampleRate: 1.0,
 
-    environment: "production",
     initialScope: {
       tags: {
         blue_green_deployment: env.CURRENT_ENVIRONMENT,
       },
     },
+
+    integrations: [
+      nodeProfilingIntegration(),
+      Sentry.extraErrorDataIntegration(),
+      Sentry.prismaIntegration({ prismaInstrumentation: new PrismaInstrumentation() }),
+      Sentry.anrIntegration({ captureStackTrace: true }),
+      Sentry.onUncaughtExceptionIntegration(),
+      Sentry.onUnhandledRejectionIntegration(),
+    ],
   });
 
   console.info("Sentry initialized");
@@ -103,18 +108,24 @@ export function initSentry(env: EnvConfig): Sentry.NodeClient | undefined {
 }
 
 export function initScope(ctx: AppContext): Sentry.Scope {
-  const scope = Sentry.getIsolationScope();
-  scope.setSDKProcessingMetadata({
-    normalizedRequest: {
-      url: ctx.req.url,
-      headers: ctx.req.header(),
-      method: ctx.req.method,
-      query_string: ctx.req.query(),
-      data: ctx.req.text(),
-    } satisfies Sentry.RequestEventData,
+  const scope = Sentry.getCurrentScope();
+
+  const session = Sentry.startSession({
+    release: ctx.env.SENTRY_RELEASE,
+    user: {
+      ip_address: DeviceManagementService.getIpAddress(),
+      geo: { country_code: DeviceManagementService.getIpCountry() },
+    },
   });
+  scope.setSession(session);
   scope.setTransactionName(`[${ctx.req.method}] ${ctx.req.path}`);
   scope.setContext("environment_vars", ctx.env);
+  scope.addEventProcessor((event) => {
+    if (event.request?.headers) {
+      delete event.request.headers["Authorization"];
+    }
+    return event;
+  });
 
   return scope;
 }

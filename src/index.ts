@@ -16,11 +16,14 @@ import { ExtendedPrismaClient } from "@utils/prisma";
 import { httpErrorHandler } from "@utils/error";
 import { initialMiddleware } from "@utils/init";
 import { loggingMiddleware } from "@utils/logging";
+import { Span } from "@opentelemetry/api";
 
 interface Variables {
   db: ExtendedPrismaClient;
-  sentry?: Sentry.Scope;
   request_id: string;
+
+  sentry?: Sentry.Scope;
+  span?: Span;
 
   /** @deprecated */
   prisma: ExtendedPrismaClient;

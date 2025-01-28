@@ -1,5 +1,5 @@
 import { DeviceOperatingSystem, DeviceType, LoginActivity, UserDevice } from "@prisma/client";
-import { AppContext } from "index";
+import { AppContext, getCtx } from "index";
 import { UAParser } from "ua-parser-js";
 import { isIP } from "net";
 
@@ -22,8 +22,8 @@ export class DeviceManagementService {
 
   async registerDevice(user_id: number): Promise<UserDevice> {
     const { name, type, os } = await this.getDeviceInfo();
-    const ip_address = this.getIpAddress();
-    const db = this.ctx.var.prisma;
+    const ip_address = DeviceManagementService.getIpAddress();
+    const { db } = this.ctx.var;
 
     const device = await db.userDevice.create({
       data: {
@@ -48,7 +48,7 @@ export class DeviceManagementService {
   }
 
   async validateDevice(device_id: number): Promise<boolean | null> {
-    const db = this.ctx.var.prisma;
+    const { db } = this.ctx.var;
     const device = await db.userDevice.findUnique({
       where: {
         id: device_id,
@@ -66,7 +66,7 @@ export class DeviceManagementService {
   }
 
   async addActivity(device_id: number, success: boolean): Promise<LoginActivity> {
-    const db = this.ctx.var.prisma;
+    const { db } = this.ctx.var;
     const device = await db.userDevice.findUnique({
       where: {
         id: device_id,
@@ -74,7 +74,7 @@ export class DeviceManagementService {
     });
     if (!device) throw new Error("Device not found");
 
-    const ip_address = this.getIpAddress();
+    const ip_address = DeviceManagementService.getIpAddress();
     const activity = await db.loginActivity.create({
       data: {
         device: {
@@ -96,7 +96,7 @@ export class DeviceManagementService {
     },
   ): Promise<number> {
     const info = await this.getDeviceInfo();
-    const ip_address = this.getIpAddress();
+    const ip_address = DeviceManagementService.getIpAddress();
     let score = 0;
 
     if (info.name === device.name && info.name !== "Unknown") score += this.weights.nameMatch;
@@ -137,12 +137,18 @@ export class DeviceManagementService {
     return { name, type, os };
   }
 
-  private getIpAddress(): string | undefined {
+  static getIpAddress(): string | undefined {
+    const { req, env } = getCtx();
+
     const ip =
-      this.ctx.req.header("cf-connecting-ip") ||
-      this.ctx.req.header("x-forwarded-for") ||
-      this.ctx.env.incoming.socket?.remoteAddress;
+      req.header("cf-connecting-ip") ||
+      req.header("x-forwarded-for") ||
+      env.incoming.socket?.remoteAddress;
 
     return ip && isIP(ip) !== 0 ? ip : undefined;
+  }
+
+  static getIpCountry(): string | undefined {
+    return getCtx().req.header("cf-ipcountry");
   }
 }
