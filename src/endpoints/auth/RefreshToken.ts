@@ -73,6 +73,7 @@ export class RefreshToken extends OpenAPIRoute {
     }
 
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    // Exclude JWT metadata to allow the library to generate fresh timestamps
     const { iat, exp, user, ...tokenPayload } = payload;
     const { access_token, refresh_token } = AuthService.generateToken(
       tokenPayload,
