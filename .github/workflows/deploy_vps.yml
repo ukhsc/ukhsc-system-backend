@@ -80,7 +80,7 @@ jobs:
           GOOGLE_OAUTH_CLIENT_ID: ${{ secrets.GOOGLE_OAUTH_CLIENT_ID }}
           GOOGLE_OAUTH_CLIENT_SECRET: ${{ secrets.GOOGLE_OAUTH_CLIENT_SECRET }}
           SENTRY_DSN: ${{ secrets.SENTRY_DSN }}
-          SENTRY_RELEASE: ${GITHUB_SHA}
+          SENTRY_RELEASE: ${{ github.sha }}
           DOCKER_IMAGE: ghcr.io/${{ github.repository_owner }}/ukhsc-system-backend-api:latest
         with:
           host: ${{ secrets.VPS_IP }}
