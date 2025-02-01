@@ -1,4 +1,4 @@
-FROM node:22-alpine3.21 AS builder
+FROM node:22 AS builder
 
 # For Sentry
 ARG GIT_COMMIT
