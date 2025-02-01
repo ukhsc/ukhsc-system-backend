@@ -1,4 +1,4 @@
-import { fromHono, HonoOpenAPIRouterType } from "chanfana";
+import { HonoOpenAPIRouterType } from "chanfana";
 import { Context, Hono } from "hono";
 import dotenv from "dotenv";
 import { logger } from "hono/logger";
@@ -9,6 +9,7 @@ import { HttpBindings, serve } from "@hono/node-server";
 import * as Sentry from "@sentry/node";
 import { type Env as HonoPinoEnv } from "hono-pino";
 import { contextStorage, getContext } from "hono/context-storage";
+import { Span } from "@opentelemetry/api";
 
 import { registerEndpoints } from "endpoints";
 import { EnvConfig } from "@utils/env";
@@ -16,7 +17,8 @@ import { ExtendedPrismaClient } from "@utils/prisma";
 import { httpErrorHandler } from "@utils/error";
 import { initialMiddleware } from "@utils/init";
 import { loggingMiddleware } from "@utils/logging";
-import { Span } from "@opentelemetry/api";
+import { HealthCheck } from "@endpoints/HealthCheck";
+import { configureOpenApi } from "@core/openapi";
 
 interface Variables {
   db: ExtendedPrismaClient;
@@ -38,25 +40,7 @@ export function getCtx(): AppContext {
 
 dotenv.config();
 const app = new Hono<AppOptions>();
-const openapi = fromHono(app, {
-  docs_url: "/docs",
-  schema: {
-    info: {
-      title: "高雄高校特約聯盟 會員暨商家資訊整合系統 API",
-      version: "1.0.0",
-    },
-    servers: [
-      {
-        url: "http://localhost:8787",
-        description: "Local Development",
-      },
-      {
-        url: "https://api.ukhsc.org",
-        description: "Production",
-      },
-    ],
-  },
-});
+const openapi = configureOpenApi(app);
 
 openapi
   .use(contextStorage())
@@ -69,17 +53,9 @@ openapi
   .use(initialMiddleware)
   .use(loggingMiddleware);
 
-openapi.registry.registerComponent("securitySchemes", "userAuth", {
-  type: "http",
-  scheme: "bearer",
-  description: "Bearer token for authenticated users",
-});
-openapi.registry.registerComponent("securitySchemes", "memberAuth", {
-  type: "http",
-  scheme: "bearer",
-  description: "Bearer token for users with 'StudentMember' role",
-});
-registerEndpoints(openapi);
+openapi.get("/health", HealthCheck);
+openapi.route("/api/v1", registerEndpoints());
+
 openapi.onError(httpErrorHandler);
 
 serve(
