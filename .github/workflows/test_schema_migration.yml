@@ -85,8 +85,7 @@ jobs:
           cd ../..
 
           # Reset and apply base migrations
-          pnpm prisma migrate reset --force --skip-generate
-          pnpm generate
+          pnpm prisma migrate reset --force
           echo "Database structure after base migrations:" >> migration_output.log
           pnpm prisma db pull --print >> migration_output.log
 
