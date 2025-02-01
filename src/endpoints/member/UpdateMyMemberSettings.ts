@@ -47,9 +47,9 @@ export default class UpdateMyMemberSettings extends OpenAPIRoute {
             },
           },
           NICKNAME_TOO_LONG: {
-            summary: "會員暱稱過長（至多 5 個字）",
+            summary: "無效的會員暱稱格式（長度不得超過 5 個字或包含空格）",
             value: {
-              code: KnownErrorCode.NICKNAME_TOO_LONG,
+              code: KnownErrorCode.INVALID_NICKNAME,
             },
           },
         },
@@ -70,9 +70,9 @@ export default class UpdateMyMemberSettings extends OpenAPIRoute {
     if (nickname === null) {
       updated_content.nickname = null;
     } else if (nickname) {
-      if (nickname.length > 5) {
-        const debug = { length: nickname.length };
-        throw new UnprocessableEntityError(KnownErrorCode.NICKNAME_TOO_LONG, undefined, debug);
+      if (nickname.length > 5 || nickname.includes(" ")) {
+        const debug = { content: nickname, length: nickname.length };
+        throw new UnprocessableEntityError(KnownErrorCode.INVALID_NICKNAME, undefined, debug);
       }
 
       updated_content.nickname = nickname;
@@ -93,10 +93,12 @@ export default class UpdateMyMemberSettings extends OpenAPIRoute {
     const { db, logger } = ctx.var;
     if (Object.keys(updated_content).length > 0) {
       try {
-        await db.studentMember.update({
-          where: { user_id: user.id },
-          data: { settings: { update: updated_content } },
-        });
+        await db.$transaction([
+          db.studentMember.update({
+            where: { user_id: user.id },
+            data: { settings: { update: updated_content } },
+          }),
+        ]);
       } catch (error) {
         throw InternalError.fromError("Failed to update member settings", error);
       }
