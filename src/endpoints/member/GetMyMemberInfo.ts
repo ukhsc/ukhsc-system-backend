@@ -24,9 +24,13 @@ export class GetMyMemberInfo extends OpenAPIRoute {
               user: UserSchema.describe("使用者共通性資訊"),
             }),
             example: {
-              purchase_channel: "PartnerFree",
               id: "ckv4f2g3e0000y9l5t6z8j2h3",
               school_attended_id: 1,
+              school_attended: {
+                id: 1,
+                short_name: "仁武高中",
+                full_name: "高雄市立仁武高級中學",
+              },
               student_id: "1234567",
               nickname: "龔同學",
               created_at: "2025-01-01T00:00:00.000Z",
@@ -58,6 +62,9 @@ export class GetMyMemberInfo extends OpenAPIRoute {
       },
       omit: {
         password_hash: true,
+      },
+      include: {
+        school_attended: true,
       },
     });
 

@@ -1,7 +1,6 @@
-// TODO: https://github.com/chrishoermann/zod-prisma-types/issues/306
 import { z as fixedZod } from "zod";
 import { extendZodWithOpenApi } from "@asteasolutions/zod-to-openapi";
-import { StudentMemberSchema } from "../prisma/schema/generated/zod";
+import { PartnerSchoolSchema, StudentMemberSchema } from "../prisma/schema/generated/zod";
 import { GrantFlows } from "@services/federated_account";
 import { KnownErrorCode } from "@utils/error";
 
@@ -18,6 +17,7 @@ export const StudentMemberSchemaPublic = StudentMemberSchema.omit({
   password_hash: true,
 }).extend({
   is_activated: z.boolean(),
+  attended_school: PartnerSchoolSchema,
 });
 
 export const KnownErrorSchema = z

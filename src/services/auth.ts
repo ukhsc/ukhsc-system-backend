@@ -81,10 +81,12 @@ export class AuthService {
     return token;
   }
 
-  private static isTokenPayload(payload: unknown): payload is TokenPayload {
+  private static isTokenPayload(payload: unknown): payload is TokenRawPayload {
     return (
       typeof payload === "object" &&
       payload !== null &&
+      "iat" in payload &&
+      "exp" in payload &&
       "roles" in payload &&
       "user_id" in payload &&
       "device_id" in payload

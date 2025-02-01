@@ -1,9 +1,11 @@
 import { AppRouter } from "index";
 import { ListPartnerSchool } from "./ListPartnerSchool";
+import { createRouter } from "..";
 
-export function registerSchoolRoute(router: AppRouter) {
-  // Backward compatibility
-  router.get("/resources/partner-school", ListPartnerSchool);
+export function registerSchoolRoute(): AppRouter {
+  const router = createRouter();
 
-  router.get("/school", ListPartnerSchool);
+  router.get("/", ListPartnerSchool);
+
+  return router;
 }
