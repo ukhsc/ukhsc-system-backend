@@ -123,7 +123,7 @@ export default class UpdateMyMemberSettings extends OpenAPIRoute {
         throw InternalError.fromError("Failed to update member settings", error);
       }
     } else {
-      logger.warn("No settings to update");
+      logger.info("No settings to update");
     }
 
     return ctx.body(null, 204);
