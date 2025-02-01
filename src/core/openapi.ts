@@ -61,7 +61,7 @@ function addDocumentUI(app: Hono<AppOptions>): void {
   </head>
   <body>
     <script id="api-reference" data-url="openapi.json"></script>
-    <script src="https://cdn.jsdelivr.net/npm/@scalar/api-reference"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@scalar/api-reference@1.25"></script>
   </body>
 </html>`;
 
@@ -75,9 +75,8 @@ function addDocumentUI(app: Hono<AppOptions>): void {
     // eslint-disable-next-line no-undef
     return new Response(html, { headers: { "Content-Type": "text/html" }, status: 200 });
   });
-  app.get("/", () => {
-    // eslint-disable-next-line no-undef
-    return new Response(html, { headers: { "Content-Type": "text/html" }, status: 200 });
+  app.get("/", (ctx) => {
+    return ctx.redirect("/docs");
   });
   app.get("/favicon.svg", () => {
     // eslint-disable-next-line no-undef
