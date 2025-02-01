@@ -1,7 +1,7 @@
 import { OpenAPIRoute } from "chanfana";
 
 import { AppContext } from "index";
-import { MemberSettingsSchema } from "schema";
+import { KnownErrorSchema, MemberSettingsSchema } from "schema";
 
 import {
   AuthService,
@@ -42,8 +42,16 @@ export default class UpdateMyMemberSettings extends OpenAPIRoute {
       204: {
         description: "成功更新會員設定",
       },
+      409: {
+        description: "請求要更新的會員設定已經過時（Optimistic Concurrency Conflict）",
+        schema: KnownErrorSchema,
+        example: {
+          code: KnownErrorCode.CONCURRENCY_CONFLICT,
+        },
+      },
       422: {
         description: "請求格式正確，但內容不符合規範",
+        schema: KnownErrorSchema,
         examples: {
           INVALID_INVOICE_BARCODE: {
             summary: "電子發票之手機條碼格式錯誤（具體規範請參考臺灣財政部資料）",
