@@ -17,7 +17,7 @@ model StudentMember {
 
 model MemberSettings {
   member_id String        @id
-  member    StudentMember @relation(fields: [member_id], references: [id])
+  member    StudentMember @relation(fields: [member_id], references: [id], onDelete: Cascade)
 
   nickname String?
 
@@ -25,4 +25,6 @@ model MemberSettings {
   /// Format follows official barcode specifications for electronic invoices
   /// For technical details, refer to: https://www.einvoice.nat.gov.tw/download/ptl003w/AC20000002
   e_invoice_barcode String?
+
+  updated_at DateTime @updatedAt
 }
