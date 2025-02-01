@@ -27,7 +27,7 @@ export default class UpdateMyMemberSettings extends OpenAPIRoute {
         description: "要更新的設定欄位（可選填）",
         content: {
           "application/json": {
-            schema: MemberSettingsSchema.omit({ member_id: true })
+            schema: MemberSettingsSchema.omit({ member_id: true, updated_at: true })
               .partial()
               .describe("如果不填寫，則不會更新該欄位。但如果填寫 null，則會將該欄位的資料刪除。"),
             example: {
@@ -98,18 +98,22 @@ export default class UpdateMyMemberSettings extends OpenAPIRoute {
     const { db, logger } = ctx.var;
     if (Object.keys(updated_content).length > 0) {
       try {
-        const current_settings = await db.studentMember.findUnique({
+        const current_state = await db.studentMember.findUnique({
           where: { user_id: user.id },
-          select: { settings: true },
+          select: { settings: true, id: true },
         });
-        const updated_at = current_settings?.settings?.updated_at;
+        if (!current_state) {
+          throw new InternalError("Failed to find member data", { user_id: user.id });
+        }
 
-        const updated = await db.studentMember.update({
+        const { id: member_id, settings } = current_state;
+        const updated = await db.memberSettings.upsert({
           where: {
-            user_id: user.id,
-            ...(updated_at ? { settings: { updated_at } } : {}),
+            member_id,
+            updated_at: settings?.updated_at,
           },
-          data: { settings: { update: updated_content } },
+          create: { ...updated_content, member: { connect: { id: member_id } } },
+          update: { ...updated_content },
         });
 
         if (!updated) {
