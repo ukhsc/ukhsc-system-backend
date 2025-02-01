@@ -31,7 +31,7 @@ export function configureOpenApi(app: Hono<AppOptions>): AppRouter {
   const openapi = fromHono(app, options);
 
   registerSecurity(openapi);
-  addDocumentUI(openapi);
+  addDocumentUI(app);
 
   return openapi;
 }
@@ -49,7 +49,7 @@ function registerSecurity(openapi: AppRouter): void {
   });
 }
 
-function addDocumentUI(openapi: AppRouter): void {
+function addDocumentUI(app: Hono<AppOptions>): void {
   // See also: https://github.com/scalar/scalar
   const html = `<!doctype html>
 <html>
@@ -71,11 +71,15 @@ function addDocumentUI(openapi: AppRouter): void {
 <path d="M149.922 221.487C129.729 227.563 104.225 226.261 84.4989 216.872C75.7418 212.348 69.1103 205.862 64.6042 197.413C60.1832 188.878 57.9727 178.508 57.9727 166.304V34.3145H91.8956V162.335C91.8956 170.443 92.9584 176.801 95.0839 181.41C97.2944 186.019 101.626 195.449 121.516 195.449C141.406 195.449 149.922 187.807 149.922 162.335C149.922 136.863 149.922 114.327 149.922 114.327H183.462V162.591C183.462 195.449 170.114 215.411 149.922 221.487Z" fill="#34495D" style="fill:#34495D;fill:color(display-p3 0.2039 0.2863 0.3647);fill-opacity:1;"/>
 </svg>`;
 
-  openapi.get("/docs", () => {
+  app.get("/docs", () => {
     // eslint-disable-next-line no-undef
     return new Response(html, { headers: { "Content-Type": "text/html" }, status: 200 });
   });
-  openapi.get("/favicon.svg", () => {
+  app.get("/", () => {
+    // eslint-disable-next-line no-undef
+    return new Response(html, { headers: { "Content-Type": "text/html" }, status: 200 });
+  });
+  app.get("/favicon.svg", () => {
     // eslint-disable-next-line no-undef
     return new Response(favicon, { headers: { "Content-Type": "image/svg+xml" }, status: 200 });
   });

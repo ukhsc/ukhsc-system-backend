@@ -11,6 +11,10 @@ export class InternalError extends Error {
     super(message);
     this.name = "InternalError";
   }
+
+  static fromError(message: string, error: unknown, details?: Record<string, unknown>) {
+    return new InternalError(message, { error, details });
+  }
 }
 
 export class KnownHttpError extends Error {
@@ -99,6 +103,8 @@ export enum KnownErrorCode {
 
   // 4000 ~ 4999: Membership management
   INVALID_SCHOOL_EMAIL = "U4000",
+  INVALID_INVOICE_BARCODE = "U4001",
+  NICKNAME_TOO_LONG = "U4002",
 
   // 5000 ~ 5999: Partner shops management
 

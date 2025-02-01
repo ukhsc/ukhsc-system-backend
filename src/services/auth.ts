@@ -156,7 +156,7 @@ export const OpenAPIResponseForbidden = {
       "application/json": {
         schema: KnownErrorSchema,
         example: {
-          error: KnownErrorCode.INSUFFICIENT_PERMISSIONS,
+          code: KnownErrorCode.INSUFFICIENT_PERMISSIONS,
         },
       },
     },

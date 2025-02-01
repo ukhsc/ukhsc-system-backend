@@ -5,11 +5,24 @@ model StudentMember {
   user_id            Int           @unique
   user               User          @relation(fields: [user_id], references: [id])
 
-  nickname        String?
   student_id_hash String?
   password_hash   String?
+
+  settings MemberSettings?
 
   created_at   DateTime  @default(now())
   activated_at DateTime?
   expired_at   DateTime?
+}
+
+model MemberSettings {
+  member_id String        @id
+  member    StudentMember @relation(fields: [member_id], references: [id])
+
+  nickname String?
+
+  /// The E-Invoice carrier barcode registered with Taiwan's Ministry of Finance
+  /// Format follows official barcode specifications for electronic invoices
+  /// For technical details, refer to: https://www.einvoice.nat.gov.tw/download/ptl003w/AC20000002
+  e_invoice_barcode String?
 }
