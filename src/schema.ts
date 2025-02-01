@@ -1,8 +1,11 @@
 import { z as fixedZod } from "zod";
 import { extendZodWithOpenApi } from "@asteasolutions/zod-to-openapi";
-import { PartnerSchoolSchema, StudentMemberSchema } from "../prisma/schema/generated/zod";
+import {
+  MemberSettingsSchema,
+  PartnerSchoolSchema,
+  StudentMemberSchema,
+} from "../prisma/schema/generated/zod";
 import { GrantFlows } from "@services/federated_account";
-import { KnownErrorCode } from "@utils/error";
 
 export * from "../prisma/schema/generated/zod";
 
@@ -18,13 +21,18 @@ export const StudentMemberSchemaPublic = StudentMemberSchema.omit({
 }).extend({
   is_activated: z.boolean(),
   attended_school: PartnerSchoolSchema,
+  settings: MemberSettingsSchema,
 });
 
 export const KnownErrorSchema = z
   .object({
-    code: z.nativeEnum(KnownErrorCode).describe("已知錯誤代號"),
+    code: z.string().describe("已知錯誤代號"),
   })
-  .openapi("標準已知錯誤回應格式");
+  .openapi("標準已知錯誤回應格式")
+  .openapi({
+    description:
+      "[已知錯誤代號列表](https://github.com/ukhsc/ukhsc-system-backend/blob/f8356e4e8a6ba8580b622acf65adef565b4bcddd/src/utils/error.ts#L82)",
+  });
 export const InternalErrorResponseSchema = z
   .object({
     error: z.string().describe("錯誤訊息").openapi({ example: "Internal Server Error" }),

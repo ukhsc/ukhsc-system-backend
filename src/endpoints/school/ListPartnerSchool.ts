@@ -22,7 +22,6 @@ export class ListPartnerSchool extends OpenAPIRoute {
                 id: 1,
                 short_name: "仁武高中",
                 full_name: "高雄市立仁武高級中學",
-                plan: "Combined",
                 google_account_config: {
                   username_format: "s＋學號",
                   student_username_format: "s[0-9]{7}",
