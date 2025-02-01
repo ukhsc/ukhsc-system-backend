@@ -9,7 +9,12 @@ import {
   OpenAPIResponseUnauthorized,
   UserRole,
 } from "@services/auth";
-import { InternalError, KnownErrorCode, UnprocessableEntityError } from "@utils/error";
+import {
+  ConflictError,
+  InternalError,
+  KnownErrorCode,
+  UnprocessableEntityError,
+} from "@utils/error";
 
 export default class UpdateMyMemberSettings extends OpenAPIRoute {
   schema = {
@@ -93,12 +98,27 @@ export default class UpdateMyMemberSettings extends OpenAPIRoute {
     const { db, logger } = ctx.var;
     if (Object.keys(updated_content).length > 0) {
       try {
-        await db.$transaction([
-          db.studentMember.update({
-            where: { user_id: user.id },
-            data: { settings: { update: updated_content } },
-          }),
-        ]);
+        const current_settings = await db.studentMember.findUnique({
+          where: { user_id: user.id },
+          select: { settings: true },
+        });
+        const updated_at = current_settings?.settings?.updated_at;
+
+        const updated = await db.studentMember.update({
+          where: {
+            user_id: user.id,
+            ...(updated_at ? { settings: { updated_at } } : {}),
+          },
+          data: { settings: { update: updated_content } },
+        });
+
+        if (!updated) {
+          throw new ConflictError(
+            KnownErrorCode.CONCURRENCY_CONFLICT,
+            "Failed to update member settings due to optimistic concurrency conflict",
+            { user_id: user.id },
+          );
+        }
       } catch (error) {
         throw InternalError.fromError("Failed to update member settings", error);
       }

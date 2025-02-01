@@ -22,7 +22,7 @@ export const SystemConfigurationUpdatesScalarFieldEnumSchema = z.enum(['id','cre
 
 export const StudentMemberScalarFieldEnumSchema = z.enum(['id','school_attended_id','user_id','student_id_hash','password_hash','created_at','activated_at','expired_at']);
 
-export const MemberSettingsScalarFieldEnumSchema = z.enum(['member_id','nickname','e_invoice_barcode']);
+export const MemberSettingsScalarFieldEnumSchema = z.enum(['member_id','nickname','e_invoice_barcode','updated_at']);
 
 export const PartnerSchoolScalarFieldEnumSchema = z.enum(['id','short_name','full_name']);
 
@@ -155,6 +155,7 @@ export const MemberSettingsSchema = z.object({
    * For technical details, refer to: https://www.einvoice.nat.gov.tw/download/ptl003w/AC20000002
    */
   e_invoice_barcode: z.string().nullable(),
+  updated_at: z.coerce.date(),
 })
 
 export type MemberSettings = z.infer<typeof MemberSettingsSchema>
@@ -323,6 +324,7 @@ export const MemberSettingsSelectSchema: z.ZodType<Prisma.MemberSettingsSelect> 
   member_id: z.boolean().optional(),
   nickname: z.boolean().optional(),
   e_invoice_barcode: z.boolean().optional(),
+  updated_at: z.boolean().optional(),
   member: z.union([z.boolean(),z.lazy(() => StudentMemberArgsSchema)]).optional(),
 }).strict()
 
@@ -798,6 +800,7 @@ export const MemberSettingsWhereInputSchema: z.ZodType<Prisma.MemberSettingsWher
   member_id: z.union([ z.lazy(() => StringFilterSchema),z.string() ]).optional(),
   nickname: z.union([ z.lazy(() => StringNullableFilterSchema),z.string() ]).optional().nullable(),
   e_invoice_barcode: z.union([ z.lazy(() => StringNullableFilterSchema),z.string() ]).optional().nullable(),
+  updated_at: z.union([ z.lazy(() => DateTimeFilterSchema),z.coerce.date() ]).optional(),
   member: z.union([ z.lazy(() => StudentMemberScalarRelationFilterSchema),z.lazy(() => StudentMemberWhereInputSchema) ]).optional(),
 }).strict();
 
@@ -805,6 +808,7 @@ export const MemberSettingsOrderByWithRelationInputSchema: z.ZodType<Prisma.Memb
   member_id: z.lazy(() => SortOrderSchema).optional(),
   nickname: z.union([ z.lazy(() => SortOrderSchema),z.lazy(() => SortOrderInputSchema) ]).optional(),
   e_invoice_barcode: z.union([ z.lazy(() => SortOrderSchema),z.lazy(() => SortOrderInputSchema) ]).optional(),
+  updated_at: z.lazy(() => SortOrderSchema).optional(),
   member: z.lazy(() => StudentMemberOrderByWithRelationInputSchema).optional()
 }).strict();
 
@@ -818,6 +822,7 @@ export const MemberSettingsWhereUniqueInputSchema: z.ZodType<Prisma.MemberSettin
   NOT: z.union([ z.lazy(() => MemberSettingsWhereInputSchema),z.lazy(() => MemberSettingsWhereInputSchema).array() ]).optional(),
   nickname: z.union([ z.lazy(() => StringNullableFilterSchema),z.string() ]).optional().nullable(),
   e_invoice_barcode: z.union([ z.lazy(() => StringNullableFilterSchema),z.string() ]).optional().nullable(),
+  updated_at: z.union([ z.lazy(() => DateTimeFilterSchema),z.coerce.date() ]).optional(),
   member: z.union([ z.lazy(() => StudentMemberScalarRelationFilterSchema),z.lazy(() => StudentMemberWhereInputSchema) ]).optional(),
 }).strict());
 
@@ -825,6 +830,7 @@ export const MemberSettingsOrderByWithAggregationInputSchema: z.ZodType<Prisma.M
   member_id: z.lazy(() => SortOrderSchema).optional(),
   nickname: z.union([ z.lazy(() => SortOrderSchema),z.lazy(() => SortOrderInputSchema) ]).optional(),
   e_invoice_barcode: z.union([ z.lazy(() => SortOrderSchema),z.lazy(() => SortOrderInputSchema) ]).optional(),
+  updated_at: z.lazy(() => SortOrderSchema).optional(),
   _count: z.lazy(() => MemberSettingsCountOrderByAggregateInputSchema).optional(),
   _max: z.lazy(() => MemberSettingsMaxOrderByAggregateInputSchema).optional(),
   _min: z.lazy(() => MemberSettingsMinOrderByAggregateInputSchema).optional()
@@ -837,6 +843,7 @@ export const MemberSettingsScalarWhereWithAggregatesInputSchema: z.ZodType<Prism
   member_id: z.union([ z.lazy(() => StringWithAggregatesFilterSchema),z.string() ]).optional(),
   nickname: z.union([ z.lazy(() => StringNullableWithAggregatesFilterSchema),z.string() ]).optional().nullable(),
   e_invoice_barcode: z.union([ z.lazy(() => StringNullableWithAggregatesFilterSchema),z.string() ]).optional().nullable(),
+  updated_at: z.union([ z.lazy(() => DateTimeWithAggregatesFilterSchema),z.coerce.date() ]).optional(),
 }).strict();
 
 export const PartnerSchoolWhereInputSchema: z.ZodType<Prisma.PartnerSchoolWhereInput> = z.object({
@@ -1361,18 +1368,21 @@ export const StudentMemberUncheckedUpdateManyInputSchema: z.ZodType<Prisma.Stude
 export const MemberSettingsCreateInputSchema: z.ZodType<Prisma.MemberSettingsCreateInput> = z.object({
   nickname: z.string().optional().nullable(),
   e_invoice_barcode: z.string().optional().nullable(),
+  updated_at: z.coerce.date().optional(),
   member: z.lazy(() => StudentMemberCreateNestedOneWithoutSettingsInputSchema)
 }).strict();
 
 export const MemberSettingsUncheckedCreateInputSchema: z.ZodType<Prisma.MemberSettingsUncheckedCreateInput> = z.object({
   member_id: z.string(),
   nickname: z.string().optional().nullable(),
-  e_invoice_barcode: z.string().optional().nullable()
+  e_invoice_barcode: z.string().optional().nullable(),
+  updated_at: z.coerce.date().optional()
 }).strict();
 
 export const MemberSettingsUpdateInputSchema: z.ZodType<Prisma.MemberSettingsUpdateInput> = z.object({
   nickname: z.union([ z.string(),z.lazy(() => NullableStringFieldUpdateOperationsInputSchema) ]).optional().nullable(),
   e_invoice_barcode: z.union([ z.string(),z.lazy(() => NullableStringFieldUpdateOperationsInputSchema) ]).optional().nullable(),
+  updated_at: z.union([ z.coerce.date(),z.lazy(() => DateTimeFieldUpdateOperationsInputSchema) ]).optional(),
   member: z.lazy(() => StudentMemberUpdateOneRequiredWithoutSettingsNestedInputSchema).optional()
 }).strict();
 
@@ -1380,23 +1390,27 @@ export const MemberSettingsUncheckedUpdateInputSchema: z.ZodType<Prisma.MemberSe
   member_id: z.union([ z.string(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
   nickname: z.union([ z.string(),z.lazy(() => NullableStringFieldUpdateOperationsInputSchema) ]).optional().nullable(),
   e_invoice_barcode: z.union([ z.string(),z.lazy(() => NullableStringFieldUpdateOperationsInputSchema) ]).optional().nullable(),
+  updated_at: z.union([ z.coerce.date(),z.lazy(() => DateTimeFieldUpdateOperationsInputSchema) ]).optional(),
 }).strict();
 
 export const MemberSettingsCreateManyInputSchema: z.ZodType<Prisma.MemberSettingsCreateManyInput> = z.object({
   member_id: z.string(),
   nickname: z.string().optional().nullable(),
-  e_invoice_barcode: z.string().optional().nullable()
+  e_invoice_barcode: z.string().optional().nullable(),
+  updated_at: z.coerce.date().optional()
 }).strict();
 
 export const MemberSettingsUpdateManyMutationInputSchema: z.ZodType<Prisma.MemberSettingsUpdateManyMutationInput> = z.object({
   nickname: z.union([ z.string(),z.lazy(() => NullableStringFieldUpdateOperationsInputSchema) ]).optional().nullable(),
   e_invoice_barcode: z.union([ z.string(),z.lazy(() => NullableStringFieldUpdateOperationsInputSchema) ]).optional().nullable(),
+  updated_at: z.union([ z.coerce.date(),z.lazy(() => DateTimeFieldUpdateOperationsInputSchema) ]).optional(),
 }).strict();
 
 export const MemberSettingsUncheckedUpdateManyInputSchema: z.ZodType<Prisma.MemberSettingsUncheckedUpdateManyInput> = z.object({
   member_id: z.union([ z.string(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
   nickname: z.union([ z.string(),z.lazy(() => NullableStringFieldUpdateOperationsInputSchema) ]).optional().nullable(),
   e_invoice_barcode: z.union([ z.string(),z.lazy(() => NullableStringFieldUpdateOperationsInputSchema) ]).optional().nullable(),
+  updated_at: z.union([ z.coerce.date(),z.lazy(() => DateTimeFieldUpdateOperationsInputSchema) ]).optional(),
 }).strict();
 
 export const PartnerSchoolCreateInputSchema: z.ZodType<Prisma.PartnerSchoolCreateInput> = z.object({
@@ -1985,19 +1999,22 @@ export const StudentMemberScalarRelationFilterSchema: z.ZodType<Prisma.StudentMe
 export const MemberSettingsCountOrderByAggregateInputSchema: z.ZodType<Prisma.MemberSettingsCountOrderByAggregateInput> = z.object({
   member_id: z.lazy(() => SortOrderSchema).optional(),
   nickname: z.lazy(() => SortOrderSchema).optional(),
-  e_invoice_barcode: z.lazy(() => SortOrderSchema).optional()
+  e_invoice_barcode: z.lazy(() => SortOrderSchema).optional(),
+  updated_at: z.lazy(() => SortOrderSchema).optional()
 }).strict();
 
 export const MemberSettingsMaxOrderByAggregateInputSchema: z.ZodType<Prisma.MemberSettingsMaxOrderByAggregateInput> = z.object({
   member_id: z.lazy(() => SortOrderSchema).optional(),
   nickname: z.lazy(() => SortOrderSchema).optional(),
-  e_invoice_barcode: z.lazy(() => SortOrderSchema).optional()
+  e_invoice_barcode: z.lazy(() => SortOrderSchema).optional(),
+  updated_at: z.lazy(() => SortOrderSchema).optional()
 }).strict();
 
 export const MemberSettingsMinOrderByAggregateInputSchema: z.ZodType<Prisma.MemberSettingsMinOrderByAggregateInput> = z.object({
   member_id: z.lazy(() => SortOrderSchema).optional(),
   nickname: z.lazy(() => SortOrderSchema).optional(),
-  e_invoice_barcode: z.lazy(() => SortOrderSchema).optional()
+  e_invoice_barcode: z.lazy(() => SortOrderSchema).optional(),
+  updated_at: z.lazy(() => SortOrderSchema).optional()
 }).strict();
 
 export const SchoolAccountConfigNullableScalarRelationFilterSchema: z.ZodType<Prisma.SchoolAccountConfigNullableScalarRelationFilter> = z.object({
@@ -3015,12 +3032,14 @@ export const UserCreateOrConnectWithoutMemberInputSchema: z.ZodType<Prisma.UserC
 
 export const MemberSettingsCreateWithoutMemberInputSchema: z.ZodType<Prisma.MemberSettingsCreateWithoutMemberInput> = z.object({
   nickname: z.string().optional().nullable(),
-  e_invoice_barcode: z.string().optional().nullable()
+  e_invoice_barcode: z.string().optional().nullable(),
+  updated_at: z.coerce.date().optional()
 }).strict();
 
 export const MemberSettingsUncheckedCreateWithoutMemberInputSchema: z.ZodType<Prisma.MemberSettingsUncheckedCreateWithoutMemberInput> = z.object({
   nickname: z.string().optional().nullable(),
-  e_invoice_barcode: z.string().optional().nullable()
+  e_invoice_barcode: z.string().optional().nullable(),
+  updated_at: z.coerce.date().optional()
 }).strict();
 
 export const MemberSettingsCreateOrConnectWithoutMemberInputSchema: z.ZodType<Prisma.MemberSettingsCreateOrConnectWithoutMemberInput> = z.object({
@@ -3094,11 +3113,13 @@ export const MemberSettingsUpdateToOneWithWhereWithoutMemberInputSchema: z.ZodTy
 export const MemberSettingsUpdateWithoutMemberInputSchema: z.ZodType<Prisma.MemberSettingsUpdateWithoutMemberInput> = z.object({
   nickname: z.union([ z.string(),z.lazy(() => NullableStringFieldUpdateOperationsInputSchema) ]).optional().nullable(),
   e_invoice_barcode: z.union([ z.string(),z.lazy(() => NullableStringFieldUpdateOperationsInputSchema) ]).optional().nullable(),
+  updated_at: z.union([ z.coerce.date(),z.lazy(() => DateTimeFieldUpdateOperationsInputSchema) ]).optional(),
 }).strict();
 
 export const MemberSettingsUncheckedUpdateWithoutMemberInputSchema: z.ZodType<Prisma.MemberSettingsUncheckedUpdateWithoutMemberInput> = z.object({
   nickname: z.union([ z.string(),z.lazy(() => NullableStringFieldUpdateOperationsInputSchema) ]).optional().nullable(),
   e_invoice_barcode: z.union([ z.string(),z.lazy(() => NullableStringFieldUpdateOperationsInputSchema) ]).optional().nullable(),
+  updated_at: z.union([ z.coerce.date(),z.lazy(() => DateTimeFieldUpdateOperationsInputSchema) ]).optional(),
 }).strict();
 
 export const StudentMemberCreateWithoutSettingsInputSchema: z.ZodType<Prisma.StudentMemberCreateWithoutSettingsInput> = z.object({

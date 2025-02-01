@@ -13,7 +13,19 @@ export class InternalError extends Error {
   }
 
   static fromError(message: string, error: unknown, details?: Record<string, unknown>) {
-    return new InternalError(message, { error, details });
+    const debug = { details } as Record<string, unknown>;
+
+    if (error instanceof Error) {
+      debug.error = {
+        name: error.name,
+        message: error.message,
+        stack: error.stack,
+      };
+    } else {
+      debug.error = error;
+    }
+
+    return new InternalError(message, debug);
   }
 }
 
@@ -41,6 +53,7 @@ const createHttpError = (status: ContentfulStatusCode, name: string) => {
 export const BadRequestError = createHttpError(400, "BadRequestError");
 export const UnauthorizedError = createHttpError(401, "UnauthorizedError");
 export const ForbiddenError = createHttpError(403, "ForbiddenError");
+export const ConflictError = createHttpError(409, "ConflictError");
 export const UnprocessableEntityError = createHttpError(422, "UnprocessableEntityError");
 
 export const httpErrorHandler = async (error: Error | HTTPResponseError, ctx: AppContext) => {
@@ -87,6 +100,7 @@ export enum KnownErrorCode {
   // 1000 ~ 1999: Basic CRUD operations
   NOT_FOUND = "U1000",
   MISMATCH = "U1001",
+  CONCURRENCY_CONFLICT = "U1002",
 
   // 2000 ~ 2999: Authentication and Authorization
   NO_TOKEN = "U2000",
