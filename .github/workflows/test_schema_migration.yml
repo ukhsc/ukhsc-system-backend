@@ -86,12 +86,14 @@ jobs:
 
           # Reset and apply base migrations
           pnpm prisma migrate reset --force --skip-generate
+          pnpm generate
           echo "Database structure after base migrations:" >> migration_output.log
           pnpm prisma db pull --print >> migration_output.log
 
       - name: Test new migrations
         id: test-migrations
         run: |
+          git reset --hard ${{ github.event.pull_request.base.sha }}
           git checkout ${{ github.event.pull_request.head.ref }}
 
           # Restore migrations from temp
