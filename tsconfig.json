@@ -8,6 +8,7 @@
       "@utils/*": ["utils/*"],
       "@endpoints/*": ["endpoints/*"],
       "@services/*": ["services/*"],
+      "@core/*": ["core/*"],
       "@tests/*": ["../tests/*"],
       "@test-helpers/*": ["../tests/helpers/*"]
     },
