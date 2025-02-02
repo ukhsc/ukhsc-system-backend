@@ -6,7 +6,7 @@ import { OpenAPIRoute } from "chanfana";
 import { AppContext } from "index";
 import { z } from "zod";
 import { DeviceManagementService } from "@services/device_management";
-import { hashWithSalt } from "@utils/hash";
+import { simpleHash } from "@utils/hash";
 import { FederateOAuthSchema, KnownErrorSchema, TokenResponseSchema } from "schema";
 
 export class CreateStudentMember extends OpenAPIRoute {
@@ -106,7 +106,7 @@ export class CreateStudentMember extends OpenAPIRoute {
                 id: school_attended.id,
               },
             },
-            student_id_hash: await hashWithSalt(student_id),
+            student_id_hash: simpleHash(student_id),
             activated_at: new Date(),
             expired_at: system_config?.contract_end_date,
           },
