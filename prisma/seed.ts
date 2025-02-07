@@ -25,7 +25,7 @@ async function main() {
       full_name: "高雄市立文山高級中學",
       account_config: {
         username_format: "學號（6 碼）",
-        student_username_format: "([0-9]{7})",
+        student_username_format: "([0-9]{6})",
         password_format: "1234@wsm",
         domain_name: "mail.wsm.kh.edu.tw",
       },
