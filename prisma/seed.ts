@@ -97,7 +97,7 @@ async function main() {
         username_format: "學號（6 碼）",
         student_username_format: "([0-9]{6})",
         password_format: "身分證字號末9碼（僅數字部分）",
-        domain_name: "gs.hs.ntnu.edu.tw",
+        domain_name: "stu.nknush.kh.edu.tw",
       },
     },
     {
