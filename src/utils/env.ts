@@ -16,6 +16,15 @@ const envSchema = z
     // OAuth
     GOOGLE_OAUTH_CLIENT_ID: z.string().default(""),
     GOOGLE_OAUTH_CLIENT_SECRET: z.string().default(""),
+
+    // Mail Verification
+    RESEND_API_KEY: z.string().optional(),
+    RESEND_QUOTA: z.number().default(100),
+
+    FALLBACK_SMTP_HOST: z.string().optional(),
+    FALLBACK_SMTP_USER: z.string().optional(),
+    FALLBACK_SMTP_PASS: z.string().optional(),
+    FALLBACK_SMTP_QUOTA: z.number().default(500),
   })
   .refine(
     (data) => {
@@ -25,6 +34,22 @@ const envSchema = z
     {
       message: "SENTRY_DSN is required in production environment",
       path: ["SENTRY_DSN"],
+    },
+  )
+  .refine(
+    (data) => {
+      if (data.IS_PRODUCTION)
+        return (
+          data.FALLBACK_SMTP_HOST !== undefined &&
+          data.FALLBACK_SMTP_USER !== undefined &&
+          data.FALLBACK_SMTP_PASS !== undefined
+        );
+      return true;
+    },
+    {
+      message:
+        "FALLBACK_SMTP_HOST, FALLBACK_SMTP_USER, FALLBACK_SMTP_PASS are required in production environment",
+      path: ["FALLBACK_SMTP_HOST", "FALLBACK_SMTP_USER", "FALLBACK_SMTP_PASS"],
     },
   );
 

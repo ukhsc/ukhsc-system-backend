@@ -9,6 +9,8 @@ export function configureOpenApi(app: Hono<AppOptions>): AppRouter {
     schema: {
       info: {
         title: "第七屆 高雄高校特約聯盟 商店資訊暨數位會員整合系統 API 技術文件",
+        description:
+          "本技術文件主要目的是用於傳承特約系統的設計，倘若您非聯盟工作人員，但想要串接我們的 API，請您聯繫我們的官方 Instagram 帳號。\n\n本文件的「校園帳號」係指學校統一為學生配發 Google Workspace for Education 之方案的帳號。",
         version: "1.0.0",
         contact: {
           name: "高校特約技術部門",

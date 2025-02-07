@@ -28,3 +28,20 @@ model MemberSettings {
 
   updated_at DateTime @updatedAt
 }
+
+model EmailVerification {
+  email              String        @id
+  school_attended_id Int
+  school_attended    PartnerSchool @relation(fields: [school_attended_id], references: [id])
+
+  code_history VerificationCode[]
+}
+
+model VerificationCode {
+  id         Int      @id @default(autoincrement())
+  code       String
+  expired_at DateTime
+
+  email              String
+  email_verification EmailVerification @relation(fields: [email], references: [email])
+}

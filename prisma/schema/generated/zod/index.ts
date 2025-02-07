@@ -4289,7 +4289,7 @@ export const FederatedAccountUpdateManyArgsSchema: z.ZodType<Prisma.FederatedAcc
   limit: z.number().optional(),
 }).strict() ;
 
-export const updateManyFederatedAccountCreateManyAndReturnArgsSchema: z.ZodType<Prisma.FederatedAccountUpdateManyAndReturnArgs> = z.object({
+export const updateManyFederatedAccountCreateManyAndReturnArgsSchema: z.ZodType<Prisma.updateManyFederatedAccountCreateManyAndReturnArgs> = z.object({
   data: z.union([ FederatedAccountUpdateManyMutationInputSchema,FederatedAccountUncheckedUpdateManyInputSchema ]),
   where: FederatedAccountWhereInputSchema.optional(),
   limit: z.number().optional(),
@@ -4343,7 +4343,7 @@ export const SchoolAccountConfigUpdateManyArgsSchema: z.ZodType<Prisma.SchoolAcc
   limit: z.number().optional(),
 }).strict() ;
 
-export const updateManySchoolAccountConfigCreateManyAndReturnArgsSchema: z.ZodType<Prisma.SchoolAccountConfigUpdateManyAndReturnArgs> = z.object({
+export const updateManySchoolAccountConfigCreateManyAndReturnArgsSchema: z.ZodType<Prisma.updateManySchoolAccountConfigCreateManyAndReturnArgs> = z.object({
   data: z.union([ SchoolAccountConfigUpdateManyMutationInputSchema,SchoolAccountConfigUncheckedUpdateManyInputSchema ]),
   where: SchoolAccountConfigWhereInputSchema.optional(),
   limit: z.number().optional(),
@@ -4397,7 +4397,7 @@ export const LoginActivityUpdateManyArgsSchema: z.ZodType<Prisma.LoginActivityUp
   limit: z.number().optional(),
 }).strict() ;
 
-export const updateManyLoginActivityCreateManyAndReturnArgsSchema: z.ZodType<Prisma.LoginActivityUpdateManyAndReturnArgs> = z.object({
+export const updateManyLoginActivityCreateManyAndReturnArgsSchema: z.ZodType<Prisma.updateManyLoginActivityCreateManyAndReturnArgs> = z.object({
   data: z.union([ LoginActivityUpdateManyMutationInputSchema,LoginActivityUncheckedUpdateManyInputSchema ]),
   where: LoginActivityWhereInputSchema.optional(),
   limit: z.number().optional(),
@@ -4447,7 +4447,7 @@ export const SystemConfigurationUpdatesUpdateManyArgsSchema: z.ZodType<Prisma.Sy
   limit: z.number().optional(),
 }).strict() ;
 
-export const updateManySystemConfigurationUpdatesCreateManyAndReturnArgsSchema: z.ZodType<Prisma.SystemConfigurationUpdatesUpdateManyAndReturnArgs> = z.object({
+export const updateManySystemConfigurationUpdatesCreateManyAndReturnArgsSchema: z.ZodType<Prisma.updateManySystemConfigurationUpdatesCreateManyAndReturnArgs> = z.object({
   data: z.union([ SystemConfigurationUpdatesUpdateManyMutationInputSchema,SystemConfigurationUpdatesUncheckedUpdateManyInputSchema ]),
   where: SystemConfigurationUpdatesWhereInputSchema.optional(),
   limit: z.number().optional(),
@@ -4501,7 +4501,7 @@ export const StudentMemberUpdateManyArgsSchema: z.ZodType<Prisma.StudentMemberUp
   limit: z.number().optional(),
 }).strict() ;
 
-export const updateManyStudentMemberCreateManyAndReturnArgsSchema: z.ZodType<Prisma.StudentMemberUpdateManyAndReturnArgs> = z.object({
+export const updateManyStudentMemberCreateManyAndReturnArgsSchema: z.ZodType<Prisma.updateManyStudentMemberCreateManyAndReturnArgs> = z.object({
   data: z.union([ StudentMemberUpdateManyMutationInputSchema,StudentMemberUncheckedUpdateManyInputSchema ]),
   where: StudentMemberWhereInputSchema.optional(),
   limit: z.number().optional(),
@@ -4555,7 +4555,7 @@ export const MemberSettingsUpdateManyArgsSchema: z.ZodType<Prisma.MemberSettings
   limit: z.number().optional(),
 }).strict() ;
 
-export const updateManyMemberSettingsCreateManyAndReturnArgsSchema: z.ZodType<Prisma.MemberSettingsUpdateManyAndReturnArgs> = z.object({
+export const updateManyMemberSettingsCreateManyAndReturnArgsSchema: z.ZodType<Prisma.updateManyMemberSettingsCreateManyAndReturnArgs> = z.object({
   data: z.union([ MemberSettingsUpdateManyMutationInputSchema,MemberSettingsUncheckedUpdateManyInputSchema ]),
   where: MemberSettingsWhereInputSchema.optional(),
   limit: z.number().optional(),
@@ -4609,7 +4609,7 @@ export const PartnerSchoolUpdateManyArgsSchema: z.ZodType<Prisma.PartnerSchoolUp
   limit: z.number().optional(),
 }).strict() ;
 
-export const updateManyPartnerSchoolCreateManyAndReturnArgsSchema: z.ZodType<Prisma.PartnerSchoolUpdateManyAndReturnArgs> = z.object({
+export const updateManyPartnerSchoolCreateManyAndReturnArgsSchema: z.ZodType<Prisma.updateManyPartnerSchoolCreateManyAndReturnArgs> = z.object({
   data: z.union([ PartnerSchoolUpdateManyMutationInputSchema,PartnerSchoolUncheckedUpdateManyInputSchema ]),
   where: PartnerSchoolWhereInputSchema.optional(),
   limit: z.number().optional(),
@@ -4663,7 +4663,7 @@ export const UserUpdateManyArgsSchema: z.ZodType<Prisma.UserUpdateManyArgs> = z.
   limit: z.number().optional(),
 }).strict() ;
 
-export const updateManyUserCreateManyAndReturnArgsSchema: z.ZodType<Prisma.UserUpdateManyAndReturnArgs> = z.object({
+export const updateManyUserCreateManyAndReturnArgsSchema: z.ZodType<Prisma.updateManyUserCreateManyAndReturnArgs> = z.object({
   data: z.union([ UserUpdateManyMutationInputSchema,UserUncheckedUpdateManyInputSchema ]),
   where: UserWhereInputSchema.optional(),
   limit: z.number().optional(),
@@ -4717,7 +4717,7 @@ export const UserDeviceUpdateManyArgsSchema: z.ZodType<Prisma.UserDeviceUpdateMa
   limit: z.number().optional(),
 }).strict() ;
 
-export const updateManyUserDeviceCreateManyAndReturnArgsSchema: z.ZodType<Prisma.UserDeviceUpdateManyAndReturnArgs> = z.object({
+export const updateManyUserDeviceCreateManyAndReturnArgsSchema: z.ZodType<Prisma.updateManyUserDeviceCreateManyAndReturnArgs> = z.object({
   data: z.union([ UserDeviceUpdateManyMutationInputSchema,UserDeviceUncheckedUpdateManyInputSchema ]),
   where: UserDeviceWhereInputSchema.optional(),
   limit: z.number().optional(),

@@ -1,0 +1,22 @@
+model PartnerSchool {
+  id                    Int                  @id @default(autoincrement())
+  short_name            String               @unique
+  full_name             String               @unique
+  google_account_config SchoolAccountConfig?
+
+  students StudentMember[]
+  emails   EmailVerification[]
+}
+
+// Google Workspace account configuration for a school
+model SchoolAccountConfig {
+  /// Human-readable username format (e.g. "s + 7-digit student ID")
+  username_format         String
+  student_username_format String /// Regex pattern for student usernames where capture group 1 extracts the student ID (e.g. "s([0-9]{7})" - group 1 captures the 7-digit ID)
+  /// Human-readable password format (e.g. same as birthday)
+  password_format         String
+  domain_name             String
+
+  school_id Int           @unique
+  school    PartnerSchool @relation(fields: [school_id], references: [id])
+}

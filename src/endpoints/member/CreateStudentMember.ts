@@ -13,15 +13,18 @@ export class CreateStudentMember extends OpenAPIRoute {
   schema = {
     tags: ["學生會員"],
     summary: "註冊並啟用新的學生會員帳號",
+    description:
+      "基於學生會員帳號僅限合作學校在學學生的原則，我們提供兩種管道註冊學生會員的帳號：\n\n1. 學校配發之校園帳號 Google OAuth 授權資訊。\n2. 本系統發送到學生校園帳號之電子郵件驗證碼。至於要求系統寄送驗證信的方式，請參考本文件電子郵件驗證的章節。\n\n此外，為減輕寄送郵件之成本負擔，第二種管道限校園帳號管理員不允許第三方軟體存取 OAuth 授權情形之校別學生使用。",
     request: {
       body: {
+        description: "`google_workspace` 與 `email_verification_code` 兩者擇一填寫即可。",
         content: {
           "application/json": {
             schema: z.object({
               school_attended_id: z.number().describe("註冊者所就讀學校的 ID"),
-              google_workspace: FederateOAuthSchema.describe(
-                "Google Workspace for Education 的帳號授權資訊",
-              ),
+              google_workspace:
+                FederateOAuthSchema.optional().describe("校園帳號 Google OAuth 授權資訊"),
+              email_verification_code: z.string().optional().describe("校園帳號的電子郵件驗證碼"),
             }),
           },
         },
