@@ -150,7 +150,7 @@ jobs:
 
             [查看部署詳細資訊](https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }})
             ${{
-              job.status == 'success' && '[前往網站](https://api.ukhsc.org)' || ''
+              job.status == 'success' && '[閱讀部屬版本之技術文件](https://api.ukhsc.org)' || ''
             }}
           embed-color: ${{ job.status == 'success' && '65280' || '16711680' }}
           embed-footer-text: "UKHSC System Backend Deployment"
