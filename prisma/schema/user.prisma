@@ -9,6 +9,7 @@ model User {
   updated_at DateTime @updatedAt
 
   member StudentMember?
+  staff  UnionStaff?
 }
 
 model UserDevice {
