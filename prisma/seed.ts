@@ -46,7 +46,7 @@ async function main() {
       account_config: {
         username_format: "學號（7 碼）",
         student_username_format: "([0-9]{7})",
-        password_format: "身分證字號（開頭英文大寫）",
+        password_format: "完整身分證字號（開頭英文大寫）",
         domain_name: "tyhs.kh.edu.tw",
       },
     },
@@ -56,7 +56,7 @@ async function main() {
       account_config: {
         username_format: "stu＋學號（7 碼）",
         student_username_format: "stu([0-9]{7})",
-        password_format: "身分證字號（開頭英文大寫）",
+        password_format: "完整身分證字號（開頭英文大寫）",
         domain_name: "mail2.cjhs.kh.edu.tw",
       },
     },
@@ -86,7 +86,7 @@ async function main() {
       account_config: {
         username_format: "學號（6 碼）",
         student_username_format: "([0-9]{6})",
-        password_format: "身分證字號（開頭英文大寫）",
+        password_format: "完整身分證字號（開頭英文大寫）",
         domain_name: "ms.ly.kh.edu.tw",
       },
     },
@@ -96,7 +96,7 @@ async function main() {
       account_config: {
         username_format: "學號（6 碼）",
         student_username_format: "([0-9]{6})",
-        password_format: "身分證字號末9碼（僅數字部分）",
+        password_format: "完整身分證字號（開頭英文大寫）",
         domain_name: "stu.nknush.kh.edu.tw",
       },
     },
@@ -106,7 +106,7 @@ async function main() {
       account_config: {
         username_format: "學號（6 碼）",
         student_username_format: "([0-9]{6})",
-        password_format: "身分證字號（開頭英文大寫）",
+        password_format: "完整身分證字號（開頭英文大寫）",
         domain_name: "hhhs.kh.edu.tw",
       },
     },
@@ -116,7 +116,7 @@ async function main() {
       account_config: {
         username_format: "s（小寫）＋學號（7 碼）",
         student_username_format: "s([0-9]{7})",
-        password_format: "身分證字號（開頭英文大寫）",
+        password_format: "完整身分證字號（開頭英文大寫）",
         domain_name: "cchs.kh.edu.tw",
       },
     },
@@ -136,7 +136,7 @@ async function main() {
       account_config: {
         username_format: "學號（6 碼）",
         student_username_format: "([0-9]{6})",
-        password_format: "身分證字號（開頭英文大寫）",
+        password_format: "完整身分證字號（開頭英文大寫）",
         domain_name: "student.kshs.kh.edu.tw",
       },
     },
