@@ -13,6 +13,7 @@
       "@test-helpers/*": ["../tests/helpers/*"]
     },
 
+    "types": ["node"],
     "declaration": true,
     "sourceMap": true,
     "esModuleInterop": true,
