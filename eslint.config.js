@@ -3,6 +3,7 @@ import typescript from "@typescript-eslint/eslint-plugin";
 import typescriptParser from "@typescript-eslint/parser";
 import prettier from "eslint-plugin-prettier";
 import cspellESLintPluginRecommended from "@cspell/eslint-plugin/recommended";
+import globals from "globals";
 
 export default [
   eslint.configs.recommended,
@@ -16,6 +17,9 @@ export default [
       parser: typescriptParser,
       parserOptions: {
         project: true,
+      },
+      globals: {
+        ...globals.node,
       },
     },
     plugins: {
