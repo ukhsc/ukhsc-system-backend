@@ -10,8 +10,7 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "migrate": "prisma migrate deploy",
-    "generate": "prisma generate && pnpm run prisma:postprocess",
-    "prisma:postprocess": "node scripts/prisma-postprocess.js",
+    "generate": "prisma generate",
     "seed": "prisma db seed",
     "lint": "tsc --noEmit && eslint .",
     "lint:fix": "eslint . --fix"
@@ -42,7 +41,7 @@
     "ua-parser-js": "^2.0.0",
     "vitest-mock-extended": "^2.0.2",
     "zod": "^3.24.1",
-    "zod-prisma-types": "^3.2.1"
+    "zod-prisma-types": "^3.2.4"
   },
   "devDependencies": {
     "@types/jsonwebtoken": "^9.0.7",
