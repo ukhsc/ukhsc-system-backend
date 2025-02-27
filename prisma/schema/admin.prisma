@@ -1,0 +1,23 @@
+model UnionStaff {
+    user_id Int  @unique
+    user    User @relation(fields: [user_id], references: [id])
+
+    role        UnionStaffRole
+    permissions StaffPermission[]
+    real_name   String            @db.Text
+    department  String            @db.Text
+    job_title   String            @db.Text
+
+    created_at DateTime @default(now())
+    updated_at DateTime @updatedAt
+}
+
+enum UnionStaffRole {
+    President
+    TechnicalDirector
+    Staff
+}
+
+enum StaffPermission {
+    MembershipEligibility @map("membership:manage_eligibility")
+}
