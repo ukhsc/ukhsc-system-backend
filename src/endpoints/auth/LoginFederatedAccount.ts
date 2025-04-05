@@ -4,7 +4,7 @@ import { DeviceManagementService } from "@services/device_management";
 import { FederatedAccountService } from "@services/federated_account";
 import { KnownErrorCode, UnauthorizedError } from "@utils/error";
 import { simpleHash } from "@utils/hash";
-import { OpenAPIRoute } from "chanfana";
+import { AppRoute } from "../route";
 import { AppContext } from "index";
 import {
   FederatedProviderSchema,
@@ -14,7 +14,7 @@ import {
 } from "schema";
 import { z } from "zod";
 
-export class LoginFederatedAccount extends OpenAPIRoute {
+export class LoginFederatedAccount extends AppRoute {
   schema = {
     tags: ["身份驗證"],
     summary: "使用社群帳號登入",

@@ -1,8 +1,8 @@
-import { OpenAPIRoute } from "chanfana";
+import { AppRoute } from "./route";
 import { AppContext } from "index";
 import { z } from "zod";
 
-export class HealthCheck extends OpenAPIRoute {
+export class HealthCheck extends AppRoute {
   schema = {
     tags: ["基礎設施"],
     summary: "Health Check (Internal)",

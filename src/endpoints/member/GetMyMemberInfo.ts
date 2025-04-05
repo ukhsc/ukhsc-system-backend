@@ -6,11 +6,11 @@ import {
 } from "@services/auth";
 import { InternalError } from "@utils/error";
 import { simpleHash } from "@utils/hash";
-import { OpenAPIRoute } from "chanfana";
+import { AppRoute } from "../route";
 import { AppContext } from "index";
 import { StudentMemberSchemaPublic, UserSchema } from "schema";
 
-export class GetMyMemberInfo extends OpenAPIRoute {
+export class GetMyMemberInfo extends AppRoute {
   schema = {
     tags: ["學生會員"],
     summary: "取得目前會員的資訊",

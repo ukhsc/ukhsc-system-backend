@@ -1,10 +1,10 @@
-import { OpenAPIRoute } from "chanfana";
 import { AppContext } from "index";
 import { InternalErrorResponseSchema, SystemServiceStatusSchema } from "schema";
 import { z } from "zod";
 import console from "console";
+import { AppRoute } from "./route";
 
-export class ServiceStatus extends OpenAPIRoute {
+export class ServiceStatus extends AppRoute {
   schema = {
     tags: ["基礎設施"],
     summary: "系統服務狀態",

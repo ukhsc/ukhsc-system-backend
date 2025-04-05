@@ -2,14 +2,14 @@ import { FederatedProvider, SchoolAccountConfig } from "@prisma/client";
 import { AuthService, UserRole } from "@services/auth";
 import { FederatedAccountService } from "@services/federated_account";
 import { InternalError, KnownErrorCode, UnprocessableEntityError } from "@utils/error";
-import { OpenAPIRoute } from "chanfana";
+import { AppRoute } from "../route";
 import { AppContext } from "index";
 import { z } from "zod";
 import { DeviceManagementService } from "@services/device_management";
 import { simpleHash } from "@utils/hash";
 import { FederateOAuthSchema, KnownErrorSchema, TokenResponseSchema } from "schema";
 
-export class CreateStudentMember extends OpenAPIRoute {
+export class CreateStudentMember extends AppRoute {
   schema = {
     tags: ["學生會員"],
     summary: "註冊並啟用新的學生會員帳號",

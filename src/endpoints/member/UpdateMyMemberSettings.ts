@@ -1,4 +1,4 @@
-import { OpenAPIRoute } from "chanfana";
+import { AppRoute } from "../route";
 
 import { AppContext } from "index";
 import { KnownErrorSchema, MemberSettingsSchema } from "schema";
@@ -16,7 +16,7 @@ import {
   UnprocessableEntityError,
 } from "@utils/error";
 
-export default class UpdateMyMemberSettings extends OpenAPIRoute {
+export default class UpdateMyMemberSettings extends AppRoute {
   schema = {
     tags: ["學生會員"],
     summary: "更新目前會員的設定",
