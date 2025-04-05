@@ -47,6 +47,11 @@ function registerSecurity(openapi: AppRouter): void {
     scheme: "bearer",
     description: "Bearer token for users with 'StudentMember' role",
   });
+  openapi.registry.registerComponent("securitySchemes", "staffAuth", {
+    type: "http",
+    scheme: "bearer",
+    description: "Bearer token for users with 'UnionStaff' role",
+  });
 }
 
 function addDocumentUI(app: Hono<AppOptions>): void {
@@ -72,14 +77,12 @@ function addDocumentUI(app: Hono<AppOptions>): void {
 </svg>`;
 
   app.get("/docs", () => {
-    // eslint-disable-next-line no-undef
     return new Response(html, { headers: { "Content-Type": "text/html" }, status: 200 });
   });
   app.get("/", (ctx) => {
     return ctx.redirect("/docs");
   });
   app.get("/favicon.svg", () => {
-    // eslint-disable-next-line no-undef
     return new Response(favicon, { headers: { "Content-Type": "image/svg+xml" }, status: 200 });
   });
 }

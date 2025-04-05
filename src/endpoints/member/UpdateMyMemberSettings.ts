@@ -75,7 +75,9 @@ export default class UpdateMyMemberSettings extends AppRoute {
   async handle(ctx: AppContext) {
     const { body } = await this.getValidatedData<typeof this.schema>();
 
-    const { user } = await AuthService.validate({ roles: [UserRole.StudentMember] });
+    const { user } = await AuthService.validate({
+      permission_checker: [UserRole.StudentMember],
+    });
 
     const { nickname, e_invoice_barcode } = body;
     const updated_content: typeof body = {};

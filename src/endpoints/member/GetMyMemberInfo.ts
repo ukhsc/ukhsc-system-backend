@@ -55,7 +55,7 @@ export class GetMyMemberInfo extends AppRoute {
 
   async handle(ctx: AppContext) {
     const auth_payload = await AuthService.validate({
-      roles: [UserRole.StudentMember],
+      permission_checker: [UserRole.StudentMember],
     });
 
     const { db, logger } = ctx.var;

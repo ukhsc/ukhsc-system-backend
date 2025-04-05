@@ -9,6 +9,9 @@ import { GrantFlows } from "@services/federated_account";
 
 export * from "../prisma/schema/generated/zod";
 
+import oas31 from "openapi3-ts/oas31";
+export type SecurityRequirementObject = oas31.SecurityRequirementObject;
+
 // TODO: fix the workaround for zod-to-openapi
 // See Also: https://github.com/cloudflare/chanfana/issues/167
 extendZodWithOpenApi(fixedZod);

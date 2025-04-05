@@ -37,6 +37,7 @@
     "install": "^0.13.0",
     "jsonwebtoken": "^9.0.2",
     "npm": "^11.0.0",
+    "openapi3-ts": "^4.4.0",
     "pino": "^9.6.0",
     "ua-parser-js": "^2.0.0",
     "vitest-mock-extended": "^2.0.2",
