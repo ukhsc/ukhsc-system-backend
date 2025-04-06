@@ -186,7 +186,7 @@ export class AuthService {
 
     const user = await db.user.findUnique({
       where: { id: user_id },
-      include: { member: true },
+      include: { member: true, staff: true },
     });
     if (!user) {
       throw new InternalError("User not found when getting roles.", { user_id });
@@ -194,6 +194,9 @@ export class AuthService {
 
     if (user.member) {
       roles.push(UserRole.StudentMember);
+    }
+    if (user.staff) {
+      roles.push(UserRole.UnionStaff);
     }
     // TODO: Add more roles here
 
