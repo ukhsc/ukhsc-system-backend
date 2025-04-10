@@ -27,9 +27,7 @@ export interface PermissionCheckContext {
   staff_permissions?: StaffPermission[];
 }
 
-export type PermissionCheckFunction = (
-  context: PermissionCheckContext,
-) => Promise<boolean> | boolean;
+export type PermissionCheckFunction = (context: PermissionCheckContext) => Promise<boolean>;
 
 export type PermissionChecker = UserRole[] | PermissionCheckFunction;
 
