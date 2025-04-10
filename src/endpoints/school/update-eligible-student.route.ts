@@ -19,7 +19,7 @@ export class UpdateEligibleStudents extends AppRoute {
             schema: z.object({
               items: z
                 .array(z.string().nonempty().max(30))
-                .max(10000)
+                .max(5000)
                 .describe("要替換的會員資格限制之學號名單"),
             }),
           },
