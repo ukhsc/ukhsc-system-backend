@@ -34,19 +34,22 @@ export class AddEligibleStudent extends AppRoute {
 
   async handle(ctx: AppContext) {
     const data = await this.getValidatedData<typeof this.schema>();
-    const school = await findSchoolAndValidate(ctx, data.params.id);
+    const school = await findSchoolAndValidate(ctx, data.params.id, { eligible_student_ids: true });
 
     const { db } = ctx.var;
-    await db.partnerSchool.update({
-      where: {
-        id: school.id,
-      },
-      data: {
-        eligible_student_ids: {
-          push: data.body.item,
+    const is_duplicate = school.eligible_student_ids.includes(data.body.item);
+    if (!is_duplicate) {
+      await db.partnerSchool.update({
+        where: {
+          id: school.id,
         },
-      },
-    });
+        data: {
+          eligible_student_ids: {
+            push: data.body.item,
+          },
+        },
+      });
+    }
 
     return ctx.body(null, 204);
   }
