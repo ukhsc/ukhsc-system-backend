@@ -58,7 +58,7 @@ export class AuthService {
       user: User;
     }
   > {
-    const token = options?.custom_token ?? this.getBearerToken();
+    const token = options?.custom_token ?? AuthService.getBearerToken();
     if (!token) {
       throw new UnauthorizedError(KnownErrorCode.NO_TOKEN);
     }
@@ -67,7 +67,7 @@ export class AuthService {
     const { db, logger } = ctx.var;
     try {
       const payload = jwt.verify(token, ctx.env.JWT_SECRET);
-      if (!this.isTokenPayload(payload)) {
+      if (!AuthService.isTokenPayload(payload)) {
         throw new UnauthorizedError(KnownErrorCode.INVALID_TOKEN);
       }
 
@@ -90,7 +90,7 @@ export class AuthService {
           has_permission = options.permission_checker.some((role) => user_roles.includes(role));
         } else {
           // Dynamic permission check
-          const staff_permissions = await this.getUserStaffPermissions(user.id, user_roles);
+          const staff_permissions = await AuthService.getUserStaffPermissions(user.id, user_roles);
           const permissionContext: PermissionCheckContext = {
             user_id: user.id,
             roles: user_roles,
