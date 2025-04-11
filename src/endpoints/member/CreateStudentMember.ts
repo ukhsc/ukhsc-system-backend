@@ -12,7 +12,7 @@ import { AppContext } from "index";
 import { z } from "zod";
 import { DeviceManagementService } from "@services/device_management";
 import { simpleHash } from "@utils/hash";
-import { FederateOAuthSchema, KnownErrorSchema, TokenResponseSchema } from "schema";
+import { FederateOAuthSchema, KnownErrorSchema, PartnerSchool, TokenResponseSchema } from "schema";
 
 export class CreateStudentMember extends AppRoute {
   schema = {
@@ -93,12 +93,8 @@ export class CreateStudentMember extends AppRoute {
       );
     }
 
-    const eligibleStudentIds = school_attended.eligible_student_ids;
     const student_id = this.captureStudentId(info.email, account_config);
-    const is_eligible = school_attended.enable_eligibility_check
-      ? eligibleStudentIds?.includes(student_id)
-      : true;
-    if (!is_eligible) {
+    if (!this.isEligibleStudent(school_attended, student_id)) {
       throw new ForbiddenError(KnownErrorCode.STUDENT_NOT_ELIGIBLE);
     }
 
@@ -177,5 +173,10 @@ export class CreateStudentMember extends AppRoute {
     }
 
     return match[1]; // The first capturing group is the student ID
+  }
+
+  private isEligibleStudent(school: PartnerSchool, id: string): boolean {
+    if (!school.enable_eligibility_check) return true;
+    return school.eligible_student_ids.includes(id);
   }
 }
