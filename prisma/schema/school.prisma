@@ -7,7 +7,8 @@ model PartnerSchool {
   eligible_student_ids     String[]             @default([]) @db.Text
   google_account_config    SchoolAccountConfig?
 
-  students StudentMember[]
+  students        StudentMember[]
+  representatives SchoolRepresentative[]
 }
 
 // Google Workspace account configuration for a school
@@ -21,4 +22,16 @@ model SchoolAccountConfig {
 
   school_id Int           @unique
   school    PartnerSchool @relation(fields: [school_id], references: [id])
+}
+
+model SchoolRepresentative {
+  user_id Int  @unique
+  user    User @relation(fields: [user_id], references: [id])
+
+  school_id Int
+  school    PartnerSchool @relation(fields: [school_id], references: [id])
+  job_title String?
+
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
 }

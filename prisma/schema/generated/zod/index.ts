@@ -28,6 +28,8 @@ export const PartnerSchoolScalarFieldEnumSchema = z.enum(['id','short_name','ful
 
 export const SchoolAccountConfigScalarFieldEnumSchema = z.enum(['username_format','student_username_format','password_format','domain_name','school_id']);
 
+export const SchoolRepresentativeScalarFieldEnumSchema = z.enum(['user_id','school_id','job_title','created_at','updated_at']);
+
 export const UserScalarFieldEnumSchema = z.enum(['id','primary_email','created_at','updated_at']);
 
 export const UserDeviceScalarFieldEnumSchema = z.enum(['id','user_id','name','type','operating_system','created_at','updated_at']);
@@ -200,6 +202,20 @@ export const SchoolAccountConfigSchema = z.object({
 })
 
 export type SchoolAccountConfig = z.infer<typeof SchoolAccountConfigSchema>
+
+/////////////////////////////////////////
+// SCHOOL REPRESENTATIVE SCHEMA
+/////////////////////////////////////////
+
+export const SchoolRepresentativeSchema = z.object({
+  user_id: z.number().int(),
+  school_id: z.number().int(),
+  job_title: z.string().nullable(),
+  created_at: z.coerce.date(),
+  updated_at: z.coerce.date(),
+})
+
+export type SchoolRepresentative = z.infer<typeof SchoolRepresentativeSchema>
 
 /////////////////////////////////////////
 // USER SCHEMA

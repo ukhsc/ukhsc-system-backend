@@ -15,14 +15,13 @@ export function registerSchoolRoute(): AppRouter {
   const router = createRouter();
   router.get("/", ListPartnerSchool);
 
-  const eligibleStudentsRouter = createRouter();
-  eligibleStudentsRouter.post("/", AddEligibleStudent);
-  eligibleStudentsRouter.put("/", UpdateEligibleStudents);
-  eligibleStudentsRouter.get("/statistics", GetEligibleStudentsStatistics);
+  const eligibilityRouter = createRouter();
+  eligibilityRouter.post("/", AddEligibleStudent);
+  eligibilityRouter.put("/", UpdateEligibleStudents);
+  eligibilityRouter.get("/statistics", GetEligibleStudentsStatistics);
+  eligibilityRouter.patch("/config", PatchEligibleStudentConfig);
 
-  eligibleStudentsRouter.patch("/config", PatchEligibleStudentConfig);
-
-  router.route("/:id/eligible-students", eligibleStudentsRouter);
+  router.route("/:id/eligible-students", eligibilityRouter);
 
   return router;
 }
@@ -35,18 +34,16 @@ export async function canManageEligibility(
   const { roles, staff_permissions } = context;
 
   if (roles.includes(UserRole.SchoolRepresentative)) {
-    // TODO: determine directly from the school representative's affiliated school instead of through the student member from user ID.
     const representative_school = await db.partnerSchool.findFirst({
-      where: { students: { some: { user_id: context.user_id } } },
+      where: { representatives: { some: { user_id: context.user_id } } },
       select: { id: true },
     });
-    return representative_school?.id === target_school_id;
+    if (representative_school?.id === target_school_id) {
+      return true;
+    }
   }
 
-  if (
-    roles.includes(UserRole.UnionStaff) &&
-    staff_permissions?.includes(StaffPermission.MembershipEligibility)
-  ) {
+  if (staff_permissions?.includes(StaffPermission.MembershipEligibility)) {
     return true;
   }
 
