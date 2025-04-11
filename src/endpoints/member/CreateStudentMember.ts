@@ -1,15 +1,20 @@
 import { FederatedProvider, SchoolAccountConfig } from "@prisma/client";
 import { AuthService, UserRole } from "@services/auth";
 import { FederatedAccountService } from "@services/federated_account";
-import { InternalError, KnownErrorCode, UnprocessableEntityError } from "@utils/error";
-import { OpenAPIRoute } from "chanfana";
+import {
+  ForbiddenError,
+  InternalError,
+  KnownErrorCode,
+  UnprocessableEntityError,
+} from "@utils/error";
+import { AppRoute } from "../route";
 import { AppContext } from "index";
 import { z } from "zod";
 import { DeviceManagementService } from "@services/device_management";
 import { simpleHash } from "@utils/hash";
-import { FederateOAuthSchema, KnownErrorSchema, TokenResponseSchema } from "schema";
+import { FederateOAuthSchema, KnownErrorSchema, PartnerSchool, TokenResponseSchema } from "schema";
 
-export class CreateStudentMember extends OpenAPIRoute {
+export class CreateStudentMember extends AppRoute {
   schema = {
     tags: ["學生會員"],
     summary: "註冊並啟用新的學生會員帳號",
@@ -87,33 +92,52 @@ export class CreateStudentMember extends OpenAPIRoute {
         { school_id: school_attended.id },
       );
     }
+
     const student_id = this.captureStudentId(info.email, account_config);
+    if (!this.isEligibleStudent(school_attended, student_id)) {
+      throw new ForbiddenError(KnownErrorCode.STUDENT_NOT_ELIGIBLE);
+    }
+
     const system_config = await db.systemConfigurationUpdates.findFirst({
       orderBy: {
         id: "desc",
       },
     });
+    if (!system_config) {
+      throw new InternalError("System configuration is not set up.");
+    }
 
     const user = await db.user.upsert({
       where: { primary_email: info.email },
-      update: {},
       create: {
         primary_email: info.email,
-        member: {
-          create: {
-            school_attended: {
-              connect: {
-                id: school_attended.id,
-              },
-            },
-            student_id_hash: simpleHash(student_id),
-            activated_at: new Date(),
-            expired_at: system_config?.contract_end_date,
-          },
-        },
       },
+      update: {},
     });
     await federated_service.linkAccount(user, info);
+
+    const student_data = {
+      school_attended: {
+        connect: {
+          id: school_attended.id,
+        },
+      },
+      student_id_hash: simpleHash(student_id),
+    };
+    await db.studentMember.upsert({
+      where: { user_id: user.id },
+      create: {
+        user: {
+          connect: {
+            id: user.id,
+          },
+        },
+        ...student_data,
+        activated_at: new Date(),
+        expired_at: system_config.contract_end_date,
+      },
+      update: student_data,
+    });
 
     const device_service = new DeviceManagementService(ctx);
     const device = await device_service.registerDevice(user.id);
@@ -149,5 +173,10 @@ export class CreateStudentMember extends OpenAPIRoute {
     }
 
     return match[1]; // The first capturing group is the student ID
+  }
+
+  private isEligibleStudent(school: PartnerSchool, id: string): boolean {
+    if (!school.enable_eligibility_check) return true;
+    return school.eligible_student_ids.includes(id);
   }
 }

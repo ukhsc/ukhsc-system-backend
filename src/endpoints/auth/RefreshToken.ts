@@ -1,11 +1,11 @@
 import { AuthService, OpenAPIResponseForbidden, OpenAPIResponseUnauthorized } from "@services/auth";
 import { DeviceManagementService } from "@services/device_management";
 import { ForbiddenError, KnownErrorCode } from "@utils/error";
-import { OpenAPIRoute } from "chanfana";
+import { AppRoute } from "../route";
 import { AppContext } from "index";
 import { z } from "zod";
 
-export class RefreshToken extends OpenAPIRoute {
+export class RefreshToken extends AppRoute {
   schema = {
     tags: ["身份驗證"],
     summary: "更新存取權杖",

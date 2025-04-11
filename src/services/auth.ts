@@ -1,6 +1,6 @@
 import jwt from "jsonwebtoken";
 import { ForbiddenError, InternalError, KnownErrorCode, UnauthorizedError } from "@utils/error";
-import { User } from "@prisma/client";
+import { StaffPermission, User } from "@prisma/client";
 import { getCtx } from "index";
 import { KnownErrorSchema } from "schema";
 
@@ -21,13 +21,42 @@ export type TokenRawPayload = TokenPayload & {
   exp: number;
 };
 
+export interface PermissionCheckContext {
+  user_id: number;
+  roles: UserRole[];
+  staff_permissions?: StaffPermission[];
+}
+
+export type PermissionCheckFunction = (context: PermissionCheckContext) => Promise<boolean>;
+
+export type PermissionChecker = UserRole[] | PermissionCheckFunction;
+
+export interface ValidateOptions {
+  custom_token?: string;
+  permission_checker?: PermissionChecker;
+}
+
 export class AuthService {
-  static async validate(options?: { custom_token?: string; roles?: UserRole[] }): Promise<
+  /**
+   * Validates a user's token and checks their permissions
+   *
+   * @param options - Validation options
+   * @returns The validated token payload with user information
+   *
+   * @remarks
+   * When using role-based permission checking (UserRole[]), access is granted if the user
+   * has ANY of the specified roles. This is useful for simple permission scenarios where
+   * multiple roles can perform the same action.
+   *
+   * Example: `permission_checker: [UserRole.StudentMember, UserRole.UnionStaff]` will grant
+   * access if the user is either a student member OR union staff.
+   */
+  static async validate(options?: ValidateOptions): Promise<
     TokenRawPayload & {
       user: User;
     }
   > {
-    const token = options?.custom_token ?? this.getBearerToken();
+    const token = options?.custom_token ?? AuthService.getBearerToken();
     if (!token) {
       throw new UnauthorizedError(KnownErrorCode.NO_TOKEN);
     }
@@ -36,7 +65,7 @@ export class AuthService {
     const { db, logger } = ctx.var;
     try {
       const payload = jwt.verify(token, ctx.env.JWT_SECRET);
-      if (!this.isTokenPayload(payload)) {
+      if (!AuthService.isTokenPayload(payload)) {
         throw new UnauthorizedError(KnownErrorCode.INVALID_TOKEN);
       }
 
@@ -49,11 +78,29 @@ export class AuthService {
         throw new UnauthorizedError(KnownErrorCode.BANNED_USER);
       }
 
-      const required_roles = options?.roles ?? [];
       const user_roles = await AuthService.getUserRoles(user.id);
-      const hasPermission = required_roles.every((role) => user_roles.includes(role));
-      if (!hasPermission) {
-        throw new ForbiddenError(KnownErrorCode.INSUFFICIENT_PERMISSIONS);
+
+      if (options?.permission_checker) {
+        let has_permission: boolean;
+
+        // Simple role-based check
+        if (Array.isArray(options.permission_checker)) {
+          has_permission = options.permission_checker.some((role) => user_roles.includes(role));
+        } else {
+          // Dynamic permission check
+          const staff_permissions = await AuthService.getUserStaffPermissions(user.id, user_roles);
+          const permissionContext: PermissionCheckContext = {
+            user_id: user.id,
+            roles: user_roles,
+            staff_permissions,
+          };
+
+          has_permission = await options.permission_checker(permissionContext);
+        }
+
+        if (!has_permission) {
+          throw new ForbiddenError(KnownErrorCode.INSUFFICIENT_PERMISSIONS);
+        }
       }
 
       return {
@@ -65,6 +112,24 @@ export class AuthService {
       logger.assign({ token, error }).info("Failed to validate token.");
       throw new UnauthorizedError(KnownErrorCode.INVALID_TOKEN);
     }
+  }
+
+  private static async getUserStaffPermissions(
+    user_id: number,
+    roles: UserRole[],
+  ): Promise<StaffPermission[] | undefined> {
+    // Skip fetching
+    if (!roles.includes(UserRole.UnionStaff)) {
+      return undefined;
+    }
+
+    const { db } = getCtx().var;
+    const staffData = await db.unionStaff.findUnique({
+      where: { user_id },
+      select: { permissions: true },
+    });
+
+    return staffData?.permissions;
   }
 
   private static getBearerToken(): string | null {
@@ -119,7 +184,7 @@ export class AuthService {
 
     const user = await db.user.findUnique({
       where: { id: user_id },
-      include: { member: true },
+      include: { member: true, staff: true, representative: true },
     });
     if (!user) {
       throw new InternalError("User not found when getting roles.", { user_id });
@@ -128,7 +193,12 @@ export class AuthService {
     if (user.member) {
       roles.push(UserRole.StudentMember);
     }
-    // TODO: Add more roles here
+    if (user.staff) {
+      roles.push(UserRole.UnionStaff);
+    }
+    if (user.representative) {
+      roles.push(UserRole.SchoolRepresentative);
+    }
 
     return roles;
   }

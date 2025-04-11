@@ -1,9 +1,9 @@
-import { OpenAPIRoute } from "chanfana";
+import { AppRoute } from "../route";
 import { z } from "zod";
 import { PartnerSchoolSchema, SchoolAccountConfigSchema } from "schema";
 import { AppContext } from "index";
 
-export class ListPartnerSchool extends OpenAPIRoute {
+export class ListPartnerSchool extends AppRoute {
   schema = {
     tags: ["合作學校"],
     summary: "列出所有本屆次聯盟的合作學校",

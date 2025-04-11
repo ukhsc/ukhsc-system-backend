@@ -7,7 +7,6 @@ ENV GIT_COMMIT=${GIT_COMMIT}
 WORKDIR /app
 
 COPY package.json pnpm-lock.yaml ./
-RUN npm install -g corepack@latest
 RUN corepack enable && corepack prepare pnpm@latest --activate
 RUN pnpm install --frozen-lockfile
 
@@ -23,7 +22,6 @@ FROM node:22
 WORKDIR /app
 COPY --from=builder /app /app
 
-RUN npm install -g corepack@latest
 RUN corepack enable && corepack prepare pnpm@latest --activate
 
 # Add EntryPoint script

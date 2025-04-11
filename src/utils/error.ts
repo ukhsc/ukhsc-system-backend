@@ -53,6 +53,7 @@ const createHttpError = (status: ContentfulStatusCode, name: string) => {
 export const BadRequestError = createHttpError(400, "BadRequestError");
 export const UnauthorizedError = createHttpError(401, "UnauthorizedError");
 export const ForbiddenError = createHttpError(403, "ForbiddenError");
+export const NotFoundError = createHttpError(404, "NotFoundError");
 export const ConflictError = createHttpError(409, "ConflictError");
 export const UnprocessableEntityError = createHttpError(422, "UnprocessableEntityError");
 
@@ -119,6 +120,7 @@ export enum KnownErrorCode {
   INVALID_SCHOOL_EMAIL = "U4000",
   INVALID_INVOICE_BARCODE = "U4001",
   INVALID_NICKNAME = "U4002",
+  STUDENT_NOT_ELIGIBLE = "U4003",
 
   // 5000 ~ 5999: Partner shops management
 

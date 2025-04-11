@@ -1,13 +1,13 @@
 import { KnownErrorSchema, FederatedProviderSchema, FederateOAuthSchema, z } from "schema";
 import { AppContext } from "index";
-import { OpenAPIRoute } from "chanfana";
+import { AppRoute } from "../route";
 import { AuthService, OpenAPIResponseForbidden, OpenAPIResponseUnauthorized } from "@services/auth";
 import { FederatedAccountService } from "@services/federated_account";
 import { FederatedProvider } from "@prisma/client";
 import { BadRequestError, KnownErrorCode } from "@utils/error";
 import { simpleHash } from "@utils/hash";
 
-export class LinkFederatedAccount extends OpenAPIRoute {
+export class LinkFederatedAccount extends AppRoute {
   schema = {
     tags: ["身份驗證"],
     summary: "綁定社群帳號",

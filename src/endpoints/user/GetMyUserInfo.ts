@@ -4,11 +4,11 @@ import {
   OpenAPIResponseUnauthorized,
   UserRole,
 } from "@services/auth";
-import { OpenAPIRoute } from "chanfana";
+import { AppRoute } from "../route";
 import { AppContext } from "index";
 import { UserSchema, z } from "schema";
 
-export class GetMyUserInfo extends OpenAPIRoute {
+export class GetMyUserInfo extends AppRoute {
   schema = {
     tags: ["使用者"],
     summary: "依據 Access Token 取得目前使用者的資訊",

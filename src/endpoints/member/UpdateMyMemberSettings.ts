@@ -1,4 +1,4 @@
-import { OpenAPIRoute } from "chanfana";
+import { AppRoute } from "../route";
 
 import { AppContext } from "index";
 import { KnownErrorSchema, MemberSettingsSchema } from "schema";
@@ -16,7 +16,7 @@ import {
   UnprocessableEntityError,
 } from "@utils/error";
 
-export default class UpdateMyMemberSettings extends OpenAPIRoute {
+export default class UpdateMyMemberSettings extends AppRoute {
   schema = {
     tags: ["學生會員"],
     summary: "更新目前會員的設定",
@@ -75,7 +75,9 @@ export default class UpdateMyMemberSettings extends OpenAPIRoute {
   async handle(ctx: AppContext) {
     const { body } = await this.getValidatedData<typeof this.schema>();
 
-    const { user } = await AuthService.validate({ roles: [UserRole.StudentMember] });
+    const { user } = await AuthService.validate({
+      permission_checker: [UserRole.StudentMember],
+    });
 
     const { nickname, e_invoice_barcode } = body;
     const updated_content: typeof body = {};
