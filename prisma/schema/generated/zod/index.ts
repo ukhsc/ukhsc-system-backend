@@ -77,7 +77,7 @@ export const UnionStaffSchema = z.object({
   permissions: StaffPermissionSchema.array(),
   user_id: z.number().int(),
   real_name: z.string(),
-  department: z.string(),
+  department: z.string().nullable(),
   job_title: z.string(),
   created_at: z.coerce.date(),
   updated_at: z.coerce.date(),

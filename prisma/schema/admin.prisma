@@ -5,7 +5,7 @@ model UnionStaff {
   role        UnionStaffRole    @default(Staff)
   permissions StaffPermission[]
   real_name   String            @db.Text
-  department  String            @db.Text
+  department  String?           @db.Text
   job_title   String            @db.Text
 
   created_at DateTime @default(now())
