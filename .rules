@@ -1,0 +1,217 @@
+# UKHSC System Backend Rules
+
+## Project Structure
+- The project follows a modular structure with endpoints, services, and core components.
+- All new endpoint handlers must be in the `src/endpoints/` directory and follow the class-based pattern.
+- Endpoint file naming should follow kebab-case with `.route.ts` suffix (e.g., `add-eligible-student.route.ts`).
+- Endpoint classes must extend `AppRoute` and implement the required schema and handle method.
+- Common utilities should be placed in `src/utils/`.
+- Business logic should be placed in the appropriate service in `src/services/`.
+- Core functionality that underpins the system belongs in `src/core/`.
+- Module-specific helpers can be placed in an index.ts file in the relevant directory.
+
+## Naming Conventions
+- **Classes**: Use PascalCase (e.g., `CreateStudentMember`, `AddEligibleStudent`).
+- **Functions/Methods**: Use camelCase (e.g., `getValidatedData`, `handle`).
+- **Variables**: Use snake_case (e.g., `auth_payload`, `user_id`, `student_data`).
+- **Constants**: Use UPPER_SNAKE_CASE for true constants (e.g., `JWT_SECRET`).
+- **Interfaces/Types**: Use PascalCase (e.g., `UserSchema`, `PartnerSchool`).
+- **Files**: Use kebab-case for files (e.g., `add-eligible-student.route.ts`).
+- **Directories**: Use kebab-case for directories (e.g., `src/endpoints/member/`).
+- **Enum Types**: PascalCase (e.g., `UserRole`, `FederatedProvider`)
+- **Enum Values**: PascalCase (e.g., `FederatedProvider.GoogleWorkspace`)
+- **Error Codes**: UPPER_SNAKE_CASE (e.g., `KnownErrorCode.INVALID_TOKEN`)
+- **Database Models**: PascalCase singular nouns (e.g., `User`, `StudentMember`)
+- **Service Classes**: PascalCase with 'Service' suffix (e.g., `AuthService`)
+
+## Endpoint Class Structure
+- Class names should be descriptive of the endpoint functionality and use PascalCase (e.g., `GetMyMemberInfo`, `CreateStudentMember`).
+- All endpoint classes must extend `AppRoute` and define:
+  - `schema`: OpenAPI schema definition using Zod
+  - `handle(ctx: AppContext)`: async method to handle the request
+- Use `this.getValidatedData<typeof this.schema>()` to validate and access request data.
+
+### Standard Endpoint Pattern:
+```typescript
+export class EndpointName extends AppRoute {
+  schema = {
+    tags: ["合作學校"], // Category in Traditional Chinese
+    summary: "端點功能的中文描述", // Summary in Traditional Chinese
+    security: [{ memberAuth: [] }, { staffAuth: [] }], // Define required authentication
+    request: {
+      params: z.object({
+        id: z.number().describe("參數的中文描述"),
+      }),
+      body: {
+        content: {
+          "application/json": {
+            schema: z.object({
+              // Request body schema
+            }),
+          },
+        },
+      },
+    },
+    responses: {
+      200: {
+        description: "成功回應的中文描述",
+        content: {
+          "application/json": {
+            schema: ResponseSchema,
+          },
+        },
+      },
+      ...OpenAPIResponseUnauthorized,
+      ...OpenAPIResponseForbidden,
+    },
+  };
+
+  async handle(ctx: AppContext) {
+    // 1. Validate data
+    const data = await this.getValidatedData<typeof this.schema>();
+    
+    // 2. Authentication check if needed
+    const auth_payload = await AuthService.validate({
+      permission_checker: [UserRole.StudentMember],
+    });
+    
+    // 3. Business logic with database access
+    const { db } = ctx.var;
+    
+    // 4. Return response
+    return ctx.json({ result: "data" }, 200);
+  }
+}
+```
+
+## Schema Definition Standards
+- Use Zod for all schema definitions.
+- Import `z` from "schema" (not directly from the zod package).
+- Define comprehensive schemas with proper descriptions.
+- Use `describe()` to document schema fields with Traditional Chinese descriptions for better API documentation.
+- Define security requirements using `security: [{ memberAuth: [] }, { staffAuth: [] }]` pattern.
+- Use standard response schemas like `OpenAPIResponseUnauthorized` and `OpenAPIResponseForbidden`.
+- Document error responses with appropriate examples using `KnownErrorSchema`.
+
+## TypeScript Standards
+- Always use proper TypeScript types. Avoid using `any` unless absolutely necessary.
+- Use type imports from path aliases (e.g., `@services/auth`, `@utils/error`).
+- Follow the import pattern: third-party libraries first, then internal imports.
+- Define proper return types for all functions.
+- Use type parameters with generics when appropriate.
+
+## API Design
+- Define OpenAPI tags in Traditional Chinese to categorize endpoints (e.g., "學生會員", "合作學校").
+- Provide summary in Traditional Chinese for all endpoints.
+- Define comprehensive response schemas with examples.
+- Use appropriate HTTP status codes:
+  - 200: Successful GET requests
+  - 201: Successful resource creation
+  - 204: Successful requests with no content to return
+  - 4xx: Client errors with appropriate codes
+- Return structured error responses with code and message.
+
+## Database / Prisma
+- Access Prisma client via `ctx.var.db`.
+- Use Prisma's type-safe query methods (e.g., `findUnique`, `update`, `upsert`).
+- Use proper relation queries with `connect` for referencing related entities.
+- Use array operations like `push` for updating array fields.
+- Use `include` to fetch related data and `omit` to exclude sensitive fields.
+- Handle not-found cases appropriately with custom errors.
+
+## Error Handling
+- Use custom error classes from `@utils/error` (e.g., `InternalError`, `ForbiddenError`, `UnprocessableEntityError`).
+- Use `KnownErrorCode` enum for standardized error codes.
+- Include relevant context information with errors.
+- Provide user-friendly error messages in Traditional Chinese for client-facing errors.
+- Log errors with appropriate context using the logger from `ctx.var.logger`.
+
+### Error Types Decision Guidelines:
+- `UnauthorizedError` → when user is not authenticated
+- `ForbiddenError` → when user doesn't have permission
+- `UnprocessableEntityError` → when request data is invalid
+- `NotFoundError` → when requested resource doesn't exist
+
+### Standard Error Pattern:
+```typescript
+if (!condition) {
+  throw new UnprocessableEntityError(
+    KnownErrorCode.SPECIFIC_ERROR_CODE,
+    "Human-readable debug message in English",
+    { optional_context: value }
+  );
+}
+```
+
+## Authentication & Authorization
+- Use `AuthService` for token generation and validation.
+- Define security requirements in the schema.
+- Use `UserRole` enum for role-based access control.
+- Use pattern `auth_payload = await AuthService.validate({ permission_checker: [UserRole.StudentMember] })`.
+- Avoid exposing sensitive information in responses.
+- Hash sensitive data when logging with `simpleHash` function.
+
+### Authentication Requirements Decision Guidelines:
+- `[UserRole.StudentMember]` → for student-only endpoints
+- `[UserRole.UnionStaff]` → for admin endpoints
+- `[UserRole.SchoolRepresentative]` → for school management endpoints
+- For public endpoints, do not include `security` in schema and do not call `AuthService.validate()`
+
+## Logging
+- Access the logger from `ctx.var.logger`.
+- Use `.assign()` to add context to log messages.
+- Use appropriate log levels (debug, info, warn, error).
+- Always hash or obfuscate sensitive information before logging.
+- Include relevant request context in error logs.
+
+## Response Handling
+- Use `ctx.json(data, statusCode)` for JSON responses.
+- Use `ctx.body(null, 204)` for empty successful responses.
+- Ensure response data structures match the defined schemas.
+- Include all required fields as defined in the response schema.
+
+## Business Logic Implementation
+- Keep endpoint handlers focused on request/response handling.
+- Extract reusable validation logic to helper functions.
+- Use services for implementing business logic.
+- Use private methods in the class for endpoint-specific helper functions.
+- Follow single responsibility principle - each class should handle one endpoint.
+
+## Security
+- Validate all user inputs using Zod schemas.
+- Use proper authorization checks with `AuthService`.
+- Hash sensitive data like student IDs using `simpleHash`.
+- Avoid exposing internal errors to clients.
+- Use secure defaults and explicit permission checks.
+
+## Internationalization
+- Use Traditional Chinese (正體中文) for user-facing text including API descriptions and summaries.
+- Use English for code, variables, and internal error messages.
+- Document APIs in Traditional Chinese to improve accessibility for the target users.
+
+## Documentation
+- Keep schema definitions up-to-date and descriptive.
+- Use examples in response schemas to illustrate expected formats.
+- Document error cases with examples.
+- Use descriptive summaries for all endpoints.
+
+## Technology Stack
+- TypeScript/Node.js
+- Hono (web framework)
+- Prisma (PostgreSQL ORM)
+- Zod (validation)
+- Chanfana (OpenAPI)
+- JWT authentication
+- Sentry/Pino (error tracking/logging)
+- Vitest (testing)
+
+## Key Domain Concepts
+- **Federated Authentication:** OAuth system with Google/Google Workspace
+- **Student Membership:** Students linked to partner schools with membership verification
+- **Partner Schools:** Educational institutions in the high school student union alliance
+- **Device Management:** User sessions tracking
+- **Union Staff:** Administrative staff with different roles and permissions
+- **School Representatives:** Users representing partner schools
+- **Partner Shops:** Businesses offering student discounts
+- **Student Benefits:** Discounts and offers for students
+- **Error Codes:** Standardized error codes by category
