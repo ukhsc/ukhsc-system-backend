@@ -6,6 +6,8 @@ source $(dirname "$0")/cleanup.sh
 
 LOG_DIR="$HOME/ukhsc-system-backend/logs"
 mkdir -p "$LOG_DIR"
+RUNTIME_SNIPPET_DIR="$HOME/nginx-runtime"
+mkdir -p "$RUNTIME_SNIPPET_DIR"
 
 
 echo "Deploying $1 to ${TARGET_ENV:-unknown}..."
@@ -74,39 +76,27 @@ if ! check_health $TARGET_PORT $TARGET_ENV; then
 fi
 
 echo "Updating Nginx active environment snippet for $TARGET_ENV..."
-ENV_SNIPPET="/etc/nginx/snippets/ukhsc-active-env.conf"
-mkdir -p /etc/nginx/snippets
+ENV_SNIPPET="$HOME/runtime/active-env.conf"
+mkdir -p "$HOME/runtime"
 
-# Validate / normalize TARGET_ENV
+# Validate TARGET_ENV
 case "$TARGET_ENV" in
   green|blue) ;;
-  *)
-    echo "[warn] invalid TARGET_ENV '$TARGET_ENV', forcing green" >&2
-    TARGET_ENV="green"
-    ;;
+  *) TARGET_ENV="green" ;;
 esac
-if [ -z "$TARGET_ENV" ]; then
-  echo "[error] TARGET_ENV empty; aborting snippet update" >&2
-  exit 1
-fi
 
-if [ ! -f "$ENV_SNIPPET" ]; then
-  echo "Initializing snippet (previous env: $CURRENT_ENV)"
-  printf 'set $ukhsc_active_env %s;\n' "$CURRENT_ENV" > "$ENV_SNIPPET"
-fi
-# Atomic update
-TMP_SNIPPET="$(mktemp)"
-printf 'set $ukhsc_active_env %s;\n' "$TARGET_ENV" > "$TMP_SNIPPET"
-cp -f "$ENV_SNIPPET" "${ENV_SNIPPET}.bak" 2>/dev/null || true
-mv "$TMP_SNIPPET" "$ENV_SNIPPET"
-if nginx -t >/dev/null 2>&1; then
-  systemctl reload nginx
+# Initialize snippet if missing
+[ -f "$ENV_SNIPPET" ] || printf 'set $ukhsc_active_env green;\n' > "$ENV_SNIPPET"
+
+# Write active environment
+printf 'set $ukhsc_active_env %s;\n' "$TARGET_ENV" > "$ENV_SNIPPET"
+
+# Reload nginx (requires sudo)
+if sudo nginx -t >/dev/null 2>&1; then
+  sudo systemctl reload nginx
   echo "Nginx reloaded. Active environment -> $TARGET_ENV"
 else
-  echo "nginx config test failed. Restoring previous snippet." >&2
-  if [ -f "${ENV_SNIPPET}.bak" ]; then
-    cp -f "${ENV_SNIPPET}.bak" "$ENV_SNIPPET"
-  fi
+  echo "nginx config test failed" >&2
   exit 1
 fi
 
