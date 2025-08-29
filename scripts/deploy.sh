@@ -4,8 +4,9 @@ source $(dirname "$0")/environment.sh
 source $(dirname "$0")/health_check.sh
 source $(dirname "$0")/cleanup.sh
 
-LOG_DIR="/var/log/ukhsc-system-backend"
-mkdir -p $LOG_DIR
+LOG_DIR="$HOME/ukhsc-system-backend/logs"
+mkdir -p "$LOG_DIR"
+echo "Using log directory: $LOG_DIR"
 
 echo "Deploying $1 to $TARGET_ENV..."
 determine_environment

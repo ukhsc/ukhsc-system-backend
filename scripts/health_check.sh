@@ -24,10 +24,11 @@ check_health() {
         echo "Deployment failed: Service did not pass $REQUIRED_SUCCESSES consecutive health checks within 60 seconds"
         docker stop "ukhsc-system-backend-api-${target_env}" || true
         echo "Fetching logs from the failed container..."
-        docker logs "ukhsc-system-backend-api-${target_env}" > "${LOG_DIR}/deployment_failed_logs.txt"
+        mkdir -p "$LOG_DIR"
+        local failed_log="$LOG_DIR/deployment_failed_logs.txt"
+        docker logs "ukhsc-system-backend-api-${target_env}" > "$failed_log" 2>&1 || true
         TIMESTAMP=$(date +"%Y%m%d_%H%M%S")
-        mkdir -p deployment_logs
-        cp "${LOG_DIR}/deployment_failed_logs.txt" "${LOG_DIR}/deployment_failed_logs_${TIMESTAMP}.txt"
+        cp "$failed_log" "$LOG_DIR/deployment_failed_logs_${TIMESTAMP}.txt" 2>/dev/null || true
         docker rm "ukhsc-system-backend-api-${target_env}" || true
         return 1
     fi
