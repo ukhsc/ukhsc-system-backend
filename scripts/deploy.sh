@@ -24,7 +24,7 @@ required_vars=(
     "ARGON2_SECRET"
     "GOOGLE_OAUTH_CLIENT_ID"
     "GOOGLE_OAUTH_CLIENT_SECRET"
-    "SENTRY_DSN",
+    "SENTRY_DSN"
     "SENTRY_RELEASE"
 )
 
@@ -49,18 +49,24 @@ if ! check_health $TARGET_PORT $TARGET_ENV; then
     exit 1
 fi
 
-echo "Switching Nginx to $TARGET_ENV..."
-sed -i "s/127.0.0.1:[0-9]*/127.0.0.1:$TARGET_PORT/" /etc/nginx/sites-available/default
-systemctl reload nginx
-
-echo "Cleaning up previous deployment..."
-if [ "$CURRENT_ENV" == "green" ]; then
-    docker stop ukhsc-system-backend-api-green || true
-    docker rm ukhsc-system-backend-api-green || true
-else
-    docker stop ukhsc-system-backend-api-blue || true
-    docker rm ukhsc-system-backend-api-blue || true
+echo "Updating Nginx active environment snippet for $TARGET_ENV..."
+ENV_SNIPPET="/etc/nginx/snippets/ukhsc-active-env.conf"
+mkdir -p /etc/nginx/snippets
+if [ ! -f "$ENV_SNIPPET" ]; then
+  echo "Initializing snippet (previous env: $CURRENT_ENV)"
+  echo "set \$ukhsc_active_env $CURRENT_ENV;" > "$ENV_SNIPPET"
 fi
+echo "set \$ukhsc_active_env $TARGET_ENV;" > "$ENV_SNIPPET"
+if nginx -t >/dev/null 2>&1; then
+  systemctl reload nginx
+  echo "Nginx reloaded. Active environment -> $TARGET_ENV"
+else
+  echo "nginx config test failed. Reverting snippet." >&2
+  echo "set \$ukhsc_active_env $CURRENT_ENV;" > "$ENV_SNIPPET"
+  exit 1
+fi
+
+echo "Preserving previous environment container ($CURRENT_ENV) for rollback."
 
 echo "Deployment successful!"
 
