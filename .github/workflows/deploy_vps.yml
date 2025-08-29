@@ -77,6 +77,7 @@ jobs:
       GOOGLE_OAUTH_CLIENT_ID: ${{ secrets.GOOGLE_OAUTH_CLIENT_ID }}
       GOOGLE_OAUTH_CLIENT_SECRET: ${{ secrets.GOOGLE_OAUTH_CLIENT_SECRET }}
       SENTRY_DSN: ${{ secrets.SENTRY_DSN }}
+      DOCKER_NETWORK: ${{ secrets.DOCKER_NETWORK }}
 
     steps:
       - name: Create Deployment
@@ -115,6 +116,10 @@ jobs:
 
       - name: Docker Login (read-only)
         run: echo "${{ secrets.GITHUB_TOKEN }}" | docker login "${REGISTRY}" -u "${{ github.repository_owner }}" --password-stdin
+      - name: Ensure Docker Network
+        if: env.DOCKER_NETWORK != ''
+        run: |
+          docker network inspect "$DOCKER_NETWORK" >/dev/null 2>&1 || docker network create "$DOCKER_NETWORK"
 
       - name: Pull & Deploy
         run: |

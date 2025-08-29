@@ -6,7 +6,7 @@ source $(dirname "$0")/cleanup.sh
 
 LOG_DIR="$HOME/ukhsc-system-backend/logs"
 mkdir -p "$LOG_DIR"
-echo "Using log directory: $LOG_DIR"
+
 
 echo "Deploying $1 to $TARGET_ENV..."
 determine_environment
@@ -37,14 +37,19 @@ for var in "${required_vars[@]}"; do
 done
 
 echo "Starting new Docker container..."
-docker run -d --restart always --name ukhsc-system-backend-api-$TARGET_ENV \
-    -p $TARGET_PORT:8787 \
-    -v $LOG_DIR:/app/logs \
+NETWORK_OPT=""
+if [ -n "$DOCKER_NETWORK" ]; then
+
+  NETWORK_OPT="--network $DOCKER_NETWORK"
+fi
+docker run -d --restart always --name "ukhsc-system-backend-api-$TARGET_ENV" \
+    -p "$TARGET_PORT:8787" \
+    -v "$LOG_DIR:/app/logs" \
+    $NETWORK_OPT \
     --env-file <(env | grep -E '^(DATABASE_URL|DIRECT_DATABASE_URL|JWT_SECRET|ARGON2_SECRET|GOOGLE_OAUTH_CLIENT_ID|GOOGLE_OAUTH_CLIENT_SECRET|SENTRY_DSN|SENTRY_RELEASE)=') \
-    -e CURRENT_ENVIRONMENT=$TARGET_ENV \
+    -e CURRENT_ENVIRONMENT="$TARGET_ENV" \
     -e IS_PRODUCTION=true \
-    --network postgres_network \
-    $1
+    "$1"
 
 echo "Checking health of new deployment..."
 if ! check_health $TARGET_PORT $TARGET_ENV; then
