@@ -8,8 +8,25 @@ LOG_DIR="$HOME/ukhsc-system-backend/logs"
 mkdir -p "$LOG_DIR"
 
 
-echo "Deploying $1 to $TARGET_ENV..."
+echo "Deploying $1 to ${TARGET_ENV:-unknown}..."
 determine_environment
+
+# Fallback inference if TARGET_ENV unset/invalid
+if [ -z "${TARGET_ENV:-}" ] || { [ "$TARGET_ENV" != "green" ] && [ "$TARGET_ENV" != "blue" ]; }; then
+  running_green=$(docker ps --format '{{.Names}}' | grep -c '^ukhsc-system-backend-api-green$' || true)
+  running_blue=$(docker ps --format '{{.Names}}' | grep -c '^ukhsc-system-backend-api-blue$' || true)
+  if [ "$running_green" -gt 0 ] && [ "$running_blue" -eq 0 ]; then
+    TARGET_ENV="blue"
+    TARGET_PORT=3001
+  elif [ "$running_blue" -gt 0 ] && [ "$running_green" -eq 0 ]; then
+    TARGET_ENV="green"
+    TARGET_PORT=3000
+  else
+    TARGET_ENV="green"
+    TARGET_PORT=3000
+  fi
+  echo "[info] inferred TARGET_ENV=$TARGET_ENV (fallback)"
+fi
 
 docker stop "ukhsc-system-backend-api-$TARGET_ENV" || true
 docker rm "ukhsc-system-backend-api-$TARGET_ENV" || true
@@ -77,13 +94,19 @@ if [ ! -f "$ENV_SNIPPET" ]; then
   echo "Initializing snippet (previous env: $CURRENT_ENV)"
   printf 'set $ukhsc_active_env %s;\n' "$CURRENT_ENV" > "$ENV_SNIPPET"
 fi
-printf 'set $ukhsc_active_env %s;\n' "$TARGET_ENV" > "$ENV_SNIPPET"
+# Atomic update
+TMP_SNIPPET="$(mktemp)"
+printf 'set $ukhsc_active_env %s;\n' "$TARGET_ENV" > "$TMP_SNIPPET"
+cp -f "$ENV_SNIPPET" "${ENV_SNIPPET}.bak" 2>/dev/null || true
+mv "$TMP_SNIPPET" "$ENV_SNIPPET"
 if nginx -t >/dev/null 2>&1; then
   systemctl reload nginx
   echo "Nginx reloaded. Active environment -> $TARGET_ENV"
 else
-  echo "nginx config test failed. Reverting snippet." >&2
-  echo "set \$ukhsc_active_env $CURRENT_ENV;" > "$ENV_SNIPPET"
+  echo "nginx config test failed. Restoring previous snippet." >&2
+  if [ -f "${ENV_SNIPPET}.bak" ]; then
+    cp -f "${ENV_SNIPPET}.bak" "$ENV_SNIPPET"
+  fi
   exit 1
 fi
 
