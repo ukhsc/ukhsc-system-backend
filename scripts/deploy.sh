@@ -59,11 +59,25 @@ fi
 echo "Updating Nginx active environment snippet for $TARGET_ENV..."
 ENV_SNIPPET="/etc/nginx/snippets/ukhsc-active-env.conf"
 mkdir -p /etc/nginx/snippets
+
+# Validate / normalize TARGET_ENV
+case "$TARGET_ENV" in
+  green|blue) ;;
+  *)
+    echo "[warn] invalid TARGET_ENV '$TARGET_ENV', forcing green" >&2
+    TARGET_ENV="green"
+    ;;
+esac
+if [ -z "$TARGET_ENV" ]; then
+  echo "[error] TARGET_ENV empty; aborting snippet update" >&2
+  exit 1
+fi
+
 if [ ! -f "$ENV_SNIPPET" ]; then
   echo "Initializing snippet (previous env: $CURRENT_ENV)"
-  echo "set \$ukhsc_active_env $CURRENT_ENV;" > "$ENV_SNIPPET"
+  printf 'set $ukhsc_active_env %s;\n' "$CURRENT_ENV" > "$ENV_SNIPPET"
 fi
-echo "set \$ukhsc_active_env $TARGET_ENV;" > "$ENV_SNIPPET"
+printf 'set $ukhsc_active_env %s;\n' "$TARGET_ENV" > "$ENV_SNIPPET"
 if nginx -t >/dev/null 2>&1; then
   systemctl reload nginx
   echo "Nginx reloaded. Active environment -> $TARGET_ENV"
