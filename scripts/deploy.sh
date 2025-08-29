@@ -43,6 +43,7 @@ docker run -d --restart always --name ukhsc-system-backend-api-$TARGET_ENV \
     --env-file <(env | grep -E '^(DATABASE_URL|DIRECT_DATABASE_URL|JWT_SECRET|ARGON2_SECRET|GOOGLE_OAUTH_CLIENT_ID|GOOGLE_OAUTH_CLIENT_SECRET|SENTRY_DSN|SENTRY_RELEASE)=') \
     -e CURRENT_ENVIRONMENT=$TARGET_ENV \
     -e IS_PRODUCTION=true \
+    --network postgres_network \
     $1
 
 echo "Checking health of new deployment..."
