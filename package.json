@@ -32,7 +32,7 @@
     "axios": "^1.8.2",
     "chanfana": "^2.6.3",
     "dotenv": "^16.4.7",
-    "hono": "^4.6.18",
+    "hono": "^4.10.3",
     "hono-pino": "^0.7.0",
     "install": "^0.13.0",
     "jsonwebtoken": "^9.0.2",
